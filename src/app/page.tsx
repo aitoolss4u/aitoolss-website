@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const categories = [
@@ -43,7 +44,7 @@ export default function Home() {
     <main className="min-h-screen overflow-hidden">
       <header className="sticky top-0 z-20 border-b border-white/[.08] bg-[#0b1020]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <a href="/" aria-label="AIToolss home" className="flex items-center gap-3">
+          <Link href="/" aria-label="AIToolss home" className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#7657ff] to-[#35d9ff] text-lg font-black">A</span>
             <span className="text-xl font-bold tracking-tight">AITools<span className="text-[#35d9ff]">s</span><span className="text-[#7657ff]">.</span></span>
           </a>
@@ -98,7 +99,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-600/15 via-[#101625] to-cyan-400/[.07] px-6 py-12 text-center sm:px-12 sm:py-16"><p className="text-sm font-semibold text-[#35d9ff]">BUILT FOR CURIOUS MINDS</p><h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold sm:text-4xl">Spend less time searching. More time creating.</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">AIToolss is being built to make discovering helpful tools simple, clear and accessible.</p><a href="#tools" className="mt-7 inline-flex rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#0b1020] transition hover:bg-cyan-100">Explore the directory →</a></div>
       </section>
 
-      <footer className="border-t border-white/[.08] px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left"><a href="/" className="text-lg font-bold">AIToolss<span className="text-[#35d9ff]">.</span></a><p className="text-xs text-slate-500">Discover tools. Unlock possibilities.</p><p className="text-xs text-slate-500">© 2026 AIToolss</p></div></footer>
+      <footer className="border-t border-white/[.08] px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left"><Link href="/" className="text-lg font-bold">AIToolss<span className="text-[#35d9ff]">.</span></Link><p className="text-xs text-slate-500">Discover tools. Unlock possibilities.</p><p className="text-xs text-slate-500">© 2026 AIToolss</p></div></footer>
     </main>
   );
 }
