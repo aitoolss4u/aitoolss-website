@@ -47,7 +47,7 @@ export default function Home() {
           <Link href="/" aria-label="AIToolss home" className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#7657ff] to-[#35d9ff] text-lg font-black">A</span>
             <span className="text-xl font-bold tracking-tight">AITools<span className="text-[#35d9ff]">s</span><span className="text-[#7657ff]">.</span></span>
-          </a>
+          </Link>
           <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm text-slate-300 md:flex">
             <a className="transition hover:text-[#35d9ff]" href="#tools">Explore tools</a>
             <a className="transition hover:text-[#35d9ff]" href="#categories">Categories</a>
