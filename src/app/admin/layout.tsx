@@ -15,11 +15,11 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
       const supabase = await createClient();
       return await supabase.auth.getUser();
     } catch {
-      redirect("/admin/login?error=configuration");
+      redirect("/admin-login?error=configuration");
     }
   })();
 
-  if (!user || user.app_metadata?.role !== "admin") redirect("/admin/login");
+  if (!user || user.app_metadata?.role !== "admin") redirect("/admin-login");
 
   return (
     <>
