@@ -102,7 +102,7 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-shell" style={{ "--admin-primary": data.settings.primaryColor, "--admin-accent": data.settings.accentColor, "--admin-bg": data.settings.backgroundColor, fontFamily: data.settings.font }} as React.CSSProperties>
+    <main className="admin-shell" style={{ "--admin-primary": data.settings.primaryColor, "--admin-accent": data.settings.accentColor, "--admin-bg": data.settings.backgroundColor, fontFamily: data.settings.font } as React.CSSProperties}>
       <aside className="admin-sidebar">
         <Link href="/" className="admin-brand"><span className="admin-brand-mark">A</span><span>AIToolss<span>.</span><small>CONTROL CENTER</small></span></Link>
         <p className="admin-nav-label">WORKSPACE</p>
