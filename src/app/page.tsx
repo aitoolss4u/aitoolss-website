@@ -2,29 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { tools as catalogTools, categories as toolCategories } from "@/lib/tools";
 
-const tools = [
-  { name: "Text Summarizer", category: "Writing", icon: "✦", tone: "violet", description: "Turn long articles, notes, and documents into clear, useful summaries.", label: "READY TO USE", href: "/tools/text-summarizer" },
-  { name: "Word Counter", category: "Writing", icon: "Aa", tone: "cyan", description: "Count words and characters, and estimate reading time in seconds.", label: "READY TO USE", href: "/tools/word-counter" },
-  { name: "Image Compressor", category: "Images", icon: "▧", tone: "pink", description: "Shrink image file sizes in your browser while keeping them looking sharp.", label: "READY TO USE", href: "/tools/image-compressor" },
-  { name: "Prompt Generator", category: "Productivity", icon: "✳", tone: "orange", description: "Turn a rough idea into a clearer prompt for your next AI workflow.", label: "IN THE WORKS", href: "/tools/prompt-generator" },
-  { name: "Code Explainer", category: "Coding", icon: "{ }", tone: "cyan", description: "Make unfamiliar code easier to understand, one snippet at a time.", label: "IN THE WORKS", href: "/tools/code-explainer" },
-  { name: "Video Description", category: "Marketing", icon: "▶", tone: "pink", description: "Build a stronger starting point for video descriptions and captions.", label: "IN THE WORKS", href: "/tools/video-description" },
-  { name: "Study Notes", category: "Education", icon: "▤", tone: "orange", description: "Organize learning material into structured, easy-to-review notes.", label: "IN THE WORKS", href: "/tools/study-notes" },
-  { name: "Business Name Ideas", category: "Business", icon: "◇", tone: "violet", description: "Explore memorable naming directions for your next big idea.", label: "IN THE WORKS", href: "/tools/business-name-ideas" },
-  { name: "Resume Checklist", category: "Career", icon: "▣", tone: "cyan", description: "Check the essentials before sending your resume to an employer.", label: "IN THE WORKS", href: "/tools/resume-checklist" },
+const tools = catalogTools.map((tool) => ({ ...tool, href: "/tools/" + tool.slug }));sume to an employer.", label: "IN THE WORKS", href: "/tools/resume-checklist" },
 ];
 
 const categoryMeta = [
   { name: "All tools", icon: "✳", subtitle: "Everything in one place" },
-  { name: "Writing", icon: "Aa", subtitle: "Words, ideas & clarity" },
-  { name: "Images", icon: "◈", subtitle: "Visuals & image utilities" },
-  { name: "Productivity", icon: "ϟ", subtitle: "Work smarter every day" },
-  { name: "Coding", icon: "{ }", subtitle: "Build and understand" },
-  { name: "Marketing", icon: "↗", subtitle: "Content that connects" },
-  { name: "Education", icon: "▤", subtitle: "Learn with less friction" },
-  { name: "Business", icon: "◇", subtitle: "Ideas into action" },
-  { name: "Career", icon: "▣", subtitle: "Your next opportunity" },
+  ...toolCategories.map((name) => ({ name, icon: name === "Writing" ? "Aa" : name === "Images" ? "◈" : name === "Productivity" ? "ϟ" : name === "Coding" ? "{ }" : name === "Marketing" ? "↗" : name === "Education" ? "▤" : name === "Business" ? "◇" : "▣", subtitle: name + " tools and utilities" })),
 ];
 
 const socialLinks = [
@@ -53,7 +38,7 @@ export default function Home() {
     const normalized = query.trim().toLowerCase();
     return tools.filter((tool) => {
       const categoryMatches = activeCategory === "All tools" || tool.category === activeCategory;
-      const queryMatches = !normalized || [tool.name, tool.category, tool.description, tool.label].join(" ").toLowerCase().includes(normalized);
+      const queryMatches = !normalized || [tool.name, tool.category, tool.description, tool.label, tool.slug].join(" ").toLowerCase().includes(normalized);
       return categoryMatches && queryMatches;
     });
   }, [query, activeCategory]);
@@ -171,8 +156,8 @@ export default function Home() {
                   <h3 className="mt-2 text-xl font-bold tracking-tight">{tool.name}</h3>
                   <p className="tool-description mt-2 min-h-[3.5rem] text-sm leading-6">{tool.description}</p>
                   <div className="tool-card-footer mt-6 flex items-center justify-between gap-3 border-t pt-4">
-                    <span className="text-xs font-semibold">{tool.label === "READY TO USE" ? "Available now" : "On our roadmap"}</span>
-                    {tool.label === "READY TO USE" ? <Link href={tool.href} className="tool-arrow" aria-label={`Open ${tool.name}`}>↗</Link> : <span className="tool-arrow tool-arrow-muted" aria-label="Coming soon">＋</span>}
+                    <span className="text-xs font-semibold">Available now</span>
+                    <Link href={tool.href} className="tool-arrow" aria-label={`Open ${tool.name}`}>↗</Link>
                   </div>
                 </article>
               ))}
