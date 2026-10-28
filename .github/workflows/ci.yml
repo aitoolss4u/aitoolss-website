@@ -18,6 +18,8 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: npm install
+      - name: Verify tool catalog
+        run: npm run test:tools
       - name: Lint
         run: npm run lint
       - name: Type check
