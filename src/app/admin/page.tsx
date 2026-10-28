@@ -61,6 +61,8 @@ export default function AdminPage() {
       const raw = window.localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<AdminData>;
+        // Hydrate browser-local prototype settings after mount.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setData({
           settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
           categories: Array.isArray(parsed.categories) ? parsed.categories : defaultCategories,
