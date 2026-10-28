@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, phase-2-foundation, phase-3-design-system]
+    branches: [main, phase-2-foundation, phase-3-design-system, phase-4-main-website]
   pull_request:
-    branches: [main, phase-2-foundation]
+    branches: [main, phase-2-foundation, phase-3-design-system]
 
 jobs:
   verify:
