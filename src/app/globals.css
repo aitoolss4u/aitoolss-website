@@ -355,3 +355,18 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .art-visual-sphere { animation: none !important; }
 }
+
+
+/* Phase 6 follow-up — recognizable social brand marks and platform colors */
+.social-link { width: 2.55rem; height: 2.55rem; border-radius: .85rem; }
+.social-icon { display: block; width: 1.25rem; height: 1.25rem; }
+.social-facebook { color: #1877f2; }
+.social-instagram { color: #e4405f; }
+.social-youtube { color: #ff0033; }
+.social-linkedin { color: #0a66c2; }
+.social-x { color: #f5f5f5; }
+.social-facebook:hover { border-color: rgb(24 119 242 / 65%); background: rgb(24 119 242 / 12%); }
+.social-instagram:hover { border-color: rgb(228 64 95 / 65%); background: rgb(228 64 95 / 12%); }
+.social-youtube:hover { border-color: rgb(255 0 51 / 65%); background: rgb(255 0 51 / 12%); }
+.social-linkedin:hover { border-color: rgb(10 102 194 / 65%); background: rgb(10 102 194 / 12%); }
+.social-x:hover { border-color: rgb(245 245 245 / 55%); background: rgb(255 255 255 / 9%); }
