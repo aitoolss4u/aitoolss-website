@@ -27,6 +27,14 @@ const categoryMeta = [
   { name: "Career", icon: "▣", subtitle: "Your next opportunity" },
 ];
 
+const socialLinks = [
+  { name: "GitHub", icon: "GH", href: "https://github.com/aitoolss4u/aitoolss-website" },
+  { name: "Instagram", icon: "IG", href: "https://www.instagram.com/" },
+  { name: "YouTube", icon: "YT", href: "https://www.youtube.com/" },
+  { name: "LinkedIn", icon: "in", href: "https://www.linkedin.com/" },
+  { name: "X", icon: "𝕏", href: "https://x.com/" },
+];
+
 const popularSearches = ["Writing", "Images", "Coding", "Productivity"];
 
 export default function Home() {
@@ -60,46 +68,63 @@ export default function Home() {
       <header className="site-header sticky top-0 z-30">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <Link href="/" aria-label="AIToolss home" className="brand-lockup flex shrink-0 items-center gap-3">
-            <span className="brand-mark grid h-10 w-10 place-items-center rounded-2xl text-lg font-black">A</span>
+            <span className="brand-mark grid h-10 w-10 place-items-center rounded-xl text-lg font-black">A</span>
             <span className="text-xl font-extrabold tracking-tight">AIToolss<span className="brand-dot">.</span></span>
           </Link>
           <nav aria-label="Main navigation" className="hidden items-center gap-8 text-sm font-medium md:flex">
             <a className="nav-link" href="#tools">Discover</a>
             <a className="nav-link" href="#categories">Categories</a>
-            <a className="nav-link" href="#about">About us</a>
+            <a className="nav-link" href="#about">About</a>
           </nav>
           <a href="#tools" className="header-cta rounded-full px-5 py-2.5 text-sm font-bold">Explore tools <span aria-hidden="true">↗</span></a>
         </div>
       </header>
 
-      <section className="hero-section relative px-5 pb-16 pt-16 sm:pb-24 sm:pt-24">
-        <div aria-hidden="true" className="hero-orb hero-orb-one" />
-        <div aria-hidden="true" className="hero-orb hero-orb-two" />
-        <div className="relative mx-auto max-w-6xl">
-          <div className="hero-copy mx-auto text-center">
-            <div className="hero-pill mx-auto mb-7 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold sm:text-sm">
-              <span className="live-dot" /> YOUR NEW AI DISCOVERY SPACE
+      <section className="showcase-hero relative px-5 pb-16 pt-12 sm:pb-20 sm:pt-16">
+        <div aria-hidden="true" className="showcase-grid" />
+        <div aria-hidden="true" className="showcase-glow showcase-glow-left" />
+        <div aria-hidden="true" className="showcase-glow showcase-glow-right" />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="showcase-intro mx-auto text-center">
+            <div className="hero-pill mx-auto mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold sm:text-sm">
+              <span className="live-dot" /> THE AI TOOL DISCOVERY PLAYGROUND
             </div>
-            <h1 className="hero-title mx-auto max-w-5xl text-5xl font-black leading-[1.03] tracking-[-0.055em] sm:text-6xl lg:text-8xl">
-              Meet your next
-              <span className="hero-gradient block">favorite tool.</span>
+            <h1 className="showcase-title mx-auto max-w-6xl text-5xl font-black leading-[.94] tracking-[-.065em] sm:text-7xl lg:text-[6.8rem]">
+              BIG IDEAS.
+              <span className="showcase-title-accent block">BETTER TOOLS.</span>
+              <span className="showcase-title-last block">MORE POSSIBLE.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-7 sm:text-lg sm:leading-8">
-              Less searching. More making. Discover practical AI tools and smart utilities that help turn your ideas into real work.
+              Find useful AI tools for writing, visuals, work and everything you want to make next. One curated space. More room to create.
             </p>
-            <form onSubmit={(event) => event.preventDefault()} role="search" className="search-box mx-auto mt-9 flex max-w-2xl items-center gap-3 rounded-2xl p-2">
+            <form onSubmit={(event) => { event.preventDefault(); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} role="search" className="search-box showcase-search mx-auto mt-8 flex max-w-2xl items-center gap-3 rounded-2xl p-2">
               <span aria-hidden="true" className="search-symbol pl-3 text-2xl">⌕</span>
-              <input aria-label="Search AI tools" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try “writing”, “image” or “code”…" className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none sm:text-base" />
+              <input aria-label="Search AI tools" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="What do you want to make today?" className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none sm:text-base" />
               {query && <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="clear-search rounded-full px-2 py-1 text-sm">×</button>}
-              <button type="submit" className="search-button rounded-xl px-5 py-3 text-sm font-bold sm:px-7">Find tools <span aria-hidden="true">→</span></button>
+              <button type="submit" className="search-button rounded-xl px-5 py-3 text-sm font-bold sm:px-7">Discover <span aria-hidden="true">→</span></button>
             </form>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
-              <span className="hero-muted mr-1">Popular:</span>
-              {popularSearches.map((item) => <button key={item} onClick={() => setActiveCategory(item)} className={`popular-chip rounded-full px-3 py-1.5 transition ${activeCategory === item ? "popular-chip-active" : ""}`}>{item}</button>)}
+              <span className="hero-muted mr-1">Explore:</span>
+              {popularSearches.map((item) => <button key={item} onClick={() => { setActiveCategory(item); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className={`popular-chip rounded-full px-3 py-1.5 transition ${activeCategory === item ? "popular-chip-active" : ""}`}>{item}</button>)}
             </div>
           </div>
 
-          <div className="hero-stats mx-auto mt-16 grid max-w-4xl grid-cols-3 gap-3 sm:mt-20 sm:gap-5">
+          <div className="showcase-art mt-14 grid grid-cols-2 gap-3 sm:mt-16 sm:grid-cols-4 sm:gap-4" aria-label="Explore tool categories">
+            <button onClick={() => { setActiveCategory("Images"); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="art-tile art-tile-image">
+              <span className="art-tile-label">01 / VISUALS</span><span className="art-visual art-visual-sphere" aria-hidden="true" /><span className="art-tile-bottom"><strong>Make it visual</strong><span>Image tools ↗</span></span>
+            </button>
+            <button onClick={() => { setActiveCategory("Writing"); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="art-tile art-tile-writing">
+              <span className="art-tile-label">02 / WORDS</span><span className="art-visual art-visual-type" aria-hidden="true">Aa</span><span className="art-tile-bottom"><strong>Find your words</strong><span>Writing tools ↗</span></span>
+            </button>
+            <button onClick={() => { setActiveCategory("Coding"); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="art-tile art-tile-code">
+              <span className="art-tile-label">03 / BUILD</span><span className="art-visual art-visual-code" aria-hidden="true">&lt;/&gt;</span><span className="art-tile-bottom"><strong>Build something</strong><span>Coding tools ↗</span></span>
+            </button>
+            <button onClick={() => { setActiveCategory("Productivity"); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="art-tile art-tile-focus">
+              <span className="art-tile-label">04 / FOCUS</span><span className="art-visual art-visual-orbit" aria-hidden="true"><i /><i /><i /></span><span className="art-tile-bottom"><strong>Make room to think</strong><span>Productivity ↗</span></span>
+            </button>
+          </div>
+
+          <div className="hero-stats mx-auto mt-10 grid max-w-4xl grid-cols-3 gap-3 sm:mt-12 sm:gap-5">
             <div className="stat-card"><span className="stat-number">{tools.length}<span>+</span></span><span className="stat-label">Tools to explore</span></div>
             <div className="stat-card"><span className="stat-number">08</span><span className="stat-label">Discovery categories</span></div>
             <div className="stat-card"><span className="stat-number">100<span>%</span></span><span className="stat-label">Made for curious minds</span></div>
@@ -115,7 +140,7 @@ export default function Home() {
           </div>
           <div className="category-grid mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3">
             {categories.filter((category) => category.name !== "All tools").map((category, index) => (
-              <button key={category.name} onClick={() => setActiveCategory(category.name)} aria-pressed={activeCategory === category.name} className={`category-card category-accent-${index % 4} rounded-2xl p-4 text-left sm:p-5 ${activeCategory === category.name ? "category-card-active" : ""}`}>
+              <button key={category.name} onClick={() => { setActiveCategory(category.name); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={activeCategory === category.name} className={`category-card category-accent-${index % 4} rounded-2xl p-4 text-left sm:p-5 ${activeCategory === category.name ? "category-card-active" : ""}`}>
                 <span className="category-icon grid h-11 w-11 place-items-center rounded-xl text-lg font-bold">{category.icon}</span>
                 <span className="mt-4 flex items-center justify-between gap-2"><span className="text-sm font-bold sm:text-base">{category.name}</span><span className="category-count">{category.count}</span></span>
                 <span className="category-subtitle mt-1 block text-xs sm:text-sm">{category.subtitle}</span>
@@ -167,7 +192,7 @@ export default function Home() {
         <div className="about-panel relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] px-6 py-12 text-center sm:px-12 sm:py-16">
           <div aria-hidden="true" className="about-glow" />
           <div className="relative">
-            <p className="section-kicker">MADE FOR WHAT&apos;S NEXT</p>
+            <p className="section-kicker">MADE FOR WHAT'S NEXT</p>
             <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">Your ideas deserve <span className="hero-gradient">better tools.</span></h2>
             <p className="section-description mx-auto mt-4 max-w-xl text-sm leading-7 sm:text-base">AIToolss is building a calmer, clearer way to discover helpful tools—without the noise.</p>
             <a href="#tools" className="about-cta mt-8 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold">Explore the toolkit <span aria-hidden="true">↗</span></a>
@@ -175,7 +200,51 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-footer px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row"><Link href="/" className="text-lg font-extrabold">AIToolss<span className="brand-dot">.</span></Link><p className="text-sm">Useful tools for curious minds.</p><div className="flex flex-wrap items-center justify-center gap-4 text-xs"><Link href="/privacy" className="hover:text-white">Privacy</Link><Link href="/terms" className="hover:text-white">Terms</Link><span>© 2026 AIToolss</span></div></div></footer>
+      <footer className="site-footer px-5 pb-6 pt-12 sm:pt-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="footer-main grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+            <div className="footer-brand">
+              <Link href="/" aria-label="AIToolss home" className="brand-lockup inline-flex items-center gap-3">
+                <span className="brand-mark grid h-10 w-10 place-items-center rounded-xl text-lg font-black">A</span>
+                <span className="text-xl font-extrabold tracking-tight text-white">AIToolss<span className="brand-dot">.</span></span>
+              </Link>
+              <p className="mt-4 max-w-xs text-sm leading-6">A growing directory of useful AI tools and smart utilities to help you create, learn and get things done.</p>
+              <p className="footer-social-title mt-6 text-xs font-bold uppercase tracking-[.16em]">Follow the journey</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {socialLinks.map((social) => <a key={social.name} href={social.href} target="_blank" rel="noreferrer noopener" aria-label={`${social.name} (update to the official AIToolss profile when available)`} title={social.name} className="social-link"><span aria-hidden="true">{social.icon}</span></a>)}
+              </div>
+              <p className="footer-note mt-3 max-w-xs text-xs leading-5">Social profile links are starter links. Replace them with AIToolss official account URLs before launch.</p>
+            </div>
+            <div>
+              <h2 className="footer-heading">Explore</h2>
+              <ul className="footer-link-list mt-4 space-y-3">
+                {categoryMeta.filter((category) => category.name !== "All tools").map((category) => <li key={category.name}><a href="#tools" onClick={() => setActiveCategory(category.name)}>{category.name}</a></li>)}
+                <li><a href="#tools" onClick={() => setActiveCategory("All tools")}>All tools</a></li>
+              </ul>
+            </div>
+            <div>
+              <h2 className="footer-heading">Discover</h2>
+              <ul className="footer-link-list mt-4 space-y-3">
+                <li><a href="#tools">Popular tools</a></li>
+                <li><a href="#categories">Browse categories</a></li>
+                <li><a href="#about">About AIToolss</a></li>
+              </ul>
+            </div>
+            <div>
+              <h2 className="footer-heading">Legal & support</h2>
+              <ul className="footer-link-list mt-4 space-y-3">
+                <li><Link href="/privacy">Privacy policy</Link></li>
+                <li><Link href="/terms">Terms of use</Link></li>
+                <li><a href="mailto:hello@aitoolss.com">Contact</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-bottom mt-12 flex flex-col gap-3 border-t pt-5 text-xs sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 AIToolss. Built for curious minds.</p>
+            <p>Useful tools. More possibilities.</p>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
