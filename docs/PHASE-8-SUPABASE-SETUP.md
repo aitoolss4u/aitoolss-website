@@ -6,7 +6,7 @@ This phase adds the first server-authenticated admin entry point and a database 
 
 - Email/password sign-in through Supabase Auth; no public registration form.
 - Admin authorization requires the trusted `app_metadata.role = "admin"` claim. A user who can sign in but lacks this claim is signed out.
-- Server-side auth guard on `/admin`; login page at `/admin/login`.
+- Server-side auth guard on `/admin`; login page at `/admin-login`.
 - Supabase SSR cookie handling and a Next.js request proxy for refreshing sessions.
 - SQL migration for categories, site settings and an admin audit log, with row-level security (RLS).
 - Starter category seed data; no credentials, keys or real users are committed.
