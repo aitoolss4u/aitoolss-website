@@ -10,7 +10,6 @@ function slugify(value: string) {
 function words(value: string) { return value.trim() ? value.trim().split(/\s+/).length : 0; }
 function sentenceCase(value: string) { return value.replace(/\s+/g, " ").trim().replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix, letter: string) => prefix + letter.toUpperCase()); }
 function titleCase(value: string) { return value.toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase()); }
-function unique(value: string) { return [...new Set(value.split(/\s+/).filter(Boolean))].join(" "); }
 function escapeHtml(value: string) { return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
 function run(slug: string, input: string, option: string): string {
@@ -52,11 +51,10 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
   const [option, setOption] = useState("default");
   const [output, setOutput] = useState("");
   const [imageInfo, setImageInfo] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const tool = useMemo(() => getTool(slug), [slug]);
   const process = () => setOutput(run(slug, input, option));
   const onImage = (picked: File | null) => {
-    setFile(picked); setOutput("");
+    setOutput("");
     if (!picked) { setImageInfo(""); return; }
     const url = URL.createObjectURL(picked);
     const image = new Image();
@@ -75,7 +73,7 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
       {["text-summarizer"].includes(slug) && <label className="mt-4 block text-sm">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="ml-2 rounded-lg bg-slate-800 p-2"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
       {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder"].includes(slug) && <label className="mt-4 block text-sm">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="ml-2 rounded-lg bg-slate-800 p-2"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option></select></label>}
       {imageInfo && <p className="mt-3 text-sm text-cyan-200">{imageInfo}</p>}
-      <div className="mt-5 flex flex-wrap gap-3"><button disabled={runDisabled} onClick={process} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{isImage ? "Image selected" : "Run tool"} ↗</button><button onClick={()=>{setInput("");setOutput("");setImageInfo("");setFile(null);}} className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold">Clear</button></div></div>
+      <div className="mt-5 flex flex-wrap gap-3"><button disabled={runDisabled} onClick={process} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{isImage ? "Image selected" : "Run tool"} ↗</button><button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold">Clear</button></div></div>
       {output && <div className="mt-8 rounded-2xl border border-white/10 bg-black/25 p-5"><div className="flex items-center justify-between gap-3"><h2 className="font-bold">Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="text-sm text-cyan-300">Copy result</button>}</div>{output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="mt-4 max-h-96 rounded-xl" /><a href={output} download="aitoolss-compressed.jpg" className="mt-4 inline-block rounded-lg bg-cyan-400 px-4 py-2 font-bold text-slate-950">Download compressed image</a></> : <pre className="mt-4 max-h-[32rem] overflow-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-200">{output}</pre>}</div>}
       <p className="mt-6 text-xs leading-5 text-slate-500">Privacy-first processing: most tools run in your browser and do not send your input to an AI service. Outputs are rule-based helpers, not professional advice. No AI API key is required.</p>
     </div>
