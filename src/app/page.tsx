@@ -28,11 +28,11 @@ const categoryMeta = [
 ];
 
 const socialLinks = [
-  { name: "GitHub", icon: "GH", href: "https://github.com/aitoolss4u/aitoolss-website" },
-  { name: "Instagram", icon: "IG", href: "https://www.instagram.com/" },
-  { name: "YouTube", icon: "YT", href: "https://www.youtube.com/" },
-  { name: "LinkedIn", icon: "in", href: "https://www.linkedin.com/" },
-  { name: "X", icon: "𝕏", href: "https://x.com/" },
+  { name: "Facebook", href: "https://www.facebook.com/" },
+  { name: "Instagram", href: "https://www.instagram.com/" },
+  { name: "YouTube", href: "https://www.youtube.com/" },
+  { name: "LinkedIn", href: "https://www.linkedin.com/" },
+  { name: "X", href: "https://x.com/" },
 ];
 
 const popularSearches = ["Writing", "Images", "Coding", "Productivity"];
@@ -211,7 +211,7 @@ export default function Home() {
               <p className="mt-4 max-w-xs text-sm leading-6">A growing directory of useful AI tools and smart utilities to help you create, learn and get things done.</p>
               <p className="footer-social-title mt-6 text-xs font-bold uppercase tracking-[.16em]">Follow the journey</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {socialLinks.map((social) => <a key={social.name} href={social.href} target="_blank" rel="noreferrer noopener" aria-label={`${social.name} (update to the official AIToolss profile when available)`} title={social.name} className="social-link"><span aria-hidden="true">{social.icon}</span></a>)}
+                {socialLinks.map((social) => <a key={social.name} href={social.href} target="_blank" rel="noreferrer noopener" aria-label={`${social.name} (update to the official AIToolss profile when available)`} title={social.name} className={`social-link social-${social.name.toLowerCase()}`}><svg aria-hidden="true" viewBox="0 0 24 24" className="social-icon" focusable="false">{social.name === "Facebook" ? <path d="M13.5 21v-8.2h2.8l.42-3.2H13.5V7.56c0-.93.26-1.56 1.6-1.56h1.71V3.14A22.4 22.4 0 0 0 14.32 3C11.85 3 10.16 4.5 10.16 7.27V9.6H7.4v3.2h2.76V21h3.34Z" fill="currentColor" /> : social.name === "Instagram" ? <><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="17.7" cy="6.6" r="1.25" fill="currentColor" /></> : social.name === "YouTube" ? <><path d="M23 7.1a3 3 0 0 0-2.1-2.12C19.05 4.45 12 4.45 12 4.45s-7.05 0-8.9.53A3 3 0 0 0 1 7.1 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.9 3 3 0 0 0 2.1 2.12c1.85.53 8.9.53 8.9.53s7.05 0 8.9-.53A3 3 0 0 0 23 16.9a31 31 0 0 0 .5-4.9 31 31 0 0 0-.5-4.9Z" fill="currentColor" /><path d="m9.7 15.5 5.9-3.5-5.9-3.5v7Z" fill="#080a11" /></> : social.name === "LinkedIn" ? <path d="M5.1 8.4a2.1 2.1 0 1 0 0-4.2 2.1 2.1 0 0 0 0 4.2ZM3.3 10h3.6v10.7H3.3V10Zm5.8 0h3.45v1.46h.05a3.78 3.78 0 0 1 3.4-1.87c3.64 0 4.32 2.4 4.32 5.52v5.59h-3.6v-4.96c0-1.18-.02-2.7-1.65-2.7-1.66 0-1.91 1.29-1.91 2.62v5.04H9.1V10Z" fill="currentColor" /> : <path d="M18.9 2H22l-6.78 7.75L23.2 22h-6.25l-4.9-7.43L5.55 22H2.4l7.25-8.28L1.8 2h6.4l4.43 6.77L18.9 2Zm-1.1 17.85h1.73L7.28 4.04H5.42L17.8 19.85Z" fill="currentColor" />}</svg></a>)}
               </div>
               <p className="footer-note mt-3 max-w-xs text-xs leading-5">Social profile links are starter links. Replace them with AIToolss official account URLs before launch.</p>
             </div>
