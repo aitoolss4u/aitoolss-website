@@ -261,3 +261,97 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .hero-orb, .tool-card { animation: none !important; }
 }
+
+
+/* Phase 6 — original, cinematic creator-style hero inspired by modern AI product sites */
+.showcase-hero {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(105 72 255 / 17%), transparent 47rem),
+    linear-gradient(180deg, #090a10 0%, #0b0d16 74%, #0b1020 100%);
+}
+.showcase-grid {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+  opacity: .18;
+  background-image: linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+.showcase-glow { position: absolute; z-index: -1; width: 25rem; height: 25rem; border-radius: 50%; filter: blur(100px); pointer-events: none; }
+.showcase-glow-left { top: 15rem; left: -14rem; background: rgb(117 65 255 / 18%); }
+.showcase-glow-right { top: 20rem; right: -15rem; background: rgb(42 191 255 / 12%); }
+.showcase-intro { max-width: 66rem; }
+.showcase-title { color: #fff; text-wrap: balance; }
+.showcase-title-accent {
+  color: #b5a1ff;
+  background: linear-gradient(95deg, #e1d7ff 0%, #a78bfa 35%, #8d7bff 60%, #71e5f5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.showcase-title-last { color: #f3f3fa; }
+.showcase-intro > p:not(.section-kicker) { color: #a2a8bc; }
+.showcase-search { border-radius: 1.15rem; }
+.showcase-art { max-width: 72rem; }
+.art-tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 13rem;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 1.35rem;
+  padding: 1rem;
+  text-align: left;
+  isolation: isolate;
+  background: #151625;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.art-tile:hover { transform: translateY(-4px); border-color: rgb(190 174 255 / 55%); box-shadow: 0 20px 55px rgb(0 0 0 / 30%); }
+.art-tile::before { position: absolute; z-index: -2; inset: 0; content: ""; opacity: .96; }
+.art-tile-image::before { background: radial-gradient(ellipse at 55% 40%, #fb9e9e 0%, #b94b8c 20%, #472c77 48%, #18172b 80%); }
+.art-tile-writing::before { background: radial-gradient(ellipse at 75% 35%, #f8d5a2 0%, #bc8067 18%, #533d60 45%, #1a1a2d 80%); }
+.art-tile-code::before { background: radial-gradient(ellipse at 50% 42%, #5ce3d0 0%, #256d83 22%, #1a3452 48%, #141827 80%); }
+.art-tile-focus::before { background: radial-gradient(ellipse at 50% 45%, #b7a3ff 0%, #6254ac 23%, #33305e 48%, #17182b 80%); }
+.art-tile-label { z-index: 1; color: rgb(255 255 255 / 80%); font-size: .62rem; font-weight: 800; letter-spacing: .14em; }
+.art-visual { position: absolute; z-index: -1; top: 2.1rem; right: 0; bottom: 2.7rem; left: 0; display: grid; place-items: center; color: rgb(255 255 255 / 90%); text-shadow: 0 4px 35px rgb(0 0 0 / 25%); }
+.art-visual-sphere { width: 7rem; height: 7rem; margin: auto; border-radius: 43% 57% 62% 38% / 43% 40% 60% 57%; background: radial-gradient(circle at 30% 24%, #ffd8d2 0%, #f4a2c4 16%, #b875e6 43%, #554bd0 67%, #25235b 100%); box-shadow: inset -15px -18px 35px rgb(12 9 46 / 65%), inset 8px 8px 22px rgb(255 255 255 / 45%), 0 0 55px rgb(198 105 255 / 25%); transform: rotate(-18deg); animation: sphere-float 7s ease-in-out infinite alternate; }
+.art-visual-type { font-size: clamp(4.5rem, 8vw, 6rem); font-weight: 900; letter-spacing: -.12em; background: linear-gradient(135deg, #fff2d7, #f5b7a4 48%, #b79aff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; transform: rotate(-8deg); }
+.art-visual-code { font-size: clamp(3.5rem, 7vw, 5rem); font-weight: 900; letter-spacing: -.12em; color: #a4fff1; text-shadow: 0 0 30px rgb(65 255 223 / 32%); }
+.art-visual-orbit { width: 7.5rem; height: 7.5rem; margin: auto; border: 1px solid rgb(228 221 255 / 55%); border-radius: 50%; box-shadow: 0 0 35px rgb(163 142 255 / 25%), inset 0 0 28px rgb(163 142 255 / 16%); transform: rotate(-32deg) scaleY(.55); }
+.art-visual-orbit::before, .art-visual-orbit::after { position: absolute; inset: -.6rem 1.2rem; border: 1px solid rgb(228 221 255 / 50%); border-radius: 50%; content: ""; }
+.art-visual-orbit::after { transform: rotate(60deg); }
+.art-visual-orbit i { position: absolute; width: .55rem; height: .55rem; border-radius: 50%; background: #fff; box-shadow: 0 0 15px #c9baff; }
+.art-visual-orbit i:nth-child(1) { top: 1rem; left: 1.4rem; }
+.art-visual-orbit i:nth-child(2) { right: .4rem; bottom: 2rem; }
+.art-visual-orbit i:nth-child(3) { top: 2.2rem; right: .7rem; }
+.art-tile-bottom { display: flex; flex-direction: column; gap: .35rem; }
+.art-tile-bottom strong { color: #fff; font-size: .94rem; letter-spacing: -.02em; }
+.art-tile-bottom span { color: rgb(255 255 255 / 72%); font-size: .72rem; }
+.site-footer { padding-bottom: 1.5rem; background: #080a11; }
+.footer-main { padding-bottom: 2rem; }
+.footer-heading { color: #f6f5ff; font-size: .84rem; font-weight: 800; }
+.footer-link-list a { color: #9ba3b9; font-size: .85rem; transition: color .2s ease; }
+.footer-link-list a:hover { color: #fff; }
+.footer-social-title { color: #c2b5ff; }
+.social-link { display: inline-grid; width: 2.4rem; height: 2.4rem; place-items: center; border: 1px solid rgb(255 255 255 / 12%); border-radius: .8rem; color: #e9e5ff; background: rgb(255 255 255 / 4%); font-size: .75rem; font-weight: 800; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.social-link:hover { transform: translateY(-2px); border-color: rgb(167 139 250 / 60%); background: rgb(118 87 255 / 15%); }
+.footer-note { color: #68728a; }
+.footer-bottom { border-color: rgb(255 255 255 / 10%); color: #737d94; }
+@keyframes sphere-float { from { transform: translateY(-3px) rotate(-18deg); } to { transform: translateY(6px) rotate(-8deg); } }
+@media (max-width: 640px) {
+  .showcase-hero { padding-top: 3rem; }
+  .showcase-title { font-size: clamp(2.8rem, 13vw, 5rem); }
+  .art-tile { min-height: 11.5rem; padding: .8rem; border-radius: 1rem; }
+  .art-tile-bottom strong { font-size: .82rem; }
+  .art-tile-bottom span { font-size: .66rem; }
+  .art-visual-sphere { width: 5.5rem; height: 5.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-visual-sphere { animation: none !important; }
+}
