@@ -1,7 +1,7 @@
 export type ToolMode = "text" | "ideas" | "checklist" | "calculator" | "formatter" | "json" | "image";
 export type ToolDefinition = { name: string; slug: string; category: string; icon: string; tone: "violet" | "cyan" | "pink" | "orange"; description: string; mode: ToolMode; label: "READY TO USE" };
 
-const entries: Array<Omit<ToolDefinition, "label">> = [
+const entries: Array<[string, string, string, string, string, ToolMode]> = [
 ["Text Summarizer","text-summarizer","Writing","✦","Turn long text into a concise, readable summary.","text"],
 ["Word Counter","word-counter","Writing","Aa","Count words, characters, sentences and reading time.","text"],
 ["Paragraph Rewriter","paragraph-rewriter","Writing","↻","Rewrite a paragraph with clearer wording and flow.","text"],
