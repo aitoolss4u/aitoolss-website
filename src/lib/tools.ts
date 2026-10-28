@@ -61,6 +61,7 @@ const entries: Array<[string, string, string, string, string, ToolMode]> = [
 ["Interview Practice Questions","interview-practice-questions","Career","?","Generate practice questions for a target role.","ideas"],
 ["Achievement Bullet Rewriter","achievement-bullet-rewriter","Career","↗","Turn work notes into achievement-focused resume bullets.","text"],
 ["Salary Hourly Converter","salary-hourly-converter","Career","$","Convert annual salary to an estimated hourly rate.","calculator"],
+["Random Password Generator","random-password-generator","Productivity","⌑","Generate a random password locally in your browser.","formatter"],
 ];
 export const tools: ToolDefinition[] = entries.map(([name, slug, category, icon, description, mode]) => ({ name, slug, category, icon, description, mode: mode as ToolMode, label: "READY TO USE", tone: category === "Writing" || category === "Business" ? "violet" : category === "Images" || category === "Coding" || category === "Career" ? "cyan" : category === "Marketing" || category === "Education" ? "pink" : "orange" }));
 export const categories = ["Writing", "Images", "Productivity", "Coding", "Marketing", "Education", "Business", "Career"];
