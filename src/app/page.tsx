@@ -175,7 +175,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-footer px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row"><Link href="/" className="text-lg font-extrabold">AIToolss<span className="brand-dot">.</span></Link><p className="text-sm">Useful tools for curious minds.</p><p className="text-xs">© 2026 AIToolss</p></div></footer>
+      <footer className="site-footer px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row"><Link href="/" className="text-lg font-extrabold">AIToolss<span className="brand-dot">.</span></Link><p className="text-sm">Useful tools for curious minds.</p><div className="flex flex-wrap items-center justify-center gap-4 text-xs"><Link href="/privacy" className="hover:text-white">Privacy</Link><Link href="/terms" className="hover:text-white">Terms</Link><span>© 2026 AIToolss</span></div></div></footer>
     </main>
   );
 }
