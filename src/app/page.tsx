@@ -167,7 +167,7 @@ export default function Home() {
         <div className="about-panel relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] px-6 py-12 text-center sm:px-12 sm:py-16">
           <div aria-hidden="true" className="about-glow" />
           <div className="relative">
-            <p className="section-kicker">MADE FOR WHAT'S NEXT</p>
+            <p className="section-kicker">MADE FOR WHAT&apos;S NEXT</p>
             <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">Your ideas deserve <span className="hero-gradient">better tools.</span></h2>
             <p className="section-description mx-auto mt-4 max-w-xl text-sm leading-7 sm:text-base">AIToolss is building a calmer, clearer way to discover helpful tools—without the noise.</p>
             <a href="#tools" className="about-cta mt-8 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold">Explore the toolkit <span aria-hidden="true">↗</span></a>
