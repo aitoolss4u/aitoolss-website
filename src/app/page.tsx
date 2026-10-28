@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { tools as catalogTools, categories as toolCategories } from "@/lib/tools";
 
-const tools = catalogTools.map((tool) => ({ ...tool, href: "/tools/" + tool.slug }));sume to an employer.", label: "IN THE WORKS", href: "/tools/resume-checklist" },
-];
+const tools = catalogTools.map((tool) => ({ ...tool, href: "/tools/" + tool.slug }));
 
 const categoryMeta = [
   { name: "All tools", icon: "✳", subtitle: "Everything in one place" },
