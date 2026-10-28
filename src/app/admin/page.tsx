@@ -78,7 +78,7 @@ export default function AdminPage() {
     catch { window.alert("Could not save settings in this browser. Check available local storage."); }
   };
   const reset = () => {
-    if (!window.confirm("Reset this browser's Admin Studio data to the starter defaults?")) return;
+    if (!window.confirm("Reset this browser&apos;s Admin Studio data to the starter defaults?")) return;
     setData(defaults); setSelectedCategory("writing"); window.localStorage.removeItem(storageKey); setSaved(true);
   };
   const exportData = () => {
@@ -152,7 +152,7 @@ export default function AdminPage() {
         {section === "settings" && <div className="admin-content">
           <div className="admin-section-intro"><span className="admin-eyebrow">SITE OPERATIONS</span><h2>Controls & preferences<span>.</span></h2><p>Switches below save your preferred configuration. They do not activate third-party services by themselves.</p></div>
           <div className="admin-card admin-form-card"><Toggle label="Maintenance mode" description="Configuration flag for a future maintenance page. Does not block public routes yet." checked={data.settings.maintenanceMode} onChange={(value) => updateSettings({ maintenanceMode: value })} /><Toggle label="Show roadmap tools" description="Preference for whether upcoming tools should appear in the directory." checked={data.settings.showRoadmapTools} onChange={(value) => updateSettings({ showRoadmapTools: value })} /><Toggle label="Analytics" description="Keep disabled until an analytics provider and privacy notice are configured." checked={data.settings.enableAnalytics} onChange={(value) => updateSettings({ enableAnalytics: value })} /><Toggle label="Advertising / AdSense" description="Recommended to remain off until publisher approval, consent and placements are ready." checked={data.settings.enableAds} onChange={(value) => updateSettings({ enableAds: value })} /></div>
-          <div className="admin-card"><div className="admin-card-heading"><div><h3>Configuration tools</h3><p>Export a backup of this browser's current settings or restore defaults.</p></div></div><div className="admin-button-row"><button className="admin-secondary" onClick={exportData}>↓ Export JSON backup</button><button className="admin-danger" onClick={reset}>Reset local settings</button></div></div>
+          <div className="admin-card"><div className="admin-card-heading"><div><h3>Configuration tools</h3><p>Export a backup of this browser&apos;s current settings or restore defaults.</p></div></div><div className="admin-button-row"><button className="admin-secondary" onClick={exportData}>↓ Export JSON backup</button><button className="admin-danger" onClick={reset}>Reset local settings</button></div></div>
         </div>}
 
         {section === "social" && <div className="admin-content">
