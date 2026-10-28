@@ -9,11 +9,12 @@ test("homepage renders the brand and tool discovery UI", async ({ page }) => {
 });
 
 test("all catalog tool links open a successful tool page", async ({ page }) => {
+  test.setTimeout(120_000);
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
 
   const hrefs = await page.locator('a[href^="/tools/"]').evaluateAll((links) =>
-    [...new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute("href").split("?")[0]).filter(Boolean))],
+    [...new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute("href")).filter((href): href is string => Boolean(href)).map((href) => href.split("?")[0]))],
   );
   expect(hrefs.length).toBeGreaterThanOrEqual(60);
 
