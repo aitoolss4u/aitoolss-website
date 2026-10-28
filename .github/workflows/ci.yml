@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, phase-2-foundation, phase-3-design-system, phase-4-main-website, phase-6-leonardo-inspired-ui, phase-7-admin-studio, phase-8-supabase-admin-auth, phase-9-admin-persistence, phase-10-60-live-tools]
+    branches: [main, phase-2-foundation, phase-3-design-system, phase-4-main-website, phase-6-leonardo-inspired-ui, phase-7-admin-studio, phase-8-supabase-admin-auth, phase-9-admin-persistence, phase-10-60-live-tools, phase-10-runtime-hardening]
   pull_request:
-    branches: [main, phase-2-foundation, phase-3-design-system, phase-6-leonardo-inspired-ui, phase-7-admin-studio, phase-8-supabase-admin-auth, phase-9-admin-persistence]
+    branches: [main, phase-2-foundation, phase-3-design-system, phase-6-leonardo-inspired-ui, phase-7-admin-studio, phase-8-supabase-admin-auth, phase-9-admin-persistence, phase-10-60-live-tools, phase-10-runtime-hardening]
 
 jobs:
   verify:
