@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { loadAdminData, saveAdminData } from "./actions";
 
 type Category = { id: string; name: string; slug: string; description: string; metaTitle: string; metaDescription: string; tags: string; visible: boolean };
 type AdminSettings = {
@@ -12,7 +13,6 @@ type AdminSettings = {
 };
 type AdminData = { settings: AdminSettings; categories: Category[] };
 
-const storageKey = "aitoolss-admin-studio-v1";
 const defaultSettings: AdminSettings = {
   siteName: "AIToolss", siteDescription: "Discover useful AI tools and smart utilities to help you create, learn and get things done.",
   defaultMetaTitle: "AIToolss — Discover AI Tools That Help You Do More",
@@ -53,35 +53,62 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData>(defaults);
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("writing");
   const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<AdminData>;
-        // Hydrate browser-local prototype settings after mount.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+    let active = true;
+    loadAdminData().then((result) => {
+      if (!active) return;
+      if (result.ok) {
+        const remoteCategories = result.categories.length ? result.categories : defaultCategories;
         setData({
-          settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
-          categories: Array.isArray(parsed.categories) ? parsed.categories : defaultCategories,
+          settings: { ...defaultSettings, ...(result.settings ?? {}) },
+          categories: remoteCategories,
         });
+        setSelectedCategory(remoteCategories[0]?.id ?? "");
+        setSaved(true);
+        setStatusMessage("Loaded saved configuration from Supabase.");
+      } else {
+        setStatusMessage(result.message);
       }
-    } catch { /* Keep safe defaults if stored data is invalid. */ }
-    setLoaded(true);
+      setLoaded(true);
+    }).catch(() => {
+      if (!active) return;
+      setStatusMessage("Could not connect to Supabase. Check project configuration and migration.");
+      setLoaded(true);
+    });
+    return () => { active = false; };
   }, []);
 
   const activeCategory = useMemo(() => data.categories.find((category) => category.id === selectedCategory) ?? data.categories[0], [data.categories, selectedCategory]);
   const updateSettings = (patch: Partial<AdminSettings>) => { setData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); setSaved(false); };
   const updateCategory = (id: string, patch: Partial<Category>) => { setData((current) => ({ ...current, categories: current.categories.map((category) => category.id === id ? { ...category, ...patch } : category) })); setSaved(false); };
-  const save = () => {
-    try { window.localStorage.setItem(storageKey, JSON.stringify(data)); setSaved(true); }
-    catch { window.alert("Could not save settings in this browser. Check available local storage."); }
+  const save = async () => {
+    setSaved(false);
+    setStatusMessage("Saving changes to Supabase…");
+    try {
+      const result = await saveAdminData(data);
+      setSaved(result.ok);
+      setStatusMessage(result.message);
+    } catch {
+      setStatusMessage("Save failed. Check your session and Supabase configuration.");
+    }
   };
-  const reset = () => {
-    if (!window.confirm("Reset this browser&apos;s Admin Studio data to the starter defaults?")) return;
-    setData(defaults); setSelectedCategory("writing"); window.localStorage.removeItem(storageKey); setSaved(true);
+  const reset = async () => {
+    if (!window.confirm("Replace the saved configuration with the starter defaults? This will update the shared Supabase configuration.")) return;
+    setData(defaults);
+    setSelectedCategory("writing");
+    setSaved(false);
+    setStatusMessage("Saving starter defaults…");
+    try {
+      const result = await saveAdminData(defaults);
+      setSaved(result.ok);
+      setStatusMessage(result.message);
+    } catch {
+      setStatusMessage("Reset failed. Check your session and Supabase configuration.");
+    }
   };
   const exportData = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -109,14 +136,14 @@ export default function AdminPage() {
         <Link href="/" className="admin-brand"><span className="admin-brand-mark">A</span><span>AIToolss<span>.</span><small>CONTROL CENTER</small></span></Link>
         <p className="admin-nav-label">WORKSPACE</p>
         <nav aria-label="Admin sections">{menu.map((item) => <button key={item.id} onClick={() => setSection(item.id)} className={section === item.id ? "active" : ""}><span>{item.icon}</span>{item.label}{section === item.id && <b>•</b>}</button>)}</nav>
-        <div className="admin-sidebar-bottom"><span className="admin-status-dot" /> Local preview mode <small>Not connected to a production database</small><Link href="/">← Back to website</Link></div>
+        <div className="admin-sidebar-bottom"><span className="admin-status-dot" /> Supabase connected <small>Database connection depends on your project setup</small><Link href="/">← Back to website</Link></div>
       </aside>
       <section className="admin-main">
-        <header className="admin-topbar"><div><span className="admin-eyebrow">AIToolss / CONTROL CENTER</span><h1>{menu.find((item) => item.id === section)?.label}</h1></div><div className="admin-top-actions"><span className="admin-draft-state">{saved ? "Saved in this browser" : "Unsaved changes"}</span><button className="admin-save" onClick={save} disabled={!loaded}>Save changes</button></div></header>
-        <div className="admin-notice"><span>ⓘ</span><p><strong>Admin Studio preview.</strong> Settings are saved in this browser only. Public-site publishing, secure admin login and shared database persistence are not connected yet. Keep this panel off production until Phase 8 adds authentication and server-side storage.</p></div>
+        <header className="admin-topbar"><div><span className="admin-eyebrow">AIToolss / CONTROL CENTER</span><h1>{menu.find((item) => item.id === section)?.label}</h1></div><div className="admin-top-actions"><span className="admin-draft-state">{saved ? "Saved to Supabase" : "Unsaved changes"}</span><button className="admin-save" onClick={save} disabled={!loaded}>Save changes</button></div></header>
+        <div className="admin-notice"><span>ⓘ</span><p><strong>Supabase-backed Admin Studio.</strong> Changes save to the shared database. Public homepage rendering and live SEO/theme publishing still need a separate integration step. {statusMessage}</p></div>
 
         {section === "overview" && <div className="admin-content">
-          <div className="admin-welcome"><div><span className="admin-eyebrow">YOUR SITE, AT A GLANCE</span><h2>Good morning, creator<span>.</span></h2><p>Manage your directory setup from one place. Your edits stay in this browser until a secure publishing backend is connected.</p></div><div className="admin-welcome-orb">A<span>.</span></div></div>
+          <div className="admin-welcome"><div><span className="admin-eyebrow">YOUR SITE, AT A GLANCE</span><h2>Good morning, creator<span>.</span></h2><p>Manage categories and site configuration from one place. Save changes to your shared Supabase database.</p></div><div className="admin-welcome-orb">A<span>.</span></div></div>
           <div className="admin-stats"><article><span>Directory categories</span><strong>{data.categories.length.toString().padStart(2, "0")}</strong><small>Editable in Categories & tags</small></article><article><span>SEO fields</span><strong>{data.categories.length + 2}</strong><small>Titles and descriptions configured</small></article><article><span>Brand colors</span><strong>03</strong><small>Primary, accent and background</small></article><article><span>Ad placements</span><strong>{data.settings.enableAds ? "ON" : "OFF"}</strong><small>Starter default stays disabled</small></article></div>
           <div className="admin-card"><div className="admin-card-heading"><div><h3>Quick actions</h3><p>Jump straight into the controls you need most.</p></div></div><div className="admin-quick-grid">{menu.slice(1).map((item) => <button key={item.id} onClick={() => setSection(item.id)}><span>{item.icon}</span><strong>{item.label}</strong><small>Open controls ↗</small></button>)}</div></div>
           <div className="admin-card"><div className="admin-card-heading"><div><h3>Publishing readiness</h3><p>These items still need backend integration before launch.</p></div><span className="admin-pill">PRE-LAUNCH</span></div><ul className="admin-checklist"><li><span>✓</span> Editable category and SEO configuration</li><li><span>✓</span> Theme controls and settings preview</li><li><span>○</span> Secure admin authentication and role permissions</li><li><span>○</span> Shared persistent database and live publishing</li><li><span>○</span> Audit log, backups and production validation</li></ul></div>
@@ -127,19 +154,19 @@ export default function AdminPage() {
             <div className="admin-add-row"><input value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addCategory(); }} placeholder="New category name" aria-label="New category name" /><button onClick={addCategory}>+ Add</button></div>
             <div className="admin-category-list">{data.categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? "selected" : ""} onClick={() => setSelectedCategory(category.id)}><span className="admin-category-symbol">{category.name.slice(0, 1).toUpperCase()}</span><span><strong>{category.name}</strong><small>/{category.slug}</small></span><span className={category.visible ? "admin-visible" : "admin-hidden"}>{category.visible ? "Visible" : "Hidden"}</span></button>)}</div>
           </div>
-          <div className="admin-card">{activeCategory ? <><div className="admin-card-heading"><div><h3>Edit category</h3><p>Changes apply to the local configuration after saving.</p></div><button className="admin-danger" onClick={() => deleteCategory(activeCategory.id)}>Delete</button></div>
+          <div className="admin-card">{activeCategory ? <><div className="admin-card-heading"><div><h3>Edit category</h3><p>Changes are written to Supabase when you save.</p></div><button className="admin-danger" onClick={() => deleteCategory(activeCategory.id)}>Delete</button></div>
             <Field label="Category name" value={activeCategory.name} onChange={(value) => updateCategory(activeCategory.id, { name: value })} />
             <Field label="URL slug" value={activeCategory.slug} onChange={(value) => updateCategory(activeCategory.id, { slug: value.toLowerCase().replace(/[^a-z0-9-]/g, "-") })} hint="Use lowercase letters, numbers and hyphens." />
             <Field label="Short description" value={activeCategory.description} onChange={(value) => updateCategory(activeCategory.id, { description: value })} multiline />
             <Field label="Meta title" value={activeCategory.metaTitle} onChange={(value) => updateCategory(activeCategory.id, { metaTitle: value })} hint={activeCategory.metaTitle.length + " characters · aim for around 50–60."} />
             <Field label="Meta description" value={activeCategory.metaDescription} onChange={(value) => updateCategory(activeCategory.id, { metaDescription: value })} multiline hint={activeCategory.metaDescription.length + " characters · aim for around 140–160."} />
             <Field label="Tags (comma-separated)" value={activeCategory.tags} onChange={(value) => updateCategory(activeCategory.id, { tags: value })} />
-            <Toggle label="Show category" description="Visibility preference for a future live publisher." checked={activeCategory.visible} onChange={(value) => updateCategory(activeCategory.id, { visible: value })} />
+            <Toggle label="Show category" description="Controls whether the category is visible to public visitors through the category API." checked={activeCategory.visible} onChange={(value) => updateCategory(activeCategory.id, { visible: value })} />
           </> : <p>No categories yet. Add one to get started.</p>}</div>
         </div>}
 
         {section === "seo" && <div className="admin-content">
-          <div className="admin-section-intro"><span className="admin-eyebrow">SEARCH APPEARANCE</span><h2>SEO essentials<span>.</span></h2><p>Set your default metadata and social sharing identity. These values are a saved configuration, not yet wired to Next.js page metadata.</p></div>
+          <div className="admin-section-intro"><span className="admin-eyebrow">SEARCH APPEARANCE</span><h2>SEO essentials<span>.</span></h2><p>Set your default metadata and social sharing identity. These values are stored in Supabase; Next.js page metadata is not yet dynamically wired to them.</p></div>
           <div className="admin-card admin-form-card"><Field label="Site name" value={data.settings.siteName} onChange={(value) => updateSettings({ siteName: value })} /><Field label="Default meta title" value={data.settings.defaultMetaTitle} onChange={(value) => updateSettings({ defaultMetaTitle: value })} hint={data.settings.defaultMetaTitle.length + " characters · keep it concise and descriptive."} /><Field label="Default meta description" value={data.settings.defaultMetaDescription} onChange={(value) => updateSettings({ defaultMetaDescription: value })} multiline hint={data.settings.defaultMetaDescription.length + " characters."} /><Field label="Site description" value={data.settings.siteDescription} onChange={(value) => updateSettings({ siteDescription: value })} multiline /><div className="admin-seo-preview"><span>SEARCH RESULT PREVIEW</span><strong>{data.settings.defaultMetaTitle || "Page title"}</strong><small>aitoolss.com</small><p>{data.settings.defaultMetaDescription || "Your meta description will appear here."}</p></div></div>
           <div className="admin-card"><div className="admin-card-heading"><div><h3>Category metadata</h3><p>Quick SEO coverage across all directory categories.</p></div></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Category</th><th>Meta title</th><th>Description length</th></tr></thead><tbody>{data.categories.map((category) => <tr key={category.id}><td>{category.name}</td><td>{category.metaTitle || "—"}</td><td>{category.metaDescription.length} chars</td></tr>)}</tbody></table></div><button className="admin-secondary" onClick={() => setSection("categories")}>Edit category SEO ↗</button></div>
         </div>}
@@ -154,15 +181,15 @@ export default function AdminPage() {
         {section === "settings" && <div className="admin-content">
           <div className="admin-section-intro"><span className="admin-eyebrow">SITE OPERATIONS</span><h2>Controls & preferences<span>.</span></h2><p>Switches below save your preferred configuration. They do not activate third-party services by themselves.</p></div>
           <div className="admin-card admin-form-card"><Toggle label="Maintenance mode" description="Configuration flag for a future maintenance page. Does not block public routes yet." checked={data.settings.maintenanceMode} onChange={(value) => updateSettings({ maintenanceMode: value })} /><Toggle label="Show roadmap tools" description="Preference for whether upcoming tools should appear in the directory." checked={data.settings.showRoadmapTools} onChange={(value) => updateSettings({ showRoadmapTools: value })} /><Toggle label="Analytics" description="Keep disabled until an analytics provider and privacy notice are configured." checked={data.settings.enableAnalytics} onChange={(value) => updateSettings({ enableAnalytics: value })} /><Toggle label="Advertising / AdSense" description="Recommended to remain off until publisher approval, consent and placements are ready." checked={data.settings.enableAds} onChange={(value) => updateSettings({ enableAds: value })} /></div>
-          <div className="admin-card"><div className="admin-card-heading"><div><h3>Configuration tools</h3><p>Export a backup of this browser&apos;s current settings or restore defaults.</p></div></div><div className="admin-button-row"><button className="admin-secondary" onClick={exportData}>↓ Export JSON backup</button><button className="admin-danger" onClick={reset}>Reset local settings</button></div></div>
+          <div className="admin-card"><div className="admin-card-heading"><div><h3>Configuration tools</h3><p>Export a backup of the current configuration or restore starter defaults.</p></div></div><div className="admin-button-row"><button className="admin-secondary" onClick={exportData}>↓ Export JSON backup</button><button className="admin-danger" onClick={reset}>Reset local settings</button></div></div>
         </div>}
 
         {section === "social" && <div className="admin-content">
           <div className="admin-section-intro"><span className="admin-eyebrow">COMMUNITY & BRAND</span><h2>Social destinations<span>.</span></h2><p>Replace starter URLs with the real official AIToolss profiles before launch.</p></div>
-          <div className="admin-card admin-form-card"><Field label="Facebook URL" value={data.settings.socialFacebook} onChange={(value) => updateSettings({ socialFacebook: value })} /><Field label="Instagram URL" value={data.settings.socialInstagram} onChange={(value) => updateSettings({ socialInstagram: value })} /><Field label="YouTube URL" value={data.settings.socialYouTube} onChange={(value) => updateSettings({ socialYouTube: value })} /><Field label="LinkedIn URL" value={data.settings.socialLinkedIn} onChange={(value) => updateSettings({ socialLinkedIn: value })} /><Field label="X URL" value={data.settings.socialX} onChange={(value) => updateSettings({ socialX: value })} /><p className="admin-inline-warning">These URLs are stored locally and do not change the public footer until a publishing integration is added.</p></div>
+          <div className="admin-card admin-form-card"><Field label="Facebook URL" value={data.settings.socialFacebook} onChange={(value) => updateSettings({ socialFacebook: value })} /><Field label="Instagram URL" value={data.settings.socialInstagram} onChange={(value) => updateSettings({ socialInstagram: value })} /><Field label="YouTube URL" value={data.settings.socialYouTube} onChange={(value) => updateSettings({ socialYouTube: value })} /><Field label="LinkedIn URL" value={data.settings.socialLinkedIn} onChange={(value) => updateSettings({ socialLinkedIn: value })} /><Field label="X URL" value={data.settings.socialX} onChange={(value) => updateSettings({ socialX: value })} /><p className="admin-inline-warning">These URLs are stored in Supabase but do not change the public footer until a publishing integration is added.</p></div>
         </div>}
 
-        <footer className="admin-footer"><span>AIToolss Admin Studio · Phase 7</span><div><button onClick={exportData}>Export config</button><button onClick={reset}>Reset</button></div></footer>
+        <footer className="admin-footer"><span>AIToolss Admin Studio · Phase 9</span><div><button onClick={exportData}>Export config</button><button onClick={reset}>Reset</button></div></footer>
       </section>
     </main>
   );
