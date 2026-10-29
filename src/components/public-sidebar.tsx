@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { categories as catalogCategories, tools as catalogTools } from "@/lib/tools";
 
 export type PublicCategory = {
@@ -35,6 +35,7 @@ export default function PublicSidebar({
   onCategoryChange,
 }: PublicSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const visibleCategories = categories ?? catalogCategories.map((name) => ({
     name,
     icon: categoryIcons[name] ?? name.slice(0, 1),
@@ -46,7 +47,7 @@ export default function PublicSidebar({
       onCategoryChange(name);
       return;
     }
-    window.location.assign("/?category=" + encodeURIComponent(name) + "#search");
+    router.push("/?category=" + encodeURIComponent(name) + "#search");
   };
 
   return (
