@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type CompressedImage = { url: string; size: number; width: number; height: number; name: string };
