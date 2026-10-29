@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { categories as catalogCategories, tools as catalogTools } from "@/lib/tools";
 
 export type PublicCategory = {
@@ -33,6 +34,7 @@ export default function PublicSidebar({
   activeCategory = "All tools",
   onCategoryChange,
 }: PublicSidebarProps) {
+  const pathname = usePathname();
   const visibleCategories = categories ?? catalogCategories.map((name) => ({
     name,
     icon: categoryIcons[name] ?? name.slice(0, 1),
@@ -54,7 +56,7 @@ export default function PublicSidebar({
           <span className="light-brand-mark" aria-hidden="true">A</span>
           <span>AIToolss<span className="sidebar-brand-dot">.</span></span>
         </Link>
-        <Link href="/" className="sidebar-home" aria-current="page">
+        <Link href="/" className="sidebar-home" aria-current={pathname === "/" ? "page" : undefined}>
           <span aria-hidden="true">⌂</span><span>Home</span>
         </Link>
         <p className="sidebar-heading">DISCOVER</p>
