@@ -117,9 +117,10 @@ export default function Home() {
               <div className="gallery-caption"><strong>{item.title || "AI creation"}</strong>{item.description && <p>{item.description}</p>}{item.creator && <small>By {item.creator}</small>}<span className="gallery-card-open">View creation ↗</span></div>
             </a>
           ) : (
-            <article key={item.id} className="ai-gallery-card">
+            <article key={item.id} className="ai-gallery-card ai-gallery-video-card">
+              <a className="gallery-video-card-hit-area" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`Open video: ${item.title || "AI creation"}`}>Open video: {item.title || "AI creation"}</a>
               <div className="gallery-media"><video src={item.url} poster={item.thumbnail_url || undefined} controls preload="none" aria-label={item.title || "AI-generated video"} onError={(event) => { event.currentTarget.style.display = "none"; const parent = event.currentTarget.parentElement; if (parent && !parent.querySelector(".media-fallback")) { const fallback = document.createElement("span"); fallback.className = "media-fallback"; fallback.textContent = "Video preview unavailable"; parent.appendChild(fallback); } }} /><span className="gallery-type">▶ VIDEO</span></div>
-              <div className="gallery-caption"><strong>{item.title || "AI creation"}</strong>{item.description && <p>{item.description}</p>}{item.creator && <small>By {item.creator}</small>}<a className="gallery-card-open" href={item.url} target="_blank" rel="noopener noreferrer">Open video ↗</a></div>
+              <div className="gallery-caption gallery-video-caption"><strong>{item.title || "AI creation"}</strong>{item.description && <p>{item.description}</p>}{item.creator && <small>By {item.creator}</small>}<a className="gallery-card-open" href={item.url} target="_blank" rel="noopener noreferrer">Open video ↗</a></div>
             </article>
           ))}</div> : <div className="gallery-empty mt-6"><span aria-hidden="true">✧</span><h3>Creative work is on its way</h3><p>Published AI images and videos will appear here when an administrator adds them.</p></div>}</section>
           <section id="categories" className="light-categories-section mt-14 scroll-mt-24">
