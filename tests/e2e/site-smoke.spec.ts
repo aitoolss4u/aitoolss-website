@@ -103,7 +103,11 @@ test("tool pages share the sidebar, footer and light page surface", async ({ pag
 
 test("featured cards remain clickable while the marquee moves", async ({ page }) => {
   await page.goto("/");
-  await page.locator(".featured-window").scrollIntoViewIfNeeded();
+  const featuredWindow = page.locator(".featured-window");
+  await featuredWindow.scrollIntoViewIfNeeded();
+  await featuredWindow.hover();
+  const track = page.locator(".featured-track");
+  await expect(track).toHaveCSS("animation-play-state", "paused");
   const firstCard = page.locator(".featured-marquee-group").first().locator(".featured-card").first();
   await expect(firstCard).toBeVisible();
   await firstCard.locator("strong").click();
