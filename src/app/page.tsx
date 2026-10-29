@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import PublicSidebar from "@/components/public-sidebar";
 import PublicFooter from "@/components/public-footer";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -53,6 +54,7 @@ function scoreToolMatch(tool: (typeof tools)[number], normalizedQuery: string) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const [categoryNames, setCategoryNames] = useState<string[]>(toolCategories);
@@ -114,7 +116,7 @@ export default function Home() {
   function openSuggestedTool(tool: (typeof tools)[number]) {
     recordToolSelection(tool.slug);
     setSuggestionsOpen(false);
-    window.location.assign(tool.href);
+    router.push(tool.href);
   }
   function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Escape") {
@@ -170,6 +172,7 @@ export default function Home() {
               <input
                 ref={searchInputRef}
                 type="search"
+                role="combobox"
                 aria-label="Search AI tools"
                 aria-autocomplete="list"
                 aria-controls="tool-search-suggestions"
