@@ -54,7 +54,7 @@ test("homepage reflects discovery UI, moving border and looping featured row", a
 test("autocomplete returns ranked real tools after one and two characters", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  const search = page.getByRole("searchbox", { name: "Search AI tools" });
+  const search = page.getByRole("combobox", { name: "Search AI tools" });
   const listbox = page.getByRole("listbox", { name: "Tool suggestions" });
 
   await search.fill("i");
@@ -117,7 +117,7 @@ test("featured cards remain clickable while the marquee moves", async ({ page })
 
 test("autocomplete supports keyboard selection, Escape and clearing", async ({ page }) => {
   await page.goto("/");
-  const search = page.getByRole("searchbox", { name: "Search AI tools" });
+  const search = page.getByRole("combobox", { name: "Search AI tools" });
   const listbox = page.getByRole("listbox", { name: "Tool suggestions" });
 
   await search.fill("im");
@@ -131,7 +131,7 @@ test("autocomplete supports keyboard selection, Escape and clearing", async ({ p
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   await page.goto("/");
-  const freshSearch = page.getByRole("searchbox", { name: "Search AI tools" });
+  const freshSearch = page.getByRole("combobox", { name: "Search AI tools" });
   await freshSearch.fill("image");
   await expect(listbox).toBeVisible();
   await page.getByRole("button", { name: "Clear search" }).click();
