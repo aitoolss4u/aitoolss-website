@@ -71,7 +71,7 @@ export default function CookieConsentPage() {
                 <p>Your choice is stored locally in this browser. The current implementation does not load an optional analytics service from this setting, so saving an enabled preference does not activate a tracker by itself.</p>
               </div>
               <label className="consent-toggle">
-                <input type="checkbox" checked={optionalAnalytics} disabled={!storageReady} onChange={(event) => { setOptionalAnalytics(event.target.checked); setSaved(false); }} />
+                <input type="checkbox" aria-label="Optional analytics preference" checked={optionalAnalytics} disabled={!storageReady} onChange={(event) => { setOptionalAnalytics(event.target.checked); setSaved(false); }} />
                 <span>{optionalAnalytics ? "Allowed" : "Off"}</span>
               </label>
             </div>
