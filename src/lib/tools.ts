@@ -1,5 +1,5 @@
 export type ToolMode = "text" | "ideas" | "checklist" | "calculator" | "formatter" | "json" | "image";
-export type ToolDefinition = { name: string; slug: string; category: string; icon: string; tone: "violet" | "cyan" | "pink" | "orange"; description: string; mode: ToolMode; label: "READY TO USE" };
+export type ToolDefinition = { name: string; slug: string; category: string; icon: string; tone: "violet" | "cyan" | "pink" | "orange"; description: string; mode: ToolMode; label: "READY TO USE"; tags: string[] };
 
 const entries: Array<[string, string, string, string, string, ToolMode]> = [
 ["Text Summarizer","text-summarizer","Writing","✦","Turn long text into a concise, readable summary.","text"],
@@ -63,6 +63,36 @@ const entries: Array<[string, string, string, string, string, ToolMode]> = [
 ["Salary Hourly Converter","salary-hourly-converter","Career","$","Convert annual salary to an estimated hourly rate.","calculator"],
 ["Random Password Generator","random-password-generator","Productivity","⌑","Generate a random password locally in your browser.","formatter"],
 ];
-export const tools: ToolDefinition[] = entries.map(([name, slug, category, icon, description, mode]) => ({ name, slug, category, icon, description, mode: mode as ToolMode, label: "READY TO USE", tone: category === "Writing" || category === "Business" ? "violet" : category === "Images" || category === "Coding" || category === "Career" ? "cyan" : category === "Marketing" || category === "Education" ? "pink" : "orange" }));
+const extraSearchTags: Record<string, string[]> = {
+  "text-summarizer": ["summary", "summarize", "article", "shorten", "key points"],
+  "word-counter": ["words", "characters", "count", "text length"],
+  "image-compressor": ["image", "photo", "picture", "compress", "optimize", "reduce file size"],
+  "image-dimension-checker": ["image", "photo", "picture", "resolution", "width", "height"],
+  "video-script-outline": ["video", "vid", "youtube", "reels", "shorts", "storyboard", "script"],
+  "youtube-description-builder": ["youtube", "video", "creator", "description"],
+  "prompt-generator": ["prompt", "ai prompt", "instructions", "llm"],
+  "color-palette-builder": ["colors", "colour palette", "hex", "design"],
+  "json-formatter": ["json", "format", "validate", "pretty print"],
+  "json-to-csv-converter": ["json", "csv", "spreadsheet", "convert"],
+  "random-password-generator": ["password", "security", "random", "secret"],
+  "social-caption-writer": ["social media", "caption", "instagram", "post"],
+};
+
+function createSearchTags(name: string, slug: string, category: string, description: string, mode: ToolMode) {
+  const catalogTerms = `${name} ${slug.replace(/-/g, " ")} ${category} ${description} ${mode}`.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  return [...new Set([...catalogTerms, ...(extraSearchTags[slug] ?? []).flatMap((tag) => tag.toLowerCase().split(/\\s+/u))])];
+}
+
+export const tools: ToolDefinition[] = entries.map(([name, slug, category, icon, description, mode]) => ({
+  name,
+  slug,
+  category,
+  icon,
+  description,
+  mode: mode as ToolMode,
+  label: "READY TO USE",
+  tags: createSearchTags(name, slug, category, description, mode),
+  tone: category === "Writing" || category === "Business" ? "violet" : category === "Images" || category === "Coding" || category === "Career" ? "cyan" : category === "Marketing" || category === "Education" ? "pink" : "orange",
+}));
 export const categories = ["Writing", "Images", "Productivity", "Coding", "Marketing", "Education", "Business", "Career"];
 export function getTool(slug: string) { return tools.find((tool) => tool.slug === slug); }
