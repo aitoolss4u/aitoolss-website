@@ -101,13 +101,14 @@ test("tool pages share the sidebar, footer and light page surface", async ({ pag
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
 
-test("clicking the body of a directory card navigates to that tool", async ({ page }) => {
+test("featured cards remain clickable while the marquee moves", async ({ page }) => {
   await page.goto("/");
-  const card = page.locator(".light-tool-card").filter({ hasText: "Word Counter" }).first();
-  await expect(card).toBeVisible();
-  await card.locator("h3").click();
-  await expect(page).toHaveURL(/\/tools\/word-counter$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Word Counter." })).toBeVisible();
+  await page.locator(".featured-window").scrollIntoViewIfNeeded();
+  const firstCard = page.locator(".featured-marquee-group").first().locator(".featured-card").first();
+  await expect(firstCard).toBeVisible();
+  await firstCard.locator("strong").click();
+  await expect(page).toHaveURL(/\\/tools\\/prompt-generator$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
 test("search and category filters update the actual tool catalog", async ({ page }) => {
