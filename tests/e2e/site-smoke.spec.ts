@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("homepage renders the brand and tool discovery UI", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  await expect(page.getByRole("link", { name: /AIToolss home/i })).toBeVisible();
+  await expect(page.locator("header a[aria-label=\\"AIToolss home\\"]")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("search")).toBeVisible();
 });
@@ -32,6 +32,6 @@ test("word counter accepts text and produces a result", async ({ page }) => {
   const editor = page.locator("textarea").first();
   await expect(editor).toBeVisible();
   await editor.fill("Browser tests check useful tools.");
-  await page.getByRole("button", { name: /run tool/i }).click();
+  await page.getByRole("button", { name: /run tool|run/i }).click();
   await expect(page.getByText(/words/i).last()).toBeVisible();
 });
