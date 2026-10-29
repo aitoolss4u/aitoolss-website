@@ -1110,6 +1110,8 @@ body { background: #faf9ff; color: #201d35; }
 .light-search-wrap { z-index: 35; }
 .hero-shortcuts {
   display: grid;
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: .6rem;
   width: 100%;
@@ -1365,7 +1367,7 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
   .footer-inner { gap: 2.2rem; grid-template-columns: minmax(220px, 1.35fr) repeat(4, minmax(145px, 1fr)); }
 }
 @media (max-width: 1279px) and (min-width: 761px) {
-  .hero-shortcuts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hero-shortcuts { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .shortcut-card { min-height: 3.65rem; }
 }
 @media (max-width: 1100px) {
@@ -1376,7 +1378,7 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 }
 @media (max-width: 760px) {
   .light-hero-title { font-size: clamp(2.15rem, 7.7vw, 3.35rem); letter-spacing: -.048em; }
-  .hero-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .hero-shortcuts { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; overflow: visible; }
   .shortcut-card { min-height: 3.35rem; padding: .55rem .6rem; }
   .shortcut-name { font-size: .8rem; }
   .footer-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; }
