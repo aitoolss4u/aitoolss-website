@@ -102,6 +102,10 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
   }, { onConflict: "key" });
   if (settingsError) return { ok: false as const, message: "Categories were saved, but site settings could not be saved." };
 
+  const publicSocial = Object.fromEntries(["socialFacebook","socialInstagram","socialX","socialLinkedIn"].map((key) => [key, typeof settings[key] === "string" ? String(settings[key]).slice(0, 500) : ""]));
+  const { error: socialError } = await supabase.from("site_settings").upsert({ key: "public_social", value: publicSocial, updated_by: user.id, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  if (socialError) return { ok: false as const, message: "Settings were saved, but public social links could not be updated. Apply the Phase 13 migration." };
+
   await supabase.from("admin_audit_log").insert({
     actor_id: user.id, action: "save_admin_configuration", entity_type: "site_configuration",
     details: { category_count: rows.length, settings_keys: Object.keys(settings) },
