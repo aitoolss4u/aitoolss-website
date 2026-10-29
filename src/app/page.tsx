@@ -14,7 +14,7 @@ const categoryMeta = [
   { name: "Education", icon: "▤", tint: "gold", subtitle: "Learn something new" },
   { name: "Business", icon: "◇", tint: "sky", subtitle: "Work smarter" },
   { name: "Career", icon: "✦", tint: "lavender", subtitle: "Grow your next step" },
-].filter((category) => toolCategories.includes(category.name));
+];
 
 const featuredSlugs = ["prompt-generator", "word-counter", "image-compressor", "json-formatter", "color-palette-builder", "text-summarizer", "password-generator", "markdown-formatter"];
 const categoryVisuals: Record<string, string> = { Writing: "✍", Images: "🎨", Productivity: "⚡", Coding: "⌘", Marketing: "↗", Education: "▤", Business: "◇", Career: "✦" };
@@ -22,15 +22,16 @@ const categoryVisuals: Record<string, string> = { Writing: "✍", Images: "🎨"
 export default function Home() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All tools");
+  const [categoryNames, setCategoryNames] = useState<string[]>(toolCategories);
   const [showTop, setShowTop] = useState(false);
   const [gallery, setGallery] = useState<Array<{id:string;type:"image"|"video";title:string;description:string;url:string;thumbnail_url:string|null;creator:string|null}>>([]);
   const [galleryColumns, setGalleryColumns] = useState(4);
   const [popular, setPopular] = useState<string[]>([]);
   const [socialLinks, setSocialLinks] = useState<Record<string,string>>({});
-  const categories = useMemo(() => categoryMeta.map((category) => ({
-    ...category,
-    count: tools.filter((tool) => tool.category === category.name).length,
-  })), []);
+  const categories = useMemo(() => categoryNames.map((name) => {
+    const meta = categoryMeta.find((category) => category.name === name);
+    return { name, icon: meta?.icon ?? name.slice(0, 1), tint: meta?.tint ?? "lilac", subtitle: meta?.subtitle ?? "Explore useful tools", count: tools.filter((tool) => tool.category === name).length };
+  }), [categoryNames]);
   const visibleTools = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return tools.filter((tool) => {
@@ -42,6 +43,7 @@ export default function Home() {
   const featured = useMemo(() => featuredSlugs.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
 
   useEffect(() => {
+    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { if (Array.isArray(data.categories) && data.categories.every((name: unknown) => typeof name === "string")) setCategoryNames(data.categories); }).catch(() => setCategoryNames(toolCategories));
     fetch("/api/social-links").then((r) => r.ok ? r.json() : { links: {} }).then((data) => setSocialLinks(data.links && typeof data.links === "object" ? data.links : {})).catch(() => setSocialLinks({}));
     fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([4,5,6].includes(data.columns) ? data.columns : 4); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
