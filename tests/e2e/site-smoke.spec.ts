@@ -18,7 +18,7 @@ test("homepage reflects discovery UI, moving border and looping featured row", a
   await expect(page.getByRole("navigation", { name: "Resources" }).getByRole("link")).toHaveCount(2);
   await expect(page.getByRole("navigation", { name: "Company and legal" }).getByRole("link")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Company & Legal" })).toBeVisible();
-  await expect(page.locator(".headline-shine-letter").count()).resolves.toBeGreaterThan(10);
+  expect(await page.locator(".headline-shine-letter").count()).toBeGreaterThan(10);
   await expect(page.locator(".hero-shortcuts button")).toHaveCount(8);
   await expect(page.locator(".hero-shortcuts img")).toHaveCount(0);
   await expect(page.locator(".hero-shortcuts svg")).toHaveCount(8);
