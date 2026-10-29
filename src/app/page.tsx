@@ -85,7 +85,7 @@ export default function Home() {
           <form role="search" onSubmit={(event) => { event.preventDefault(); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="light-search-wrap mx-auto mt-8">
             <div className="light-search">
               <span aria-hidden="true" className="search-glyph">⌕</span>
-              <input aria-label="Search AI tools" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tools, ideas, or what you want to do…" />
+              <input type="search" aria-label="Search AI tools" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tools, ideas, or what you want to do…" />
               {query && <button type="button" className="search-clear" aria-label="Clear search" onClick={() => setQuery("")}>×</button>}
               <span className="search-sparkle" aria-hidden="true">✦</span>
               <button type="submit" className="light-search-submit">Discover <span aria-hidden="true">→</span></button>
