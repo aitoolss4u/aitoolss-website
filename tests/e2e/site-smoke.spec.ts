@@ -12,9 +12,16 @@ test("homepage reflects discovery UI, moving border and looping featured row", a
   await expect(page.getByRole("heading", { name: "Find your next shortcut." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Better tools. More room to create." })).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Supporting pages" }).getByRole("link")).toHaveCount(5);
-  await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("button")).toHaveCount(6);
+  await expect(page.locator(".footer-inner > .footer-section")).toHaveCount(5);
+  await expect(page.getByRole("navigation", { name: "Popular tools" }).getByRole("link")).toHaveCount(6);
+  await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("link")).toHaveCount(6);
+  await expect(page.getByRole("navigation", { name: "Resources" }).getByRole("link")).toHaveCount(2);
+  await expect(page.getByRole("navigation", { name: "Company and legal" }).getByRole("link")).toHaveCount(6);
+  await expect(page.getByRole("heading", { name: "Company & Legal" })).toBeVisible();
+  await expect(page.locator(".headline-shine-letter").count()).resolves.toBeGreaterThan(10);
   await expect(page.locator(".hero-shortcuts button")).toHaveCount(8);
+  await expect(page.locator(".hero-shortcuts img")).toHaveCount(0);
+  await expect(page.locator(".hero-shortcuts svg")).toHaveCount(8);
   const desktopColumns = await page.locator(".hero-shortcuts").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
   if (await page.evaluate(() => window.innerWidth > 760)) expect(desktopColumns).toBe(8);
   await expect(page.locator(".category-sidebar").getByRole("link", { name: "AIToolss home" })).toBeVisible();
@@ -190,4 +197,28 @@ test("gallery API has safe default grid settings when no media is configured", a
   expect(body.columns).toBe(4);
   expect(body.rows).toBe(4);
   expect(Array.isArray(body.items)).toBe(true);
+});
+
+
+test("resource directory and cookie preferences lead to useful, functional pages", async ({ page }) => {
+  await page.goto("/categories");
+  await expect(page.getByRole("heading", { level: 1, name: "Find your area of focus." })).toBeVisible();
+  await expect(page.locator(".resource-category-card")).toHaveCount(8);
+  await page.getByRole("link", { name: /Images/ }).first().click();
+  await expect(page).toHaveURL(/\?category=Images#search$/);
+
+  await page.goto("/types-of-tools");
+  await expect(page.getByRole("heading", { level: 1, name: "Types of tools." })).toBeVisible();
+  await expect(page.locator(".resource-type-card")).toHaveCount(6);
+  await expect(page.getByText("All tools", { exact: true })).toHaveCount(0);
+
+  await page.goto("/cookie-consent");
+  await expect(page.getByRole("heading", { level: 1, name: "Cookie & consent preferences." })).toBeVisible();
+  const analyticsPreference = page.getByRole("checkbox", { name: /Optional analytics preference/ });
+  await analyticsPreference.check();
+  await page.getByRole("button", { name: "Save preferences" }).click();
+  await expect(page.getByRole("status")).toContainText("saved in this browser");
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("aitoolss-cookie-preferences-v1") || "{}"));
+  expect(stored.essential).toBe(true);
+  expect(stored.optionalAnalytics).toBe(true);
 });
