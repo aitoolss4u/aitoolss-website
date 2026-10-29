@@ -4,7 +4,7 @@ import Link from "next/link";
 import PublicSidebar from "@/components/public-sidebar";
 import PublicFooter from "@/components/public-footer";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { tools as catalogTools, categories as toolCategories } from "@/lib/tools";
 
 const tools = catalogTools.map((tool) => ({ ...tool, href: "/tools/" + tool.slug }));
@@ -23,7 +23,7 @@ const featuredSlugs = ["prompt-generator", "word-counter", "image-compressor", "
 const categoryVisuals: Record<string, string> = { Writing: "✍", Images: "🎨", Productivity: "⚡", Coding: "⌘", Marketing: "↗", Education: "▤", Business: "◇", Career: "✦" };
 
 function normalizeSearchText(value: string) {
-  return value.normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().trim().replace(/\\s+/g, " ");
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/\s+/g, " ");
 }
 
 function scoreToolMatch(tool: (typeof tools)[number], normalizedQuery: string) {
@@ -139,7 +139,7 @@ export default function Home() {
       openSuggestedTool(searchSuggestions[Math.max(0, activeSuggestionIndex)] ?? searchSuggestions[0]);
     }
   }
-  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (searchSuggestions.length) {
       openSuggestedTool(searchSuggestions[Math.max(0, activeSuggestionIndex)] ?? searchSuggestions[0]);
