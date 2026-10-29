@@ -80,7 +80,7 @@ const extraSearchTags: Record<string, string[]> = {
 
 function createSearchTags(name: string, slug: string, category: string, description: string, mode: ToolMode) {
   const catalogTerms = `${name} ${slug.replace(/-/g, " ")} ${category} ${description} ${mode}`.toLowerCase().match(/[a-z0-9]+/g) ?? [];
-  return [...new Set([...catalogTerms, ...(extraSearchTags[slug] ?? []).flatMap((tag) => tag.toLowerCase().split(/\\s+/u))])];
+  return [...new Set([...catalogTerms, ...(extraSearchTags[slug] ?? []).flatMap((tag) => tag.toLowerCase().split(/\s+/u))])];
 }
 
 export const tools: ToolDefinition[] = entries.map(([name, slug, category, icon, description, mode]) => ({
