@@ -118,6 +118,7 @@ export default function Home() {
   }
   function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Escape") {
+      event.preventDefault();
       setSuggestionsOpen(false);
       setActiveSuggestionIndex(-1);
       return;
