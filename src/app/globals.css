@@ -734,7 +734,7 @@ body { background: #faf9ff; color: #201d35; }
 .category-visual-business { background:linear-gradient(135deg,#d7f8f1,#dbe8ff); }
 .category-visual-career { background:linear-gradient(135deg,#dbeeff,#f9e0ed); }
 .gallery-section,.popular-tools-section { min-width:0; }
-.ai-gallery-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; }
+.ai-gallery-grid { display:grid; grid-template-columns:repeat(var(--gallery-columns,4),minmax(0,1fr)); gap:1rem; }
 .ai-gallery-card { min-width:0; overflow:hidden; border:1px solid #e9e5f5; border-radius:1rem; background:#fff; box-shadow:0 7px 24px rgb(46 31 87 / 5%); }
 .gallery-media { position:relative; aspect-ratio:4/3; overflow:hidden; background:linear-gradient(135deg,#eee9ff,#e2f7ff); }
 .gallery-media img,.gallery-media video,.gallery-media a { display:block; width:100%; height:100%; object-fit:cover; }
