@@ -69,7 +69,7 @@ export default function Home() {
   }
 
   return (
-    <main className="light-shell min-h-screen"><div className="app-layout">
+    <div className="light-shell min-h-screen"><main className="app-layout">
       <div className="homepage-layout">
         <PublicSidebar categories={categories} activeCategory={activeCategory} onCategoryChange={(category) => chooseCategory(category, true)} />
 
@@ -153,9 +153,9 @@ export default function Home() {
         </div>
       </div>
 
+      </main>
       <PublicFooter categories={categories} onCategoryChange={(category) => chooseCategory(category, true)} />
-      </div>
       {showTop && <button type="button" className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })} aria-label="Back to top" title="Back to top">↑</button>}
-    </main>
+    </div>
   );
 }
