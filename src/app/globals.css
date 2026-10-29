@@ -861,3 +861,8 @@ body { background: #faf9ff; color: #201d35; }
 .tool-page-shell .accent-violet-400 { accent-color:#7657ff; }
 .tool-page-shell .section-description a { color:#644cc9; }
 .tool-page-shell .search-button { border:0; background:linear-gradient(110deg,#7657ff,#4b65e8 62%,#179fc5); color:#fff; }
+
+.info-page .text-foreground { color:#302941; }
+.info-page .ds-panel { border-color:#e8e2f4; background:#fff; color:#302941; box-shadow:0 12px 34px rgb(53 38 92 / 6%); }
+.info-page .ds-muted { color:#756f89; }
+.info-page .ds-eyebrow { color:#8a76ce; }
