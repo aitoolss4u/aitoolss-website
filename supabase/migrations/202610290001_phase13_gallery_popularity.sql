@@ -55,3 +55,10 @@ $$;
 revoke all on function public.get_popular_tool_slugs() from public;
 grant execute on function public.get_popular_tool_slugs() to anon, authenticated;
 grant insert on public.tool_selection_events to anon, authenticated;
+
+-- Public footer reads only this allowlisted social-link setting, never the full private site settings.
+insert into public.site_settings(key,value)
+values ('public_social','{}'::jsonb)
+on conflict (key) do nothing;
+drop policy if exists "Public can read configured social links" on public.site_settings;
+create policy "Public can read configured social links" on public.site_settings for select to anon, authenticated using (key = 'public_social');
