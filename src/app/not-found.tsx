@@ -1,8 +1,9 @@
 import Link from "next/link";
+import PublicSiteChrome from "@/components/public-site-chrome";
 
 export default function NotFound() {
   return (
-    <main className="site-shell flex min-h-screen items-center justify-center px-5 py-20">
+    <PublicSiteChrome><main className="info-page flex items-center justify-center px-5 py-20">
       <section className="ds-panel w-full max-w-2xl px-6 py-12 text-center sm:px-12 sm:py-16">
         <p className="ds-eyebrow">ERROR 404 · PAGE NOT FOUND</p>
         <p aria-hidden="true" className="mt-5 text-7xl font-black tracking-tight sm:text-8xl">
@@ -21,6 +22,6 @@ export default function NotFound() {
           Back to homepage <span aria-hidden="true">→</span>
         </Link>
       </section>
-    </main>
+    </main></PublicSiteChrome>
   );
 }
