@@ -23,6 +23,36 @@ const categoryMeta = [
 const featuredSlugs = ["prompt-generator", "word-counter", "image-compressor", "json-formatter", "color-palette-builder", "text-summarizer", "password-generator", "markdown-formatter"];
 const categoryVisuals: Record<string, string> = { Writing: "✍", Images: "🎨", Productivity: "⚡", Coding: "⌘", Marketing: "↗", Education: "▤", Business: "◇", Career: "✦" };
 
+function ShortcutLineIcon({ name }: { name: string }) {
+  let shape;
+  switch (name) {
+    case "Writing":
+      shape = <><path d="m14.7 5.3 4 4" /><path d="M4 20l4.4-1 10.3-10.3a2.8 2.8 0 0 0-4-4L4.4 15 4 20Z" /><path d="m13.5 6.5 4 4" /></>;
+      break;
+    case "Images":
+      shape = <><rect x="3" y="3.5" width="18" height="17" rx="3" /><circle cx="8.5" cy="9" r="1.5" /><path d="m4 17 5-5 3 3 3-4 5 6" /></>;
+      break;
+    case "Productivity":
+      shape = <path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z" />;
+      break;
+    case "Coding":
+      shape = <><path d="m8 7-5 5 5 5" /><path d="m16 7 5 5-5 5" /><path d="m14 4-4 16" /></>;
+      break;
+    case "Marketing":
+      shape = <><path d="M7 17 17 7" /><path d="M8 7h9v9" /><path d="M4 20h16" /></>;
+      break;
+    case "Education":
+      shape = <><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v17H5.5A2.5 2.5 0 0 0 3 22V5.5Z" /><path d="M21 5.5A2.5 2.5 0 0 0 18.5 3H12v17h6.5A2.5 2.5 0 0 1 21 22V5.5Z" /></>;
+      break;
+    case "Business":
+      shape = <><rect x="3" y="7" width="18" height="14" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2" /></>;
+      break;
+    default:
+      shape = <><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" /><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" /></>;
+  }
+  return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shape}</svg>;
+}
+
 function normalizeSearchText(value: string) {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/\s+/g, " ");
 }
@@ -160,13 +190,13 @@ export default function Home() {
         <PublicSidebar categories={categories} activeCategory={activeCategory} onCategoryChange={(category) => chooseCategory(category, true)} />
 
         <div className="homepage-main min-w-0">
-      <section className="light-hero relative px-5 pb-12 pt-14 sm:px-8 sm:pb-16 sm:pt-20">
+      <section className="light-hero relative px-5 pb-8 pt-8 sm:px-8 sm:pb-10 sm:pt-12">
         <div aria-hidden="true" className="hero-orb hero-orb-one" /><div aria-hidden="true" className="hero-orb hero-orb-two" />
         <div className="hero-content relative z-10 w-full text-center">
           <div className="light-eyebrow mx-auto"><span className="eyebrow-spark">✳</span> YOUR FRIENDLY AI TOOLKIT</div>
-          <h1 className="light-hero-title mx-auto mt-6">Your Entire <span>AI Universe.</span></h1>
-          <p className="light-hero-copy mx-auto mt-5 max-w-2xl">Discover useful tools for creativity, productivity, coding, research and everyday work. Find your spark, then make it happen.</p>
-          <form id="search" role="search" onSubmit={handleSearchSubmit} className="light-search-wrap mx-auto mt-8">
+          <h1 aria-label="Your Entire AI Universe." className="light-hero-title mx-auto mt-5"><span aria-hidden="true" className="headline-shine-line">{Array.from("Your Entire AI Universe.").map((character, index) => character === " " ? " " : <span key={index} className="headline-shine-letter" style={{ "--letter-index": index } as React.CSSProperties}>{character}</span>)}</span></h1>
+          <p className="light-hero-copy mx-auto mt-3 max-w-2xl">Discover useful tools for creativity, productivity, coding, research and everyday work. Find your spark, then make it happen.</p>
+          <form id="search" role="search" onSubmit={handleSearchSubmit} className="light-search-wrap mx-auto mt-5">
             <div className="light-search">
               <span aria-hidden="true" className="search-glyph">⌕</span>
               <input
@@ -215,9 +245,9 @@ export default function Home() {
             </div>}
           </form>
 
-          <div className="hero-shortcuts mx-auto mt-9 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
-            {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} className={`shortcut-card shortcut-${category.tint} ${activeCategory === category.name ? "shortcut-active" : ""}`} aria-pressed={activeCategory === category.name}>
-              <span className="shortcut-icon">{category.icon}</span><span className="shortcut-name">{category.name}</span><span className="shortcut-count">{category.count} tools <span aria-hidden="true">↗</span></span>
+          <div className="hero-shortcuts mx-auto mt-4 sm:mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8" aria-label="Explore categories">
+            {categories.slice(0, 8).map((category) => <button type="button" key={category.name} onClick={() => chooseCategory(category.name, true)} className={`shortcut-card shortcut-${category.tint} ${activeCategory === category.name ? "shortcut-active" : ""}`} aria-pressed={activeCategory === category.name}>
+              <span className="shortcut-icon"><ShortcutLineIcon name={category.name} /></span><span className="shortcut-name">{category.name}</span><span className="shortcut-arrow" aria-hidden="true">↗</span>
             </button>)}
           </div>
         </div>
@@ -273,7 +303,7 @@ export default function Home() {
       </div>
 
       </main>
-      <PublicFooter categories={categories} onCategoryChange={(category) => chooseCategory(category, true)} />
+      <PublicFooter categories={categories} />
       {showTop && <button type="button" className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })} aria-label="Back to top" title="Back to top">↑</button>}
     </div>
   );
