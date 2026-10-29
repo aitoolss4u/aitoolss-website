@@ -13,7 +13,7 @@ export async function GET() {
       const value = typeof raw[key] === "string" ? raw[key].trim() : "";
       try {
         const url = new URL(value);
-        if (url.protocol === "https:" && url.hostname !== "facebook.com" && url.hostname !== "www.facebook.com" && url.hostname !== "instagram.com" && url.hostname !== "www.instagram.com" && url.hostname !== "x.com" && url.hostname !== "www.x.com" && url.hostname !== "linkedin.com" && url.hostname !== "www.linkedin.com") links[key] = url.toString();
+        if (url.protocol === "https:" && url.pathname !== "/" && url.pathname !== "/home") links[key] = url.toString();
       } catch { /* Unconfigured URLs are intentionally omitted. */ }
     }
     return NextResponse.json({ links }, { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } });
