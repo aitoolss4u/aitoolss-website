@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
 
 export const metadata: Metadata = { title: "Terms of Use", description: "Terms for using AIToolss and its browser-based utilities." };
