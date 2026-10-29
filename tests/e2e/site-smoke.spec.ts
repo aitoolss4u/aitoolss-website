@@ -13,6 +13,7 @@ test("homepage reflects the refined discovery layout", async ({ page }) => {
   await expect(page.getByRole("navigation", { name: "Supporting pages" }).getByRole("link")).toHaveCount(5);
   await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("button")).toHaveCount(6);
   await expect(page.getByRole("button", { name: /Writing/ }).first()).toBeVisible();
+  await expect(page.locator(".hero-shortcuts button")).toHaveCount(8);
 });
 
 test("all catalog tool links open a successful tool page", async ({ page }) => {
@@ -58,4 +59,13 @@ test("homepage remains within the viewport at supported widths", async ({ page }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     expect(overflow, `Unexpected horizontal overflow at ${width}px`).toBe(false);
   }
+});
+
+test("gallery API has safe default grid settings when no media is configured", async ({ request }) => {
+  const response = await request.get("/api/gallery");
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.columns).toBe(4);
+  expect(body.rows).toBe(4);
+  expect(Array.isArray(body.items)).toBe(true);
 });
