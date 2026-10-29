@@ -83,7 +83,7 @@ export default function Home() {
           </form>
           <div className="search-suggestions mt-4 flex flex-wrap items-center justify-center gap-2"><span>Try:</span>{["Writing", "Images", "Coding", "Productivity"].map((term) => <button key={term} onClick={() => { setQuery(""); chooseCategory(term, true); }} className={activeCategory === term ? "suggestion-active" : ""}>{term}</button>)}</div>
           <div className="hero-shortcuts mx-auto mt-9 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-4">
-            {categories.slice(0, 4).map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} className={`shortcut-card shortcut-${category.tint} ${activeCategory === category.name ? "shortcut-active" : ""}`} aria-pressed={activeCategory === category.name}>
+            {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} className={`shortcut-card shortcut-${category.tint} ${activeCategory === category.name ? "shortcut-active" : ""}`} aria-pressed={activeCategory === category.name}>
               <span className="shortcut-icon">{category.icon}</span><span className="shortcut-name">{category.name}</span><span className="shortcut-count">{category.count} tools <span aria-hidden="true">↗</span></span>
             </button>)}
           </div>
