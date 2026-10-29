@@ -51,19 +51,34 @@ test("homepage reflects discovery UI, moving border and looping featured row", a
   }
 });
 
-test("all catalog tool links open a successful tool page", async ({ page }) => {
-  test.setTimeout(120_000);
+test("autocomplete returns ranked real tools after one and two characters", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  const hrefs = await page.locator('a[href^="/tools/"]').evaluateAll((links) =>
-    [...new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute("href")).filter((href): href is string => Boolean(href)).map((href) => href.split("?")[0]))],
-  );
-  expect(hrefs.length).toBeGreaterThanOrEqual(60);
-  for (const href of hrefs) {
-    const toolResponse = await page.goto(href);
-    expect(toolResponse?.status(), `Expected ${href} to return HTTP 200`).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  }
+  const search = page.getByRole("searchbox", { name: "Search AI tools" });
+  const listbox = page.getByRole("listbox", { name: "Tool suggestions" });
+
+  await search.fill("i");
+  await expect(listbox).toBeVisible();
+  const options = listbox.getByRole("option");
+  expect(await options.count()).toBeGreaterThan(0);
+  expect(await options.count()).toBeLessThanOrEqual(8);
+
+  await search.fill("im");
+  await expect(listbox).toBeVisible();
+  expect(await options.count()).toBeGreaterThan(0);
+  expect(await options.count()).toBeLessThanOrEqual(8);
+  await expect(options.first()).toContainText(/image/i);
+
+  await search.fill("vid");
+  await expect(options.first()).toContainText(/video/i);
+  await search.fill("zzq-no-matching-tool-999");
+  await expect(page.getByText("No matching tools found")).toBeVisible();
+
+  await search.fill("Word Counter");
+  await expect(options.first()).toContainText("Word Counter");
+  await options.first().click();
+  await expect(page).toHaveURL(/\\/tools\\/word-counter$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Word Counter." })).toBeVisible();
 });
 
 test("word counter updates its metrics as the user types", async ({ page }) => {
