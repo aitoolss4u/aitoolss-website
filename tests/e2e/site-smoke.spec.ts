@@ -17,9 +17,11 @@ test("homepage reflects the refined discovery layout", async ({ page }) => {
   await expect(page.locator(".category-sidebar").getByRole("link", { name: "AIToolss home" })).toBeVisible();
   await expect(page.locator(".category-sidebar").getByRole("link", { name: /Home/ })).toBeVisible();
   const searchBorder = page.locator(".light-search-wrap");
-  await expect(searchBorder).toHaveCSS("animation-name", "search-orbit");
   const reducedMotion = await page.evaluate(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  if (!reducedMotion) {
+  if (reducedMotion) {
+    await expect(searchBorder).toHaveCSS("animation-name", "none");
+  } else {
+    await expect(searchBorder).toHaveCSS("animation-name", "search-orbit");
     const firstAngle = await searchBorder.evaluate((element) => getComputedStyle(element).getPropertyValue("--search-angle"));
     await page.waitForTimeout(400);
     const nextAngle = await searchBorder.evaluate((element) => getComputedStyle(element).getPropertyValue("--search-angle"));
