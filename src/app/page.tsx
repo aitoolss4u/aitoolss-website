@@ -82,7 +82,7 @@ export default function Home() {
           <div className="light-eyebrow mx-auto"><span className="eyebrow-spark">✳</span> YOUR FRIENDLY AI TOOLKIT</div>
           <h1 className="light-hero-title mx-auto mt-6">Your Entire <span>AI Universe.</span></h1>
           <p className="light-hero-copy mx-auto mt-5 max-w-2xl">Discover useful tools for creativity, productivity, coding, research and everyday work. Find your spark, then make it happen.</p>
-          <form role="search" onSubmit={(event) => { event.preventDefault(); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="light-search-wrap mx-auto mt-8 max-w-3xl">
+          <form role="search" onSubmit={(event) => { event.preventDefault(); document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" }); }} className="light-search-wrap mx-auto mt-8">
             <div className="light-search">
               <span aria-hidden="true" className="search-glyph">⌕</span>
               <input aria-label="Search AI tools" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tools, ideas, or what you want to do…" />
