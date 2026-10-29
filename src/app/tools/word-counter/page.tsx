@@ -17,12 +17,9 @@ export default function WordCounterPage() {
   }, [text]);
 
   return (
-    <main className="site-shell min-h-screen px-5 pb-16">
-      <header className="mx-auto flex max-w-6xl items-center justify-between py-6">
-        <Link href="/" className="text-xl font-extrabold">AIToolss<span className="brand-dot">.</span></Link>
-        <Link href="/#tools" className="nav-link text-sm">← All tools</Link>
-      </header>
-      <section className="mx-auto max-w-5xl pt-10">
+    <main className="tool-page-shell">
+      
+      <section className="tool-page-content">
         <p className="section-kicker">FREE WRITING TOOL</p>
         <h1 className="mt-3 text-4xl font-black sm:text-6xl">Word Counter<span className="heading-period">.</span></h1>
         <p className="section-description mt-4 leading-7">Count words and characters instantly and estimate reading time. Your text stays in this browser.</p>
