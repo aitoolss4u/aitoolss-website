@@ -7,11 +7,6 @@ const STORAGE_KEY = "aitoolss-cookie-preferences-v1";
 
 type SavedPreferences = { essential: true; optionalAnalytics: boolean; savedAt: string };
 
-export const metadata = {
-  title: "Cookie & Consent Preferences",
-  description: "Review the browser storage and optional analytics preferences for AIToolss.",
-};
-
 export default function CookieConsentPage() {
   const [optionalAnalytics, setOptionalAnalytics] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
