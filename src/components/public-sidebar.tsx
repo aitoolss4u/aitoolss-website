@@ -31,7 +31,7 @@ type PublicSidebarProps = {
 
 export default function PublicSidebar({
   categories,
-  activeCategory = "All tools",
+  activeCategory = "",
   onCategoryChange,
 }: PublicSidebarProps) {
   const pathname = usePathname();
@@ -46,7 +46,7 @@ export default function PublicSidebar({
       onCategoryChange(name);
       return;
     }
-    window.location.assign(name === "All tools" ? "/#tools" : "/?category=" + encodeURIComponent(name) + "#tools");
+    window.location.assign("/?category=" + encodeURIComponent(name) + "#search");
   };
 
   return (
@@ -60,14 +60,6 @@ export default function PublicSidebar({
           <span aria-hidden="true">⌂</span><span>Home</span>
         </Link>
         <p className="sidebar-heading">DISCOVER</p>
-        <button
-          type="button"
-          className={`sidebar-item ${activeCategory === "All tools" ? "sidebar-item-active" : ""}`}
-          onClick={() => choose("All tools")}
-          aria-pressed={activeCategory === "All tools"}
-        >
-          <span aria-hidden="true">✳</span><span>All tools</span><small>{catalogTools.length}</small>
-        </button>
         {visibleCategories.map((category) => (
           <button
             type="button"
