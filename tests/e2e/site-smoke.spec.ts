@@ -44,14 +44,15 @@ test("all catalog tool links open a successful tool page", async ({ page }) => {
   }
 });
 
-test("word counter accepts text and produces a result", async ({ page }) => {
+test("word counter updates its metrics as the user types", async ({ page }) => {
   const response = await page.goto("/tools/word-counter");
   expect(response?.status()).toBe(200);
-  const editor = page.locator("textarea").first();
+  const editor = page.getByLabel("Your text");
   await expect(editor).toBeVisible();
   await editor.fill("Browser tests check useful tools.");
-  await page.getByRole("button", { name: /run tool/i }).click();
-  await expect(page.getByText(/words/i).last()).toBeVisible();
+  const wordMetric = page.locator(".ds-panel").filter({ hasText: "Words" }).first();
+  await expect(wordMetric.getByText("5", { exact: true })).toBeVisible();
+  await expect(wordMetric.getByText("Words", { exact: true })).toBeVisible();
 });
 
 test("search and category filters update the actual tool catalog", async ({ page }) => {
