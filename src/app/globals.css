@@ -840,3 +840,24 @@ body { background: #faf9ff; color: #201d35; }
 .info-page a { text-underline-offset:3px; }
 .info-article { width:min(100%,54rem); margin:0 auto; }
 @media (max-width:760px) { .info-page { padding:1.25rem .9rem 2.5rem; } }
+
+
+/* Legacy built-in tool pages now inherit the shared light theme without repainting admin UI. */
+.tool-page-shell .ds-panel { border-color:#e8e2f4; background:rgb(255 255 255 / 92%); color:#302941; box-shadow:0 12px 34px rgb(53 38 92 / 6%); }
+.tool-page-shell .text-foreground { color:#302941; }
+.tool-page-shell .text-muted { color:#79738d; }
+.tool-page-shell .section-kicker { color:#8a76ce; }
+.tool-page-shell .section-description { color:#756f89; }
+.tool-page-shell .heading-period { color:#7355dd; }
+.tool-page-shell .border-white\/10,.tool-page-shell .border-white\/15 { border-color:#e4dfef; }
+.tool-page-shell .bg-black\/20 { background:#f8f6fc; }
+.tool-page-shell .bg-slate-900 { border-color:#ddd6ee; background:#fff; color:#302941; }
+.tool-page-shell .text-emerald-300 { color:#15805d; }
+.tool-page-shell .text-amber-300 { color:#9a650e; }
+.tool-page-shell .text-rose-300 { color:#b44366; }
+.tool-page-shell .text-cyan-200,.tool-page-shell .text-cyan-300 { color:#517da8; }
+.tool-page-shell .bg-violet-500\/15 { background:#eee9ff; }
+.tool-page-shell .text-violet-300 { color:#775bd6; }
+.tool-page-shell .accent-violet-400 { accent-color:#7657ff; }
+.tool-page-shell .section-description a { color:#644cc9; }
+.tool-page-shell .search-button { border:0; background:linear-gradient(110deg,#7657ff,#4b65e8 62%,#179fc5); color:#fff; }
