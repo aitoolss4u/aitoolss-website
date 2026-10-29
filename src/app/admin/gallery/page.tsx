@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createGalleryItem, deleteGalleryItem, saveGalleryLayout, updateGalleryItem } from "./actions";
+import { DeleteGalleryForm } from "./delete-button";
 
 export const metadata = { title: "Gallery management | AIToolss Admin", robots: { index: false, follow: false } };
 
@@ -57,7 +58,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
             <label style={{display:"flex",gap:8,alignItems:"center"}}><input type="checkbox" name="is_published" defaultChecked={item.is_published} /> Published</label>
             <div style={{display:"flex",gap:8,alignItems:"center"}}><button style={{padding:"10px 14px",borderRadius:9,background:"#6d53d7",color:"#fff",fontWeight:800}}>Save item</button></div>
           </form>
-          <form action={deleteGalleryItem} style={{marginTop:10}}><input type="hidden" name="id" value={item.id} /><button style={{padding:"8px 12px",borderRadius:9,border:"1px solid #f1bcbc",color:"#a12727"}}>Delete item</button></form>
+          <DeleteGalleryForm action={deleteGalleryItem} id={item.id} />
         </article>)}</div>}
       </section>
     </div>
