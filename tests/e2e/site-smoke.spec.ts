@@ -77,7 +77,7 @@ test("autocomplete returns ranked real tools after one and two characters", asyn
   await search.fill("Word Counter");
   await expect(options.first()).toContainText("Word Counter");
   await options.first().click();
-  await expect(page).toHaveURL(/\\/tools\\/word-counter$/);
+  await expect(page).toHaveURL(/\/tools\/word-counter$/);
   await expect(page.getByRole("heading", { level: 1, name: "Word Counter." })).toBeVisible();
 });
 
@@ -107,7 +107,7 @@ test("featured cards remain clickable while the marquee moves", async ({ page })
   const firstCard = page.locator(".featured-marquee-group").first().locator(".featured-card").first();
   await expect(firstCard).toBeVisible();
   await firstCard.locator("strong").click();
-  await expect(page).toHaveURL(/\\/tools\\/prompt-generator$/);
+  await expect(page).toHaveURL(/\/tools\/prompt-generator$/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
@@ -123,7 +123,7 @@ test("autocomplete supports keyboard selection, Escape and clearing", async ({ p
   await search.press("ArrowDown");
   await expect(listbox).toBeVisible();
   await search.press("Enter");
-  await expect(page).toHaveURL(/\\/tools\\//);
+  await expect(page).toHaveURL(/\/tools\//);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   await page.goto("/");
