@@ -44,7 +44,7 @@ export default function Home() {
   const featured = useMemo(() => featuredSlugs.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
 
   useEffect(() => {
-    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { if (Array.isArray(data.categories) && data.categories.every((name: unknown) => typeof name === "string")) setCategoryNames(data.categories); }).catch(() => setCategoryNames(toolCategories));
+    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); }).catch(() => setCategoryNames(toolCategories));
     const requestedCategory = new URLSearchParams(window.location.search).get("category");
     if (requestedCategory && toolCategories.includes(requestedCategory)) setActiveCategory(requestedCategory);
     fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([4,5,6].includes(data.columns) ? data.columns : 4); }).catch(() => setGallery([]));
@@ -143,7 +143,7 @@ export default function Home() {
               {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name)} aria-pressed={activeCategory === category.name} className={activeCategory === category.name ? "mobile-chip active" : "mobile-chip"}>{category.name}</button>)}
             </div>
             <div className="light-tool-grid mt-6">
-              {visibleTools.map((tool) => <Link key={tool.slug} href={tool.href} className="light-tool-card" onClick={() => recordToolSelection(tool.slug)}>
+              {visibleTools.map((tool) => <Link key={tool.slug} href={tool.href} aria-label={`Open ${tool.name}`} className="light-tool-card" onClick={() => recordToolSelection(tool.slug)}>
                 <div className="light-tool-card-top"><span className={`light-tool-icon tool-tone-${tool.tone}`}>{tool.icon}</span><span className="light-tool-status"><i /> Ready to use</span></div>
                 <p className="light-tool-category">{tool.category}</p><h3>{tool.name}</h3><p className="light-tool-description">{tool.description}</p>
                 <div className="light-tool-footer"><span>Browser-friendly utility</span><span className="tool-card-cta">Explore <span aria-hidden="true">↗</span></span></div>
