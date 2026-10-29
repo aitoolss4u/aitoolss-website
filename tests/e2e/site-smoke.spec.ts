@@ -95,6 +95,29 @@ test("homepage remains within the viewport at supported widths", async ({ page }
   }
 });
 
+test("gallery image and video cards expose full-card links without blocking video controls", async ({ page }) => {
+  await page.route("**/api/gallery", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      columns: 4,
+      rows: 4,
+      items: [
+        { id: "image-fixture", type: "image", title: "Gallery image test", description: "Image preview", url: "https://gallery.test/image.jpg", thumbnail_url: null, creator: null },
+        { id: "video-fixture", type: "video", title: "Gallery video test", description: "Video preview", url: "https://gallery.test/video.mp4", thumbnail_url: null, creator: null }
+      ]
+    })
+  }));
+  await page.goto("/");
+  const imageCard = page.locator(".ai-gallery-card-linked").filter({ hasText: "Gallery image test" });
+  await expect(imageCard).toBeVisible();
+  await expect(imageCard).toHaveAttribute("href", "https://gallery.test/image.jpg");
+  const videoCard = page.locator(".ai-gallery-video-card");
+  await expect(videoCard).toBeVisible();
+  await expect(videoCard.getByRole("link", { name: "Open video: Gallery video test" })).toBeVisible();
+  await expect(videoCard.locator("video")).toHaveJSProperty("controls", true);
+});
+
 test("gallery API has safe default grid settings when no media is configured", async ({ request }) => {
   const response = await request.get("/api/gallery");
   expect(response.status()).toBe(200);
