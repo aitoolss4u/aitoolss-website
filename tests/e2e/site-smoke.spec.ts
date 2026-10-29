@@ -14,6 +14,8 @@ test("homepage reflects the refined discovery layout", async ({ page }) => {
   await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("button")).toHaveCount(6);
   await expect(page.getByRole("button", { name: /Writing/ }).first()).toBeVisible();
   await expect(page.locator(".hero-shortcuts button")).toHaveCount(8);
+  const desktopColumns = await page.locator(".hero-shortcuts").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
+  if (await page.evaluate(() => window.innerWidth > 760)) expect(desktopColumns).toBe(8);
   await expect(page.locator(".category-sidebar").getByRole("link", { name: "AIToolss home" })).toBeVisible();
   await expect(page.locator(".category-sidebar").getByRole("link", { name: /Home/ })).toBeVisible();
   const searchBorder = page.locator(".light-search-wrap");
@@ -53,6 +55,24 @@ test("word counter updates its metrics as the user types", async ({ page }) => {
   const wordMetric = page.locator(".ds-panel").filter({ hasText: "Words" }).first();
   await expect(wordMetric.getByText("5", { exact: true })).toBeVisible();
   await expect(wordMetric.getByText("Words", { exact: true })).toBeVisible();
+});
+
+test("tool pages share the sidebar, footer and light page surface", async ({ page }) => {
+  const response = await page.goto("/tools/word-counter");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".category-sidebar").getByRole("link", { name: "AIToolss home" })).toBeVisible();
+  await expect(page.locator("main.tool-page-shell")).toBeVisible();
+  await expect(page.locator("main.tool-page-shell")).toHaveCSS("background-color", "rgb(250, 249, 255)");
+  await expect(page.getByRole("contentinfo")).toBeVisible();
+});
+
+test("clicking the body of a directory card navigates to that tool", async ({ page }) => {
+  await page.goto("/");
+  const card = page.locator(".light-tool-card").filter({ hasText: "Word Counter" }).first();
+  await expect(card).toBeVisible();
+  await card.locator("h3").click();
+  await expect(page).toHaveURL(/\/tools\/word-counter$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Word Counter." })).toBeVisible();
 });
 
 test("search and category filters update the actual tool catalog", async ({ page }) => {
