@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "AIToolss — Discover AI Tools That Help You Do More",
+    default: "AIToolss — Discover Your Next AI Tool",
     template: "%s | AIToolss",
   },
   description: siteConfig.description,
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
-    title: "AIToolss — Discover AI Tools That Help You Do More",
+    title: "AIToolss — Discover Your Next AI Tool",
     description: "One simple place to discover useful AI tools.",
     url: siteConfig.url,
     locale: "en_US",
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: siteConfig.theme.midnightNavy,
-  colorScheme: "dark",
+  themeColor: "#faf9ff",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
