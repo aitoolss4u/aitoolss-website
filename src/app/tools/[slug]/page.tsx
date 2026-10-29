@@ -70,7 +70,7 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
   const runDisabled = !isImage && !input.trim();
   return <main className="tool-page-shell">
     <div className="tool-page-content">
-      <Link href="/" className="tool-back-link">← All tools</Link>
+      <Link href="/" className="tool-back-link">← Home</Link>
       <section className="tool-panel">
         <div className="tool-eyebrow">{tool.category} · Browser tool</div>
         <div className="tool-heading-row">
