@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("homepage renders the brand and tool discovery UI", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  await expect(page.locator("header a[aria-label=\\"AIToolss home\\"]")).toBeVisible();
+  await expect(page.locator("header").getByRole("link", { name: /AIToolss home/i })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("search")).toBeVisible();
 });
