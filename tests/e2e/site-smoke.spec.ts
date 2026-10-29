@@ -5,7 +5,7 @@ test("homepage reflects the refined discovery layout", async ({ page }) => {
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1, name: "Your Entire AI Universe." })).toBeVisible();
   await expect(page.getByRole("search")).toBeVisible();
-  await expect(page.getByRole("button", { name: /All tools/ })).toBeVisible();
+  await expect(page.locator(".category-sidebar").getByRole("button", { name: /All tools/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "AI Creations Gallery." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Find your next shortcut." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Better tools. More room to create." })).toHaveCount(0);
@@ -14,6 +14,17 @@ test("homepage reflects the refined discovery layout", async ({ page }) => {
   await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("button")).toHaveCount(6);
   await expect(page.getByRole("button", { name: /Writing/ }).first()).toBeVisible();
   await expect(page.locator(".hero-shortcuts button")).toHaveCount(8);
+  await expect(page.locator(".category-sidebar").getByRole("link", { name: "AIToolss home" })).toBeVisible();
+  await expect(page.locator(".category-sidebar").getByRole("link", { name: /Home/ })).toBeVisible();
+  const searchBorder = page.locator(".light-search-wrap");
+  await expect(searchBorder).toHaveCSS("animation-name", "search-orbit");
+  const reducedMotion = await page.evaluate(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if (!reducedMotion) {
+    const firstAngle = await searchBorder.evaluate((element) => getComputedStyle(element).getPropertyValue("--search-angle"));
+    await page.waitForTimeout(400);
+    const nextAngle = await searchBorder.evaluate((element) => getComputedStyle(element).getPropertyValue("--search-angle"));
+    expect(nextAngle).not.toBe(firstAngle);
+  }
 });
 
 test("all catalog tool links open a successful tool page", async ({ page }) => {
