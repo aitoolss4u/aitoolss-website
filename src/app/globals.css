@@ -1378,8 +1378,8 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 }
 @media (max-width: 760px) {
   .light-hero-title { font-size: clamp(2.15rem, 7.7vw, 3.35rem); letter-spacing: -.048em; }
-  .hero-shortcuts { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; overflow: visible; }
-  .shortcut-card { min-height: 3.35rem; padding: .55rem .6rem; }
+  .hero-shortcuts { grid-auto-flow: column; grid-auto-columns: 136px; grid-template-columns: none; gap: .55rem; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; padding: .4rem .1rem .7rem; scroll-snap-type: x proximity; }
+  .shortcut-card { min-height: 3.35rem; padding: .55rem .6rem; scroll-snap-align: start; }
   .shortcut-name { font-size: .8rem; }
   .footer-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; }
   .footer-brand-column, .footer-section-company { grid-column: 1 / -1; }
