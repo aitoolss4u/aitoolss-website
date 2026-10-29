@@ -91,7 +91,7 @@ export default function Home() {
               <button type="submit" className="light-search-submit">Discover <span aria-hidden="true">→</span></button>
             </div>
           </form>
-          <div className="search-suggestions mt-4 flex flex-wrap items-center justify-center gap-2"><span>Try:</span>{["Writing", "Images", "Coding", "Productivity"].map((term) => <button key={term} onClick={() => { setQuery(""); chooseCategory(term, true); }} className={activeCategory === term ? "suggestion-active" : ""}>{term}</button>)}</div>
+
           <div className="hero-shortcuts mx-auto mt-9 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
             {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} className={`shortcut-card shortcut-${category.tint} ${activeCategory === category.name ? "shortcut-active" : ""}`} aria-pressed={activeCategory === category.name}>
               <span className="shortcut-icon">{category.icon}</span><span className="shortcut-name">{category.name}</span><span className="shortcut-count">{category.count} tools <span aria-hidden="true">↗</span></span>
