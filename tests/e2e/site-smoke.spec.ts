@@ -111,15 +111,40 @@ test("featured cards remain clickable while the marquee moves", async ({ page })
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("search and category filters update the actual tool catalog", async ({ page }) => {
+test("autocomplete supports keyboard selection, Escape and clearing", async ({ page }) => {
   await page.goto("/");
   const search = page.getByRole("searchbox", { name: "Search AI tools" });
-  await search.fill("word counter");
-  await expect(page.getByRole("link", { name: "Open Word Counter" })).toBeVisible();
-  await search.fill("this-tool-does-not-exist-123");
-  await expect(page.getByRole("heading", { name: "No tools found for that search" })).toBeVisible();
-  await page.getByRole("button", { name: "Clear search and filters" }).first().click();
-  await expect(page.getByText(/60 tools found/)).toBeVisible();
+  const listbox = page.getByRole("listbox", { name: "Tool suggestions" });
+
+  await search.fill("im");
+  await expect(listbox).toBeVisible();
+  await search.press("Escape");
+  await expect(listbox).toBeHidden();
+  await search.press("ArrowDown");
+  await expect(listbox).toBeVisible();
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\\/tools\\//);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  await page.goto("/");
+  const freshSearch = page.getByRole("searchbox", { name: "Search AI tools" });
+  await freshSearch.fill("image");
+  await expect(listbox).toBeVisible();
+  await page.getByRole("button", { name: "Clear search" }).click();
+  await expect(freshSearch).toHaveValue("");
+  await expect(listbox).toBeHidden();
+});
+
+test("selecting a category opens only its capped suggestions", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".hero-shortcuts").getByRole("button", { name: /Images/ }).click();
+  const listbox = page.getByRole("listbox", { name: "Tool suggestions" });
+  await expect(listbox).toBeVisible();
+  const options = listbox.getByRole("option");
+  expect(await options.count()).toBeGreaterThan(0);
+  expect(await options.count()).toBeLessThanOrEqual(8);
+  await expect(listbox).toContainText("Explore Images tools");
+  await expect(page.getByText("All tools", { exact: true })).toHaveCount(0);
 });
 
 test("homepage remains within the viewport at supported widths", async ({ page }) => {
