@@ -831,3 +831,12 @@ body { background: #faf9ff; color: #201d35; }
 .tool-privacy-note { margin-top:1.5rem; color:#938ba6; font-size:.75rem; line-height:1.7; }
 .tool-page-shell .tool-page-title { overflow-wrap:anywhere; }
 @media (max-width:760px) { .public-site-layout { display:flex; flex-direction:column; } .public-site-layout > .category-sidebar { width:100%; height:auto; min-height:0; position:relative; } .public-site-main { width:100%; } .tool-page-shell { padding:1rem .75rem; } .tool-page-content { padding-block:.5rem 2rem; } .tool-panel { margin-top:1rem; } }
+
+
+.info-page { flex:1 0 auto; width:100%; min-width:0; min-height:70vh; padding:clamp(1.5rem,5vw,4rem); background:radial-gradient(ellipse at 12% 0%,#f2edff 0,transparent 42%),radial-gradient(ellipse at 96% 12%,#e5f7ff 0,transparent 35%),#faf9ff; color:#29233f; }
+.info-page h1,.info-page h2 { color:#29233f; }
+.info-page p,.info-page .text-muted,.info-page .section-description { color:#756f89; }
+.info-page .section-kicker { color:#8a76ce; }
+.info-page a { text-underline-offset:3px; }
+.info-article { width:min(100%,54rem); margin:0 auto; }
+@media (max-width:760px) { .info-page { padding:1.25rem .9rem 2.5rem; } }
