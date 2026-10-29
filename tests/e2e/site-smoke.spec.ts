@@ -1,33 +1,53 @@
 import { expect, test } from "@playwright/test";
 
-test("homepage reflects the refined discovery layout", async ({ page }) => {
+test("homepage reflects discovery UI, moving border and looping featured row", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1, name: "Your Entire AI Universe." })).toBeVisible();
   await expect(page.getByRole("search")).toBeVisible();
-  await expect(page.locator(".category-sidebar").getByRole("button", { name: /All tools/ })).toBeVisible();
+  await expect(page.getByText("All tools", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".light-tools-section")).toHaveCount(0);
+  await expect(page.locator('a[href="#tools"]')).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "AI Creations Gallery." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Find your next shortcut." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Better tools. More room to create." })).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Supporting pages" }).getByRole("link")).toHaveCount(5);
   await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("button")).toHaveCount(6);
-  await expect(page.getByRole("button", { name: /Writing/ }).first()).toBeVisible();
   await expect(page.locator(".hero-shortcuts button")).toHaveCount(8);
   const desktopColumns = await page.locator(".hero-shortcuts").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
   if (await page.evaluate(() => window.innerWidth > 760)) expect(desktopColumns).toBe(8);
   await expect(page.locator(".category-sidebar").getByRole("link", { name: "AIToolss home" })).toBeVisible();
   await expect(page.locator(".category-sidebar").getByRole("link", { name: /Home/ })).toBeVisible();
-  const searchBorder = page.locator(".light-search-wrap");
+
   const reducedMotion = await page.evaluate(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const searchBorder = page.locator(".light-search-wrap");
+  const borderStreak = () => searchBorder.evaluate((element) => ({
+    animation: getComputedStyle(element, "::before").animationName,
+    angle: getComputedStyle(element, "::before").getPropertyValue("--search-angle"),
+  }));
   if (reducedMotion) {
-    await expect(searchBorder).toHaveCSS("animation-name", "none");
+    expect((await borderStreak()).animation).toBe("none");
   } else {
-    await expect(searchBorder).toHaveCSS("animation-name", "search-orbit");
-    const firstAngle = await searchBorder.evaluate((element) => getComputedStyle(element).getPropertyValue("--search-angle"));
-    await page.waitForTimeout(400);
-    const nextAngle = await searchBorder.evaluate((element) => getComputedStyle(element).getPropertyValue("--search-angle"));
-    expect(nextAngle).not.toBe(firstAngle);
+    expect((await borderStreak()).animation).toBe("search-orbit");
+    const firstAngle = (await borderStreak()).angle;
+    await page.waitForTimeout(450);
+    expect((await borderStreak()).angle).not.toBe(firstAngle);
+  }
+
+  const featuredWindow = page.locator(".featured-window");
+  await featuredWindow.scrollIntoViewIfNeeded();
+  const track = page.locator(".featured-track");
+  await expect(track).toHaveClass(/featured-track-active/);
+  await expect(track.locator(".featured-marquee-group")).toHaveCount(2);
+  await expect(track.locator(".featured-marquee-group").nth(1)).toHaveAttribute("aria-hidden", "true");
+  if (reducedMotion) {
+    expect(await track.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
+  } else {
+    expect(await track.evaluate((element) => getComputedStyle(element).animationName)).toBe("featured-marquee");
+    const firstTransform = await track.evaluate((element) => getComputedStyle(element).transform);
+    await page.waitForTimeout(350);
+    expect(await track.evaluate((element) => getComputedStyle(element).transform)).not.toBe(firstTransform);
   }
 });
 
