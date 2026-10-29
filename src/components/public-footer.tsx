@@ -73,7 +73,7 @@ export default function PublicFooter({ categories, onCategoryChange }: PublicFoo
             {visibleCategories.slice(0, 6).map((category) => onCategoryChange ? (
               <button type="button" key={category.name} onClick={() => onCategoryChange(category.name)}>{category.name}</button>
             ) : (
-              <Link key={category.name} href={`/?category=${encodeURIComponent(category.name)}#tools`}>{category.name}</Link>
+              <Link key={category.name} href={`/?category=${encodeURIComponent(category.name)}#search`}>{category.name}</Link>
             ))}
           </nav>
         </div>
