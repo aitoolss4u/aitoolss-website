@@ -14,17 +14,26 @@ export default function CookieConsentPage() {
   const [storageError, setStorageError] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const savedPreferences = JSON.parse(raw) as Partial<SavedPreferences>;
-        setOptionalAnalytics(savedPreferences.optionalAnalytics === true);
+    let cancelled = false;
+    const hydrateSavedPreference = () => {
+      if (cancelled) return;
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const savedPreferences = JSON.parse(raw) as Partial<SavedPreferences>;
+          setOptionalAnalytics(savedPreferences.optionalAnalytics === true);
+        }
+      } catch {
+        setStorageError(true);
+      } finally {
+        setStorageReady(true);
       }
-    } catch {
-      setStorageError(true);
-    } finally {
-      setStorageReady(true);
-    }
+    };
+    const timer = window.setTimeout(hydrateSavedPreference, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, []);
 
   function savePreferences(nextValue = optionalAnalytics) {
