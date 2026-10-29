@@ -65,20 +65,37 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
     image.onerror = () => { URL.revokeObjectURL(url); setImageInfo("Could not read this image file."); };
     image.src = url;
   };
-  if (!tool) return <main className="min-h-screen bg-slate-950 px-6 py-24 text-white"><div className="mx-auto max-w-2xl"><p className="text-sm text-cyan-300">AIToolss / Tool not found</p><h1 className="mt-4 text-4xl font-bold">We couldn’t find that tool.</h1><Link href="/" className="mt-8 inline-block underline">Back to all tools</Link></div></main>;
+  if (!tool) return <main className="tool-page-shell"><div className="tool-page-content"><p className="tool-eyebrow">AIToolss / Tool not found</p><h1 className="tool-page-title">We couldn’t find that tool.</h1><Link href="/" className="tool-primary-button">Back to all tools</Link></div></main>;
   const isImage = tool.mode === "image";
   const runDisabled = !isImage && !input.trim();
-  return <main className="min-h-screen bg-[#080b14] px-5 py-8 text-slate-100 sm:px-8 sm:py-12"><div className="mx-auto max-w-4xl">
-    <Link href="/" className="text-sm text-cyan-300 hover:text-white">← All tools</Link>
-    <div className="mt-8 rounded-3xl border border-white/10 bg-white/[.035] p-6 sm:p-10">
-      <div className="text-xs font-bold uppercase tracking-[.2em] text-violet-300">{tool.category} · Browser tool</div><div className="mt-4 flex items-start gap-4"><span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-violet-500/15 text-2xl">{tool.icon}</span><div><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{tool.name}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">{tool.description}</p></div></div>
-      <div className="mt-8"><label htmlFor="tool-input" className="mb-2 block text-sm font-semibold">{isImage ? "Choose an image" : "Your input"}</label>{isImage ? <input type="file" accept="image/*" onChange={(e)=>onImage(e.target.files?.[0]??null)} className="block w-full text-sm" /> : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 outline-none focus:border-violet-400" />}
-      {["text-summarizer"].includes(slug) && <label className="mt-4 block text-sm">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="ml-2 rounded-lg bg-slate-800 p-2"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
-      {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder"].includes(slug) && <label className="mt-4 block text-sm">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="ml-2 rounded-lg bg-slate-800 p-2"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option></select></label>}
-      {imageInfo && <p className="mt-3 text-sm text-cyan-200">{imageInfo}</p>}
-      <div className="mt-5 flex flex-wrap gap-3"><button disabled={runDisabled} onClick={process} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{isImage ? "Image selected" : "Run tool"} ↗</button><button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold">Clear</button></div></div>
-      {output && <div className="mt-8 rounded-2xl border border-white/10 bg-black/25 p-5"><div className="flex items-center justify-between gap-3"><h2 className="font-bold">Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="text-sm text-cyan-300">Copy result</button>}</div>{output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="mt-4 max-h-96 rounded-xl" /><a href={output} download="aitoolss-compressed.jpg" className="mt-4 inline-block rounded-lg bg-cyan-400 px-4 py-2 font-bold text-slate-950">Download compressed image</a></> : <pre className="mt-4 max-h-[32rem] overflow-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-200">{output}</pre>}</div>}
-      <p className="mt-6 text-xs leading-5 text-slate-500">Privacy-first processing: most tools run in your browser and do not send your input to an AI service. Outputs are rule-based helpers, not professional advice. No AI API key is required.</p>
+  return <main className="tool-page-shell">
+    <div className="tool-page-content">
+      <Link href="/" className="tool-back-link">← All tools</Link>
+      <section className="tool-panel">
+        <div className="tool-eyebrow">{tool.category} · Browser tool</div>
+        <div className="tool-heading-row">
+          <span className="tool-heading-icon" aria-hidden="true">{tool.icon}</span>
+          <div className="tool-heading-copy"><h1 className="tool-page-title">{tool.name}</h1><p className="tool-page-description">{tool.description}</p></div>
+        </div>
+        <div className="tool-workspace">
+          <label htmlFor="tool-input" className="tool-field-label">{isImage ? "Choose an image" : "Your input"}</label>
+          {isImage
+            ? <input id="tool-input" type="file" accept="image/*" onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
+            : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="tool-input" />}
+          {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
+          {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option></select></label>}
+          {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
+          <div className="tool-actions">
+            <button disabled={runDisabled} onClick={process} className="tool-primary-button">{isImage ? "Image selected" : "Run tool"} ↗</button>
+            <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
+          </div>
+        </div>
+        {output && <section className="tool-result">
+          <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
+          {output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download="aitoolss-compressed.jpg" className="tool-download-link">Download compressed image</a></> : <pre className="tool-output-text">{output}</pre>}
+        </section>}
+        <p className="tool-privacy-note">Privacy-first processing: most tools run in your browser and do not send your input to an AI service. Outputs are rule-based helpers, not professional advice. No AI API key is required.</p>
+      </section>
     </div>
-  </div></main>;
+  </main>;
 }
