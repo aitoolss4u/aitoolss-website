@@ -24,6 +24,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All tools");
   const [showTop, setShowTop] = useState(false);
   const [gallery, setGallery] = useState<Array<{id:string;type:"image"|"video";title:string;description:string;url:string;thumbnail_url:string|null;creator:string|null}>>([]);
+  const [galleryColumns, setGalleryColumns] = useState(4);
   const [popular, setPopular] = useState<string[]>([]);
   const categories = useMemo(() => categoryMeta.map((category) => ({
     ...category,
@@ -40,7 +41,7 @@ export default function Home() {
   const featured = useMemo(() => featuredSlugs.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
 
   useEffect(() => {
-    fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => setGallery(Array.isArray(data.items) ? data.items : [])).catch(() => setGallery([]));
+    fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([4,5,6].includes(data.columns) ? data.columns : 4); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
   }, []);
 
@@ -112,7 +113,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section id="gallery" className="gallery-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">MADE WITH AI</p><h2>AI Creations Gallery<span>.</span></h2><p>Explore inspiring AI-generated visuals and videos from the creative community.</p></div></div>{gallery.length ? <div className="ai-gallery-grid mt-6">{gallery.slice(0,16).map((item) => <article key={item.id} className="ai-gallery-card"><div className="gallery-media">{item.type === "video" ? <video src={item.url} poster={item.thumbnail_url || undefined} controls preload="none" aria-label={item.title || "AI-generated video"} /> : <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`View ${item.title || "AI image"}`}><img src={item.thumbnail_url || item.url} alt={item.title || "AI creation"} loading="lazy" /></a>}{item.type === "video" && <span className="gallery-type">▶ VIDEO</span>}</div><div className="gallery-caption"><strong>{item.title || "AI creation"}</strong>{item.description && <p>{item.description}</p>}{item.creator && <small>By {item.creator}</small>}</div></article>)}</div> : <div className="gallery-empty mt-6"><span aria-hidden="true">✧</span><h3>Creative work is on its way</h3><p>Published AI images and videos will appear here when an administrator adds them.</p></div>}</section>
+          <section id="gallery" className="gallery-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">MADE WITH AI</p><h2>AI Creations Gallery<span>.</span></h2><p>Explore inspiring AI-generated visuals and videos from the creative community.</p></div></div>{gallery.length ? <div className="ai-gallery-grid mt-6" style={{ gridTemplateColumns: `repeat(${galleryColumns}, minmax(0, 1fr))` }}>{gallery.slice(0,16).map((item) => <article key={item.id} className="ai-gallery-card"><div className="gallery-media">{item.type === "video" ? <video src={item.url} poster={item.thumbnail_url || undefined} controls preload="none" aria-label={item.title || "AI-generated video"} /> : <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`View ${item.title || "AI image"}`}><img src={item.thumbnail_url || item.url} alt={item.title || "AI creation"} loading="lazy" /></a>}{item.type === "video" && <span className="gallery-type">▶ VIDEO</span>}</div><div className="gallery-caption"><strong>{item.title || "AI creation"}</strong>{item.description && <p>{item.description}</p>}{item.creator && <small>By {item.creator}</small>}</div></article>)}</div> : <div className="gallery-empty mt-6"><span aria-hidden="true">✧</span><h3>Creative work is on its way</h3><p>Published AI images and videos will appear here when an administrator adds them.</p></div>}</section>
           <section id="categories" className="light-categories-section mt-14 scroll-mt-24">
             <div className="section-topline"><div><p className="light-kicker">FIND YOUR FLOW</p><h2>Explore by category<span>.</span></h2><p>Choose a lane, or follow your curiosity.</p></div></div>
             <div className="light-category-grid mt-5">
