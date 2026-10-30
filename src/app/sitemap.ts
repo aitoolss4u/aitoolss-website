@@ -1,13 +1,12 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site";
-import { tools, categories } from "@/lib/tools";
+import { tools } from "@/lib/tools";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     "", "/about", "/contact-us", "/privacy", "/terms", "/disclaimer",
     "/cookie-consent", "/categories", "/types-of-tools", "/popular-tools",
     "/new-trending-tools",
-    ...categories.map((category) => `/?category=${encodeURIComponent(category)}`),
     ...tools.map((tool) => `/tools/${tool.slug}`),
   ];
   return routes.map((route) => ({
