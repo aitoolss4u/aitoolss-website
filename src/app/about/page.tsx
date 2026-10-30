@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
-export const metadata = { title: "About AIToolss", description: "Learn about the AIToolss tool discovery directory." };
-export default function AboutPage() { return <PublicSiteChrome><main className="info-page"><div style={{maxWidth:850,margin:"0 auto"}}><Link href="/" style={{color:"#654ed0",fontWeight:700}}>← AIToolss home</Link><p style={{marginTop:48,color:"#7657ff",fontSize:12,fontWeight:800,letterSpacing:".15em"}}>ABOUT AITOOLSS</p><h1 style={{fontSize:"clamp(2.5rem,7vw,4.5rem)",fontWeight:900,letterSpacing:"-.05em",lineHeight:1.02,marginTop:12}}>Your Entire AI Universe.</h1><p style={{fontSize:18,lineHeight:1.8,color:"#69627f",marginTop:24}}>AIToolss is a directory of browser-friendly tools and practical utilities for writing, images, productivity, coding, marketing, education, business and career tasks.</p><p style={{lineHeight:1.8,color:"#69627f",marginTop:16}}>Our aim is to make useful digital helpers easier to discover. Tool capabilities vary; check each tool page for its current behavior and limitations.</p><Link href="/#search" style={{display:"inline-block",marginTop:28,padding:"12px 18px",borderRadius:12,background:"#6d53d7",color:"#fff",fontWeight:800}}>Discover tools ↗</Link></div></main></PublicSiteChrome>; }
+import CmsPageContent from "@/components/cms-page-content";
+export const metadata: Metadata = { title: "About AIToolss", description: "Learn about the AIToolss tool discovery directory." };
+export default function AboutPage() {
+ return <PublicSiteChrome><main className="info-page"><article className="info-article">
+  <CmsPageContent slug="about" fallbackTitle="Your Entire AI Universe." fallbackIntro="AIToolss is a directory of browser-friendly tools and practical utilities for writing, images, productivity, coding, marketing, education, business and career tasks.">
+   <div className="cms-fallback-body"><h2>Our purpose</h2><p>We bring useful digital helpers together so people can find a practical tool for the task in front of them.</p><h2>How the directory works</h2><p>Browse categories, read each tool description and open its page to see how it works. Some tools run locally in your browser; AI-powered tools use a configured model provider.</p><h2>Our approach</h2><p>We aim to describe capabilities honestly and avoid invented reviews, rankings or guarantees. Availability and features may change.</p><p><Link href="/#search" className="font-semibold text-violet-700 underline">Discover tools</Link></p></div>
+  </CmsPageContent>
+ </article></main></PublicSiteChrome>;
+}
