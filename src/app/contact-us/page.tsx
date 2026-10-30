@@ -9,7 +9,7 @@ export default function ContactPage() {
   try{
    const response=await fetch("/api/contact",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:data.get("name"),email:data.get("email"),subject:data.get("subject"),message:data.get("message"),website:data.get("website")})});
    const result=await response.json(); if(!response.ok) throw new Error(result.error||"Unable to send your message.");
-   form.reset();setStatus("Your message was accepted by the email service and sent to the AIToolss contact inbox.");
+   form.reset();setStatus(result.message || (result.delivery === "email" ? "Your message was sent to the AIToolss contact inbox." : "Your message has been received."));
   }catch(error){setStatus(error instanceof Error?error.message:"Unable to send your message. Your entries have been kept; please try again.");}
   finally{setSending(false);}
  }
