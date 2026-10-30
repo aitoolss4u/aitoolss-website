@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     title: "AIToolss — Discover AI Tools That Help You Do More",
     description: siteConfig.description,
   },
+  icons: { icon: [{ url: "/favicon.png", type: "image/png", sizes: "48x48" }], apple: [{ url: "/brand/aitoolss-logo.png", sizes: "180x180", type: "image/png" }] },
   robots: { index: true, follow: true },
 };
 
