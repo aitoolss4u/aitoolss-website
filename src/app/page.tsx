@@ -204,7 +204,7 @@ export default function Home() {
   }
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (searchSuggestions.length) {
+    if (query.trim() && searchSuggestions.length) {
       openSuggestedTool(searchSuggestions[Math.max(0, activeSuggestionIndex)] ?? searchSuggestions[0]);
     } else if (query.trim()) {
       setSuggestionsOpen(true);
@@ -322,6 +322,17 @@ export default function Home() {
                 <span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true">{categoryVisuals[category.name] ?? category.icon}</span><span className="light-category-name">{category.name}</span><span className="light-category-description">{category.subtitle}</span><span className="light-category-count">Explore <span aria-hidden="true">↗</span></span>
               </button>)}
             </div>
+            {activeCategory && <section className="category-filter-results mt-7" aria-live="polite" aria-labelledby="category-filter-heading">
+              <div className="category-filter-heading">
+                <div><p className="light-kicker">CATEGORY FILTER</p><h3 id="category-filter-heading">{activeCategory} tools<span>.</span></h3><p>{tools.filter((tool) => tool.category === activeCategory).length} matching catalogue tools. Search suggestions stay closed until you type.</p></div>
+                <button type="button" onClick={() => chooseCategory("", false)} className="category-filter-clear">Clear filter ×</button>
+              </div>
+              <div className="related-tools-grid mt-5">
+                {tools.filter((tool) => tool.category === activeCategory).map((tool) => <Link key={tool.slug} href={tool.href} className="related-tool-card" onClick={() => recordToolSelection(tool.slug)}>
+                  <strong>{tool.icon} {tool.name}</strong><span>{tool.description}</span>
+                </Link>)}
+              </div>
+            </section>}
           </section>
 
           <section id="popular-tools" className="popular-tools-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">COMMUNITY SHORTCUTS</p><h2>Find your next shortcut<span>.</span></h2><p>Real tool selections influence this list. Until activity builds up, catalog order is used without fabricated popularity counts.</p></div></div><div className="popular-tool-grid mt-6">{popularTools.map((tool) => <Link key={tool.slug} href={tool.href} className="popular-tool-card" onClick={() => recordToolSelection(tool.slug)}>
