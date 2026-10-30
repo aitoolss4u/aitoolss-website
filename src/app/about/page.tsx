@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { getCmsMetadata } from "@/lib/content-pages";
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
 import CmsPageContent from "@/components/cms-page-content";
-export const metadata: Metadata = { title: "About AIToolss", description: "Learn about the AIToolss tool discovery directory." };
+const fallbackMetadata: Metadata = { title: "About AIToolss", description: "Learn about the AIToolss tool discovery directory." };
+export async function generateMetadata(): Promise<Metadata> { return getCmsMetadata("about", fallbackMetadata); }
 export default function AboutPage() {
  return <PublicSiteChrome><main className="info-page"><article className="info-article">
   <CmsPageContent slug="about" fallbackTitle="Your Entire AI Universe." fallbackIntro="AIToolss is a directory of browser-friendly tools and practical utilities for writing, images, productivity, coding, marketing, education, business and career tasks.">
