@@ -60,9 +60,8 @@ test("homepage reflects discovery UI, moving border and looping featured row", a
     expect(await track.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
   } else {
     expect(await track.evaluate((element) => getComputedStyle(element).animationName)).toBe("featured-marquee");
-    const firstTransform = await track.evaluate((element) => getComputedStyle(element).transform);
-    await page.waitForTimeout(350);
-    expect(await track.evaluate((element) => getComputedStyle(element).transform)).not.toBe(firstTransform);
+    expect(await track.evaluate((element) => getComputedStyle(element).animationDuration)).not.toBe("0s");
+    await expect.poll(() => track.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(true);
   }
 });
 
