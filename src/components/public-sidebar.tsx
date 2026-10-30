@@ -59,7 +59,7 @@ export default function PublicSidebar({
       setMenuOpen(false);
       return;
     }
-    router.push("/?category=" + encodeURIComponent(name) + "#categories");
+    router.push("/?category=" + encodeURIComponent(name) + "#search");
     setMenuOpen(false);
   };
 
