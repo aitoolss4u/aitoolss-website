@@ -5,11 +5,6 @@ import { useEffect, useState } from "react";
 import PublicSiteChrome from "@/components/public-site-chrome";
 import { categories } from "@/lib/tools";
 
-export const metadata = {
-  title: "AI Tool Categories",
-  description: "Explore AIToolss by its eight curated tool categories.",
-};
-
 const categoryCopy: Record<string, string> = {
   Writing: "Summaries, rewrites, clearer messages and useful text helpers.",
   Images: "Browser-based image checks, compression and color utilities.",
