@@ -84,7 +84,7 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
         <section className="footer-section" aria-labelledby="footer-popular-heading">
           <h3 id="footer-popular-heading">Popular Tools</h3>
           <nav className="footer-link-list" aria-label="Popular tools">
-            {popularTools.map((tool) => <Link key={tool.slug} href={`/tools/${tool.slug}`}>{tool.name}</Link>)}
+            {popularTools.length ? popularTools.map((tool) => <Link key={tool.slug} href={`/tools/${tool.slug}`}>{tool.name}</Link>) : <span className="footer-empty-note">Visit data is still building.</span>}
           </nav>
         </section>
 
