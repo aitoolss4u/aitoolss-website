@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { getCmsMetadata } from "@/lib/content-pages";
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
 import CmsPageContent from "@/components/cms-page-content";
-export const metadata: Metadata = { title: "Privacy Policy", description: "How AIToolss handles contact messages, site activity, authentication and tool inputs." };
+const fallbackMetadata: Metadata = { title: "Privacy Policy", description: "How AIToolss handles contact messages, site activity, authentication and tool inputs." };
+export async function generateMetadata(): Promise<Metadata> { return getCmsMetadata("privacy", fallbackMetadata); }
 export default function PrivacyPage() {
  return <PublicSiteChrome><main className="info-page"><article className="info-article">
   <CmsPageContent slug="privacy" fallbackTitle="Privacy Policy" fallbackIntro="How AIToolss handles information submitted through the website. Last updated: October 30, 2026.">
