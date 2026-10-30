@@ -1494,3 +1494,15 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 .related-tool-card span { color: #817891; font-size: .76rem; line-height: 1.5; }
 @media (max-width: 900px) { .related-tools-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 420px) { .related-tools-grid { gap: .65rem; } .related-tool-card { padding: .8rem; } }
+
+
+/* Official transparent AIToolss image mark */
+.aitoolss-brand-image { display:block; width:auto; height:auto; max-width:100%; object-fit:contain; object-position:center; }
+.mobile-site-brand, .sidebar-brand, .footer-brand { display:inline-flex; align-items:center; justify-content:flex-start; }
+.mobile-site-brand .aitoolss-brand-image { width:42px; height:42px; }
+.sidebar-brand .aitoolss-brand-image { width:46px; height:46px; }
+.footer-brand .aitoolss-brand-image { width:52px; height:52px; }
+.admin-brand { display:flex; align-items:center; gap:.7rem; }
+.admin-brand .aitoolss-brand-image { width:46px; height:46px; }
+.admin-brand > span { display:block; font-size:.7rem; font-weight:800; letter-spacing:.14em; color:#8b84a0; }
+@media (max-width:760px) { .mobile-site-brand .aitoolss-brand-image { width:40px; height:40px; } }
