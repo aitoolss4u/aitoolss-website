@@ -10,6 +10,12 @@ const aiSlugs = new Set([
  "flashcard-maker","meeting-agenda-maker","meeting-notes-formatter"
 ]);
 const requests = new Map<string,number[]>();
+
+export async function GET() {
+ const model=process.env.AI_MODEL;
+ const credentialSource=process.env.AI_GATEWAY_API_KEY?"api-key":process.env.VERCEL_OIDC_TOKEN?"vercel-oidc":"missing";
+ return NextResponse.json({configured:credentialSource!=="missing"&&Boolean(model),credentialSource,model:model||null},{headers:{"Cache-Control":"no-store"}});
+}
 export async function POST(request:Request) {
  try {
   const body=await request.json();
