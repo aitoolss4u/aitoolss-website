@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { getCmsMetadata } from "@/lib/content-pages";
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
 import CmsPageContent from "@/components/cms-page-content";
-export const metadata: Metadata = { title: "Disclaimer | AIToolss", description: "Important information about AI-assisted output, tools and third-party services." };
+const fallbackMetadata: Metadata = { title: "Disclaimer | AIToolss", description: "Important information about AI-assisted output, tools and third-party services." };
+export async function generateMetadata(): Promise<Metadata> { return getCmsMetadata("disclaimer", fallbackMetadata); }
 export default function DisclaimerPage() {
  return <PublicSiteChrome><main className="info-page"><article className="info-article">
   <CmsPageContent slug="disclaimer" fallbackTitle="Disclaimer" fallbackIntro="Important information about AI-assisted outputs, tools and third-party services.">
