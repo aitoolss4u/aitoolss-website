@@ -137,7 +137,7 @@ If an optional service is enabled in the future, its provider may set or read it
 Questions about cookies and privacy can be sent to aitoolss4u@gmail.com.','Cookie Policy & Consent | AIToolss','Understand essential storage and optional analytics preferences on AIToolss and manage your browser consent.'),
 ('contact-us','Contact AIToolss','Send feedback, report a problem, suggest a tool or ask a question.','## Contact the team
 
-Use the contact form on this page to send your name, email address, subject and message. When email delivery is configured, messages are routed to aitoolss4u@gmail.com.
+Use the contact form on this page to send your name, email address, subject and message. When email delivery is configured, messages are routed to aitoolss4u@gmail.com; otherwise, messages are stored in the protected admin inbox.
 
 ## What to include
 
