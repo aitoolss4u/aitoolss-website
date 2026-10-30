@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { categories as catalogCategories, tools as catalogTools } from "@/lib/tools";
 import type { PublicCategory } from "./public-sidebar";
+import BrandLogo from "@/components/brand-logo";
 
 type SocialLinks = Record<string, string>;
 type SocialProfile = readonly [key: string, label: string, kind: "facebook" | "instagram" | "x" | "linkedin"];
@@ -86,9 +87,7 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
       <div className="footer-inner">
         <section className="footer-section footer-brand-column" aria-labelledby="footer-brand-heading">
           <h2 id="footer-brand-heading" className="sr-only">AIToolss</h2>
-          <Link href="/" aria-label="AIToolss home" className="footer-brand">
-            <span className="light-brand-mark" aria-hidden="true">A</span><span>AIToolss<span className="footer-brand-dot">.</span></span>
-          </Link>
+          <BrandLogo className="footer-brand" size={52} />
           <p>A thoughtful collection of practical tools for creativity, productivity, coding and everyday work.</p>
           <div className="footer-socials" aria-label="Configured social media accounts">
             {socialProfiles.map(([key, label, kind]) => socialLinks[key] ? (
