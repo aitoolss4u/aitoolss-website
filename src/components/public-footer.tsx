@@ -16,12 +16,6 @@ const socialProfiles: SocialProfile[] = [
   ["socialLinkedIn", "LinkedIn", "linkedin"],
 ];
 const popularFallbackSlugs = [
-  "prompt-generator",
-  "word-counter",
-  "image-compressor",
-  "json-formatter",
-  "color-palette-builder",
-  "text-summarizer",
 ];
 
 function SocialIcon({ kind }: { kind: SocialProfile[2] }) {
@@ -72,15 +66,7 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
     }
   }, [categories]);
 
-  const popularTools = useMemo(() => {
-    const ranked = popularSlugs.map((slug) => catalogTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof catalogTools)[number] => Boolean(tool));
-    const bySlug = new Map<string, (typeof catalogTools)[number]>();
-    for (const tool of [...ranked, ...popularFallbackSlugs.map((slug) => catalogTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof catalogTools)[number] => Boolean(tool))]) {
-      if (!bySlug.has(tool.slug)) bySlug.set(tool.slug, tool);
-      if (bySlug.size === 6) break;
-    }
-    return [...bySlug.values()];
-  }, [popularSlugs]);
+  const popularTools = useMemo(() => popularSlugs.map((slug) => catalogTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof catalogTools)[number] => Boolean(tool)).slice(0, 6), [popularSlugs]);
 
   return (
     <footer className="professional-footer">
@@ -117,6 +103,8 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
           <nav className="footer-link-list" aria-label="Resources">
             <Link href="/types-of-tools">Types of Tools</Link>
             <Link href="/categories">Categories</Link>
+            <Link href="/popular-tools">Popular Tools</Link>
+            <Link href="/new-trending-tools">New &amp; Trending Tools</Link>
             <Link href="/popular-tools">Popular Tools</Link>
             <Link href="/new-trending-tools">New &amp; Trending Tools</Link>
           </nav>
