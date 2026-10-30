@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
-import { categories, tools } from "@/lib/tools";
+import { categories } from "@/lib/tools";
 
 export const metadata = {
   title: "AI Tool Categories",
