@@ -1,28 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
-
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "How AIToolss handles contact messages, site activity, authentication and browser-based tool inputs.",
-};
-
+import CmsPageContent from "@/components/cms-page-content";
+export const metadata: Metadata = { title: "Privacy Policy", description: "How AIToolss handles contact messages, site activity, authentication and tool inputs." };
 export default function PrivacyPage() {
-  return <PublicSiteChrome><main className="info-page"><article className="info-article">
-    <p className="section-kicker">TRUST &amp; TRANSPARENCY</p>
-    <h1 className="mt-3 text-4xl font-black sm:text-5xl">Privacy Policy</h1>
-    <p className="section-description mt-4">Last updated: October 30, 2026</p>
-    <div className="mt-8 space-y-7 text-sm leading-7 text-muted">
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">About this policy</h2><p>This policy describes the information handled by the AIToolss website as currently implemented. AIToolss is a directory of browser-based utilities and tool discovery pages. Features and integrations may change; this page should be updated when the implementation changes.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Information you submit</h2><p>If you use the Contact Us form, the website receives your name, email address, subject and message. The server validates the fields and, when email delivery is configured, sends the message to aitoolss4u@gmail.com through Resend. Your email address is included as Reply-To. The email provider and the receiving mailbox may retain the message under their own retention and security practices. Do not submit passwords, payment details or other sensitive information through the contact form.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Tool inputs and outputs</h2><p>The catalogue&apos;s current utilities execute in the visitor&apos;s browser using local JavaScript logic. The current tool pages do not send the text or image selected for those utilities to an AIToolss AI model endpoint. Some tools are template-based helpers rather than external AI services; check each tool&apos;s page for its actual behavior. Browser extensions, device settings and third-party services you independently use may have separate data practices.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Site activity and popularity</h2><p>When a visitor opens a tool through the site&apos;s tracked selection links, the site may record the selected catalogue slug and timestamp to produce a recent popularity list. The database schema for this event does not store the visitor&apos;s raw search text or a visitor account identifier with that event. Standard hosting and security infrastructure may separately process request metadata and logs.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Accounts and administration</h2><p>Administrative access uses Supabase authentication. Authentication and session information is handled by Supabase to support sign-in and protect administrative features. Public visitors do not need an account to use the catalogue&apos;s browser-based utilities. Admin-managed categories, settings and gallery entries are stored in the configured Supabase project.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Cookies and local storage</h2><p>The application may use browser storage and cookies needed for supported authentication and site functions. The Cookie &amp; Consent page currently stores an optional analytics preference in this browser, but the present codebase does not load an analytics tracker from that preference. Do not interpret that preference as evidence that an analytics provider is active.</p><p className="mt-2">You can review the current browser preference on the <Link className="font-semibold text-violet-700 underline" href="/cookie-consent">Cookie &amp; Consent page</Link>.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Gallery and third-party media</h2><p>Published gallery entries may display media hosted at public HTTPS URLs supplied by an administrator. When your browser loads externally hosted media, that host may receive technical request information such as your IP address and browser details. The current gallery implementation stores media URLs and metadata in Supabase; direct file upload storage is not configured in this project.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Service providers</h2><p>The current repository integrates Supabase for database and authentication functionality and is configured to send contact messages through Resend when the required server environment variables are supplied. The production hosting provider may process request logs and operational metadata. These providers process information under their own terms and privacy documentation.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Retention, security and your choices</h2><p>Contact messages may remain in the recipient mailbox and email provider systems. Database records are retained according to the configured Supabase project and its backup policies. AIToolss uses server-side validation and access controls for administrative operations, but no internet service can promise absolute security. For a privacy request, contact aitoolss4u@gmail.com and describe the information and request; identity verification may be needed before acting.</p></section>
-      <section><h2 className="mb-2 text-lg font-bold text-foreground">Changes and contact</h2><p>This policy may be revised when features, providers or legal requirements change. Questions about this policy can be sent to <a className="font-semibold text-violet-700 underline" href="mailto:aitoolss4u@gmail.com">aitoolss4u@gmail.com</a>.</p></section>
-    </div>
-  </article></main></PublicSiteChrome>;
+ return <PublicSiteChrome><main className="info-page"><article className="info-article">
+  <CmsPageContent slug="privacy" fallbackTitle="Privacy Policy" fallbackIntro="How AIToolss handles information submitted through the website. Last updated: October 30, 2026.">
+   <div className="cms-fallback-body">
+    <h2>Information you submit</h2><p>If you use the Contact Us form, the website receives your name, email address, subject and message. When email delivery is configured, it sends the message to aitoolss4u@gmail.com through Resend. Do not submit passwords, payment details or sensitive information.</p>
+    <h2>Tool inputs and outputs</h2><p>Browser-based utilities process input locally unless a tool clearly identifies an external AI feature. When an AI feature is enabled, the text you submit is sent securely from our server to the configured model provider. Do not submit sensitive or confidential information.</p>
+    <h2>Site activity and popularity</h2><p>When a visitor opens a tool through a tracked selection link, the site may record the tool slug and timestamp to create a recent popularity list. This event does not include raw search text.</p>
+    <h2>Accounts and service providers</h2><p>Administrative authentication and site data are handled by Supabase. Contact email delivery, when enabled, is handled by Resend. Hosting providers may process technical request logs.</p>
+    <h2>Cookies and local storage</h2><p>Essential browser storage may support core functions and sign-in sessions. Optional analytics should remain disabled unless a provider is configured and the visitor has given required consent. See the <Link href="/cookie-consent" className="font-semibold text-violet-700 underline">Cookie &amp; Consent page</Link>.</p>
+    <h2>Retention and requests</h2><p>Contact messages may remain in email systems. Database records are retained according to the configured Supabase project. For privacy requests, contact aitoolss4u@gmail.com.</p>
+    <h2>Changes</h2><p>This policy is updated when features or providers change. It describes the current implementation and does not claim unconfigured services are active.</p>
+   </div>
+  </CmsPageContent>
+ </article></main></PublicSiteChrome>;
 }
