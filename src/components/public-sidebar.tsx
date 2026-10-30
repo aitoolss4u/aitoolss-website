@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { categories as catalogCategories, tools as catalogTools } from "@/lib/tools";
+import { categories as catalogCategories } from "@/lib/tools";
 
 export type PublicCategory = {
   name: string;
