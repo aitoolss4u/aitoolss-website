@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type CategoryInput = {
   id: string; name: string; slug: string; description: string;
-  metaTitle: string; metaDescription: string; tags: string; visible: boolean;
+  metaTitle: string; metaDescription: string; tags: string; imageUrl: string; visible: boolean;
 };
 type SettingsInput = Record<string, unknown>;
 
@@ -42,7 +42,7 @@ export async function signOutAdmin() {
 export async function loadAdminData() {
   const { supabase } = await requireAdmin();
   const [categoriesResult, settingsResult] = await Promise.all([
-    supabase.from("categories").select("id,name,slug,description,tags,meta_title,meta_description,is_visible,sort_order").order("sort_order").order("name"),
+    supabase.from("categories").select("id,name,slug,description,tags,meta_title,meta_description,image_url,is_visible,sort_order").order("sort_order").order("name"),
     supabase.from("site_settings").select("value").eq("key", "global").maybeSingle(),
   ]);
   if (categoriesResult.error) return { ok: false as const, message: "Could not load categories. Confirm the Phase 8 SQL migration has been applied." };
@@ -55,6 +55,7 @@ export async function loadAdminData() {
     tags: (item.tags ?? []).join(", "),
     metaTitle: item.meta_title,
     metaDescription: item.meta_description,
+    imageUrl: item.image_url ?? "",
     visible: item.is_visible,
   }));
   return { ok: true as const, categories, settings: (settingsResult.data?.value ?? {}) as SettingsInput };
@@ -66,7 +67,7 @@ function validCategory(item: CategoryInput) {
     && typeof item.description === "string" && item.description.length <= 1000
     && typeof item.metaTitle === "string" && item.metaTitle.length <= 120
     && typeof item.metaDescription === "string" && item.metaDescription.length <= 320
-    && typeof item.tags === "string" && item.tags.length <= 1000 && typeof item.visible === "boolean";
+    && typeof item.tags === "string" && item.tags.length <= 1000 && typeof item.imageUrl === "string" && item.imageUrl.length <= 2048 && (!item.imageUrl || (() => { try { return new URL(item.imageUrl).protocol === "https:"; } catch { return false; } })()) && typeof item.visible === "boolean";
 }
 
 export async function saveAdminData(payload: { categories: CategoryInput[]; settings: SettingsInput }) {
@@ -80,11 +81,15 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
   const allowedSettings = ["siteName","siteDescription","defaultMetaTitle","defaultMetaDescription","primaryColor","accentColor","backgroundColor","font","maintenanceMode","showRoadmapTools","enableAnalytics","enableAds","socialFacebook","socialInstagram","socialYouTube","socialLinkedIn","socialX"];
   const settings = Object.fromEntries(allowedSettings.filter((key) => key in payload.settings).map((key) => [key, payload.settings[key]]));
   if (JSON.stringify(settings).length > 20000) return { ok: false as const, message: "Settings payload is too large." };
+  const hex = /^#[0-9a-f]{6}$/i;
+  for (const key of ["primaryColor","accentColor","backgroundColor"]) if (settings[key] !== undefined && (typeof settings[key] !== "string" || !hex.test(String(settings[key])))) return { ok: false as const, message: "Brand colors must be valid six-digit hex values." };
+  if (settings.font !== undefined && !["Arial","Helvetica","Georgia","Verdana","Tahoma","Trebuchet MS","system-ui"].includes(String(settings.font))) return { ok: false as const, message: "Choose a supported system font." };
+  for (const key of ["siteName","siteDescription","defaultMetaTitle","defaultMetaDescription"]) if (settings[key] !== undefined && (typeof settings[key] !== "string" || String(settings[key]).length > 320)) return { ok: false as const, message: "Check the length of your site and SEO text." };
 
   const rows = payload.categories.map((item, index) => ({
     name: item.name.trim(), slug: item.slug, description: item.description,
     tags: item.tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 30),
-    meta_title: item.metaTitle, meta_description: item.metaDescription,
+    meta_title: item.metaTitle, meta_description: item.metaDescription, image_url: item.imageUrl || null,
     is_visible: item.visible, sort_order: (index + 1) * 10, updated_by: user.id,
   }));
   if (rows.length) {
