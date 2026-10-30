@@ -35,7 +35,7 @@ export default function CategoriesPage() {
                 <span className="resource-category-card-copy">
                   <strong>{category}</strong>
                   <span>{categoryCopy[category] ?? "Explore useful tools for this category."}</span>
-                  <small>{tools.filter((tool) => tool.category === category).length} curated tools <span aria-hidden="true">↗</span></small>
+                  <small>Explore category <span aria-hidden="true">↗</span></small>
                 </span>
               </Link>
             ))}
