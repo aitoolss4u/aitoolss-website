@@ -18,7 +18,7 @@ const defaultSettings: AdminSettings = {
   siteName: "AIToolss", siteDescription: "Discover useful AI tools and smart utilities to help you create, learn and get things done.",
   defaultMetaTitle: "AIToolss — Discover AI Tools That Help You Do More",
   defaultMetaDescription: "Explore useful AI tools for writing, images, productivity, coding, marketing, education, business and career.",
-  primaryColor: "#7657FF", accentColor: "#35D9FF", backgroundColor: "#0B1020", font: "Arial",
+  primaryColor: "#7657FF", accentColor: "#35D9FF", backgroundColor: "#FAF9FF", font: "Arial",
   maintenanceMode: false, showRoadmapTools: true, enableAnalytics: false, enableAds: false,
   socialFacebook: "https://www.facebook.com/", socialInstagram: "https://www.instagram.com/",
   socialYouTube: "https://www.youtube.com/", socialLinkedIn: "https://www.linkedin.com/", socialX: "https://x.com/",
