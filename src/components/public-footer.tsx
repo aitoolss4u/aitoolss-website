@@ -15,9 +15,6 @@ const socialProfiles: SocialProfile[] = [
   ["socialX", "X", "x"],
   ["socialLinkedIn", "LinkedIn", "linkedin"],
 ];
-const popularFallbackSlugs = [
-];
-
 function SocialIcon({ kind }: { kind: SocialProfile[2] }) {
   if (kind === "facebook") return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.7 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5H17V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.6V13h2.7v8h3.4Z" /></svg>;
   if (kind === "instagram") return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.6" cy="6.8" r=".8" fill="currentColor" stroke="none" /></svg>;
@@ -103,8 +100,6 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
           <nav className="footer-link-list" aria-label="Resources">
             <Link href="/types-of-tools">Types of Tools</Link>
             <Link href="/categories">Categories</Link>
-            <Link href="/popular-tools">Popular Tools</Link>
-            <Link href="/new-trending-tools">New &amp; Trending Tools</Link>
             <Link href="/popular-tools">Popular Tools</Link>
             <Link href="/new-trending-tools">New &amp; Trending Tools</Link>
           </nav>
