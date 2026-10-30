@@ -278,7 +278,7 @@ export default function Home() {
             {categories.slice(0, 8).map((category) => <button type="button" key={category.name} onClick={() => chooseCategory(category.name, true)} className={`shortcut-card shortcut-${category.tint} ${activeCategory === category.name ? "shortcut-active" : ""}`} aria-pressed={activeCategory === category.name}>
               <span className="shortcut-icon"><ShortcutLineIcon name={category.name} /></span><span className="shortcut-name">{category.name}</span><span className="shortcut-arrow" aria-hidden="true">↗</span>
             </button>)}
-          </div
+          </div>
             {activeCategory && <section className="category-filter-results mt-7" aria-live="polite" aria-labelledby="category-filter-heading">
               <div className="category-filter-heading">
                 <div><p className="light-kicker">CATEGORY FILTER</p><h3 id="category-filter-heading">{activeCategory} tools<span>.</span></h3><p>{tools.filter((tool) => tool.category === activeCategory).length} matching catalogue tools. Search suggestions stay closed until you type.</p></div>
@@ -289,7 +289,7 @@ export default function Home() {
                   <strong>{tool.icon} {tool.name}</strong><span>{tool.description}</span>
                 </Link>)}
               </div>
-            </section>}>
+            </section>}
         </div>
       </section>
 
