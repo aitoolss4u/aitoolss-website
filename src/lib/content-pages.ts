@@ -16,8 +16,8 @@ export async function getCmsMetadata(slug:string, fallback:Metadata):Promise<Met
 export async function getSiteMetadata(fallback:Metadata):Promise<Metadata>{
  try{
   const supabase=await createClient();
-  const {data}=await supabase.from("site_settings").select("value").eq("key","global").maybeSingle();
-  const value=data?.value as Record<string,unknown>|undefined;
+  const {data}=await supabase.rpc("get_public_site_metadata");
+  const value=data as Record<string,unknown>|undefined;
   if(!value)return fallback;
   const title=typeof value.defaultMetaTitle==="string"&&value.defaultMetaTitle.trim()?value.defaultMetaTitle:fallback.title;
   const description=typeof value.defaultMetaDescription==="string"&&value.defaultMetaDescription.trim()?value.defaultMetaDescription:fallback.description;
