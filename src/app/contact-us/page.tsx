@@ -1,4 +1,43 @@
-import Link from "next/link";
+"use client";
+
+import { useState, type FormEvent } from "react";
 import PublicSiteChrome from "@/components/public-site-chrome";
+
 export const metadata = { title: "Contact AIToolss", description: "Contact the AIToolss project team." };
-export default function ContactPage() { return <PublicSiteChrome><main className="info-page"><div style={{maxWidth:800,margin:"0 auto"}}><Link href="/" style={{color:"#654ed0",fontWeight:700}}>← AIToolss home</Link><p style={{marginTop:48,color:"#7657ff",fontSize:12,fontWeight:800,letterSpacing:".15em"}}>GET IN TOUCH</p><h1 style={{fontSize:"clamp(2.5rem,7vw,4.5rem)",fontWeight:900,letterSpacing:"-.05em",lineHeight:1.02,marginTop:12}}>Contact Us.</h1><p style={{fontSize:18,lineHeight:1.8,color:"#69627f",marginTop:24}}>For site feedback, corrections, or feature requests, open an issue in the AIToolss website repository. Please do not include passwords, API keys, or private personal information in public issues.</p><a href="https://github.com/aitoolss4u/aitoolss-website/issues" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:28,padding:"12px 18px",borderRadius:12,background:"#6d53d7",color:"#fff",fontWeight:800}}>Open GitHub issues ↗</a><p style={{fontSize:13,color:"#88819e",marginTop:18}}>This is the currently available public contact channel; a dedicated support email is not configured on this site.</p></div></main></PublicSiteChrome>; }
+
+export default function ContactPage() {
+  const [status, setStatus] = useState("");
+  const [sending, setSending] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    setSending(true);
+    setStatus("");
+    try {
+      const response = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
+        name: data.get("name"), email: data.get("email"), subject: data.get("subject"), message: data.get("message"), website: data.get("website"),
+      }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to send your message.");
+      form.reset();
+      setStatus("Your message was accepted by the email service and sent to the AIToolss contact inbox.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Unable to send your message. Your entries have been kept; please try again.");
+    } finally { setSending(false); }
+  }
+  return <PublicSiteChrome><main className="info-page"><article className="info-article">
+    <p className="section-kicker">GET IN TOUCH</p><h1 className="mt-3 text-4xl font-black sm:text-5xl">Contact Us</h1>
+    <p className="section-description mt-4 max-w-2xl">Send feedback, report a problem, suggest a tool, or ask a question about AIToolss. Messages are routed to our contact inbox.</p>
+    <form onSubmit={submit} className="mt-8 grid max-w-2xl gap-4 rounded-2xl border border-[#e8e2f2] bg-white p-5 sm:p-7">
+      <label className="grid gap-2 text-sm font-semibold text-[#413753]">Full name<input name="name" required maxLength={120} autoComplete="name" className="rounded-xl border border-[#ded7eb] p-3 font-normal" /></label>
+      <label className="grid gap-2 text-sm font-semibold text-[#413753]">Email address<input name="email" type="email" required maxLength={254} autoComplete="email" className="rounded-xl border border-[#ded7eb] p-3 font-normal" /></label>
+      <label className="grid gap-2 text-sm font-semibold text-[#413753]">Subject<input name="subject" required maxLength={180} className="rounded-xl border border-[#ded7eb] p-3 font-normal" /></label>
+      <label className="grid gap-2 text-sm font-semibold text-[#413753]">Message<textarea name="message" required maxLength={8000} rows={7} className="rounded-xl border border-[#ded7eb] p-3 font-normal" /></label>
+      <label aria-hidden="true" className="hidden">Leave this field empty<input name="website" tabIndex={-1} autoComplete="off" /></label>
+      <button type="submit" disabled={sending} className="rounded-xl bg-[#6d53d7] px-5 py-3 font-bold text-white disabled:opacity-60">{sending ? "Sending…" : "Send message"}</button>
+      <p role="status" aria-live="polite" className="text-sm text-[#6e657d]">{status}</p>
+    </form>
+    <p className="mt-5 text-sm text-[#777087]">Contact email: aitoolss4u@gmail.com</p>
+  </article></main></PublicSiteChrome>;
+}
