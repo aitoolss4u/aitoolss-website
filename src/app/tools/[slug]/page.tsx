@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
-import { getTool } from "@/lib/tools";
+import { getTool, tools as catalogTools } from "@/lib/tools";
 
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -55,6 +55,20 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
   const [output, setOutput] = useState("");
   const [imageInfo, setImageInfo] = useState("");
   const tool = useMemo(() => getTool(slug), [slug]);
+  const relatedTools = useMemo(() => {
+    if (!tool) return [];
+    const currentTags = new Set(tool.tags.map((tag) => tag.toLowerCase()));
+    return catalogTools.filter((candidate) => candidate.slug !== tool.slug)
+      .map((candidate) => ({
+        candidate,
+        score: (candidate.category === tool.category ? 100 : 0) +
+          candidate.tags.reduce((score, tag) => score + (currentTags.has(tag.toLowerCase()) ? 12 : 0), 0) +
+          (candidate.mode === tool.mode ? 5 : 0),
+      }))
+      .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+      .slice(0, 8)
+      .map(({ candidate }) => candidate);
+  }, [tool]);
   const process = () => setOutput(run(slug, input, option));
   const onImage = (picked: File | null) => {
     setOutput("");
@@ -96,6 +110,14 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
         </section>}
         <p className="tool-privacy-note">Privacy-first processing: most tools run in your browser and do not send your input to an AI service. Outputs are rule-based helpers, not professional advice. No AI API key is required.</p>
       </section>
+      {relatedTools.length > 0 && <section className="related-tools-section" aria-labelledby="related-tools-heading">
+        <div className="section-topline"><div><p className="light-kicker">KEEP EXPLORING</p><h2 id="related-tools-heading">Related tools<span>.</span></h2><p>More useful tools from this catalogue, selected by category and shared tags.</p></div></div>
+        <div className="related-tools-grid mt-5">
+          {relatedTools.map((related) => <Link key={related.slug} href={`/tools/${related.slug}`} className="related-tool-card">
+            <strong>{related.icon} {related.name}</strong><span>{related.category} · {related.description}</span>
+          </Link>)}
+        </div>
+      </section>}
     </div>
   </main>;
 }
