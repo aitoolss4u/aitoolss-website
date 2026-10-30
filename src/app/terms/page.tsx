@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { getCmsMetadata } from "@/lib/content-pages";
 import PublicSiteChrome from "@/components/public-site-chrome";
 import CmsPageContent from "@/components/cms-page-content";
-export const metadata: Metadata = { title: "Terms & Conditions", description: "Terms for using AIToolss and its browser-based utilities." };
+const fallbackMetadata: Metadata = { title: "Terms & Conditions", description: "Terms for using AIToolss and its browser-based utilities." };
+export async function generateMetadata(): Promise<Metadata> { return getCmsMetadata("terms", fallbackMetadata); }
 export default function TermsPage() {
  return <PublicSiteChrome><main className="info-page"><article className="info-article">
   <CmsPageContent slug="terms" fallbackTitle="Terms & Conditions" fallbackIntro="Please use AIToolss lawfully and review tool outputs before relying on them. Last updated: October 30, 2026.">
