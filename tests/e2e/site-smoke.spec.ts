@@ -15,7 +15,7 @@ test("homepage reflects discovery UI, moving border and looping featured row", a
   await expect(page.locator(".footer-inner > .footer-section")).toHaveCount(5);
   await expect(page.getByRole("navigation", { name: "Popular tools" }).getByRole("link")).toHaveCount(6);
   await expect(page.getByRole("navigation", { name: "Top categories" }).getByRole("link")).toHaveCount(6);
-  await expect(page.getByRole("navigation", { name: "Resources" }).getByRole("link")).toHaveCount(2);
+  await expect(page.getByRole("navigation", { name: "Resources" }).getByRole("link")).toHaveCount(4);
   await expect(page.getByRole("navigation", { name: "Company and legal" }).getByRole("link")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Company & Legal" })).toBeVisible();
   expect(await page.locator(".headline-shine-letter").count()).toBeGreaterThan(10);
@@ -146,15 +146,13 @@ test("autocomplete supports keyboard selection, Escape and clearing", async ({ p
   await expect(listbox).toBeHidden();
 });
 
-test("selecting a category opens only its capped suggestions", async ({ page }) => {
+test("selecting a category does not open search suggestions", async ({ page }) => {
   await page.goto("/");
-  await page.locator(".hero-shortcuts").getByRole("button", { name: /Images/ }).click();
+  const category = page.locator(".hero-shortcuts").getByRole("button", { name: /Images/ });
+  await category.click();
+  await expect(category).toHaveAttribute("aria-pressed", "true");
   const listbox = page.getByRole("listbox", { name: "Tool suggestions" });
-  await expect(listbox).toBeVisible();
-  const options = listbox.getByRole("option");
-  expect(await options.count()).toBeGreaterThan(0);
-  expect(await options.count()).toBeLessThanOrEqual(8);
-  await expect(listbox).toContainText("Explore Images tools");
+  await expect(listbox).toBeHidden();
   await expect(page.getByText("All tools", { exact: true })).toHaveCount(0);
 });
 
