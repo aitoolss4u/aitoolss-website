@@ -1531,3 +1531,12 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
   .resource-category-grid, .resource-type-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .resource-category-image { height:96px; }
 }
+
+
+.category-filter-results { padding:1.2rem; border:1px solid #e9e3f4; border-radius:1.25rem; background:#fff; text-align:left; }
+.category-filter-heading { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+.category-filter-heading h3 { color:#302941; font-size:1.35rem; font-weight:850; }
+.category-filter-heading h3 span { color:#7657ff; }
+.category-filter-heading p:not(.light-kicker) { margin-top:.25rem; color:#817891; font-size:.8rem; }
+.category-filter-clear { padding:.55rem .8rem; border:1px solid #e6e0f1; border-radius:.7rem; color:#5c4a8c; font-size:.8rem; font-weight:750; }
+.category-filter-clear:hover { background:#f3efff; }
