@@ -20,7 +20,22 @@ type CategoryItem = { name: string; description: string; image_url: string | nul
 
 export default function CategoriesPage() {
   const [items, setItems] = useState<CategoryItem[]>(categories.map((name) => ({ name, description: "", image_url: null })));
-  useEffect(() => { fetch("/api/categories").then((response) => response.ok ? response.json() : null).then((data) => { if (Array.isArray(data?.items)) setItems(data.items.filter((item: unknown): item is CategoryItem => Boolean(item && typeof item === "object" && typeof (item as CategoryItem).name === "string" && categories.includes((item as CategoryItem).name))); }).catch(() => undefined); }, []);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/categories")
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!active || !Array.isArray(data?.items)) return;
+        const next = data.items.filter((item: unknown): item is CategoryItem => {
+          if (!item || typeof item !== "object") return false;
+          const candidate = item as CategoryItem;
+          return typeof candidate.name === "string" && categories.includes(candidate.name);
+        });
+        if (next.length) setItems(next);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
   return (
     <PublicSiteChrome>
       <main className="info-page">
