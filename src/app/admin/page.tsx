@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import BrandLogo from "@/components/brand-logo";
 import { loadAdminData, saveAdminData } from "./actions";
 
 type Category = { id: string; name: string; slug: string; description: string; metaTitle: string; metaDescription: string; tags: string; visible: boolean };
@@ -133,7 +134,7 @@ export default function AdminPage() {
   return (
     <main className="admin-shell" style={{ "--admin-primary": data.settings.primaryColor, "--admin-accent": data.settings.accentColor, "--admin-bg": data.settings.backgroundColor, fontFamily: data.settings.font } as React.CSSProperties}>
       <aside className="admin-sidebar">
-        <Link href="/" className="admin-brand"><span className="admin-brand-mark">A</span><span>AIToolss<span>.</span><small>CONTROL CENTER</small></span></Link>
+        <div className="admin-brand"><BrandLogo size={48} /><span>CONTROL CENTER</span></div>
         <p className="admin-nav-label">WORKSPACE</p><Link href="/admin/gallery" className="admin-gallery-link">AI Creations Gallery ↗</Link>
         <nav aria-label="Admin sections">{menu.map((item) => <button key={item.id} onClick={() => setSection(item.id)} className={section === item.id ? "active" : ""}><span>{item.icon}</span>{item.label}{section === item.id && <b>•</b>}</button>)}</nav>
         <div className="admin-sidebar-bottom"><span className="admin-status-dot" /> Supabase connected <small>Database connection depends on your project setup</small><Link href="/">← Back to website</Link></div>
