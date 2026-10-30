@@ -118,6 +118,8 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
           <nav className="footer-link-list" aria-label="Resources">
             <Link href="/types-of-tools">Types of Tools</Link>
             <Link href="/categories">Categories</Link>
+            <Link href="/popular-tools">Popular Tools</Link>
+            <Link href="/new-trending-tools">New &amp; Trending Tools</Link>
           </nav>
         </section>
 
