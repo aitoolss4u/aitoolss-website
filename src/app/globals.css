@@ -1548,3 +1548,6 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 .heading-period, .brand-dot, .footer-brand-dot, .sidebar-brand-dot { color:var(--color-cyan); }
 .back-to-top { border-color:var(--color-violet); background:var(--color-violet); }
 .tool-page-shell { background:var(--background); }
+
+
+.light-shell { background:var(--background) !important; }
