@@ -31,7 +31,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
         </form>
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
-        <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2>
+        <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>A media URL is the public web address of an image or video. Paste a direct HTTPS file URL that visitors can access. Image links may point to JPG, PNG or WebP files; video links must be supported by the website player. A Google Drive sharing page is not necessarily a direct media file, and private or embedding-restricted files may not display. Direct file upload is not configured yet; use the public URL option for now.</p>
         <form action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media type<select name="media_type" required style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="image">Image</option><option value="video">Video</option></select></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media URL (HTTPS)<input name="media_url" type="url" required placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
