@@ -102,7 +102,7 @@ export default function Home() {
   const [popular, setPopular] = useState<string[]>([]);
   const categories = useMemo(() => categoryNames.map((name) => {
     const meta = categoryMeta.find((category) => category.name === name);
-    return { name, icon: meta?.icon ?? name.slice(0, 1), tint: meta?.tint ?? "lilac", subtitle: meta?.subtitle ?? "Explore useful tools", count: tools.filter((tool) => tool.category === name).length };
+    return { name, icon: meta?.icon ?? name.slice(0, 1), tint: meta?.tint ?? "lilac", subtitle: meta?.subtitle ?? "Explore useful tools" };
   }), [categoryNames]);
   const searchSuggestions = useMemo(() => {
     const normalized = normalizeSearchText(query);
@@ -164,7 +164,7 @@ export default function Home() {
     window.addEventListener("scroll", updateFooterOverlap, { passive: true });
     window.addEventListener("resize", updateFooterOverlap);
     return () => { window.removeEventListener("scroll", updateFooterOverlap); window.removeEventListener("resize", updateFooterOverlap); };
-  }, []);
+  }, [showTop]);
 
   function chooseCategory(category: string, focusSearch = false) {
     setActiveCategory(category);
@@ -319,7 +319,7 @@ export default function Home() {
             <div className="section-topline"><div><p className="light-kicker">FIND YOUR FLOW</p><h2>Explore by category<span>.</span></h2><p>Choose a lane, or follow your curiosity.</p></div></div>
             <div className="light-category-grid mt-5">
               {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} aria-pressed={activeCategory === category.name} className={`light-category-card cat-${category.tint} ${activeCategory === category.name ? "light-category-active" : ""}`}>
-                <span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true">{categoryVisuals[category.name] ?? category.icon}</span><span className="light-category-name">{category.name}</span><span className="light-category-description">{category.subtitle}</span><span className="light-category-count">{category.count} tools <span aria-hidden="true">↗</span></span>
+                <span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true">{categoryVisuals[category.name] ?? category.icon}</span><span className="light-category-name">{category.name}</span><span className="light-category-description">{category.subtitle}</span><span className="light-category-count">Explore <span aria-hidden="true">↗</span></span>
               </button>)}
             </div>
           </section>
