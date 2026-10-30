@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -34,7 +35,10 @@ export async function POST(request: Request) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.CONTACT_FROM_EMAIL;
     if (!apiKey || !from) {
-      return NextResponse.json({ error: "Contact email delivery is not configured yet. Please try again later." }, { status: 503 });
+      const supabase = await createClient();
+      const { error } = await supabase.from("contact_messages").insert({ name, email, subject, message, status: "new" });
+      if (error) return NextResponse.json({ error: "Contact storage is not configured yet. Please try again later." }, { status: 503 });
+      return NextResponse.json({ ok: true, delivery: "inbox", message: "Your message has been saved securely in the AIToolss admin inbox. Email forwarding is not configured yet." });
     }
 
     const safeName = escapeHtml(name);
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
     if (!response.ok) {
       return NextResponse.json({ error: "The email provider could not accept your message. Please try again later." }, { status: 502 });
     }
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, delivery: "email" });
   } catch {
     return NextResponse.json({ error: "Unable to submit the message. Please check the fields and try again." }, { status: 400 });
   }
