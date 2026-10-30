@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { siteConfig } from "@/lib/site";
 import { getSiteMetadata } from "@/lib/content-pages";
 import "./globals.css";
+import SiteThemeProvider from "@/components/site-theme-provider";
 
 const fallbackMetadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -40,7 +41,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang={siteConfig.language} suppressHydrationWarning>
-      <body>{children}</body>
+      <body><SiteThemeProvider>{children}</SiteThemeProvider></body>
     </html>
   );
 }
