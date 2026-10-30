@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, phase-2-foundation, phase-3-design-system, phase-4-main-website, phase-6-leonardo-inspired-ui, phase-7-admin-studio, phase-8-supabase-admin-auth, phase-9-admin-persistence, phase-10-60-live-tools, phase-10-runtime-hardening, phase-11-browser-smoke-tests, phase-12-light-discovery-redesign, phase-13-homepage-gallery-footer, phase-13-ui-critical-fixes, phase-13-search-marquee-autocomplete]
+  pull_request:
+    branches: [main, phase-2-foundation, phase-3-design-system, phase-6-leonardo-inspired-ui, phase-7-admin-studio, phase-8-supabase-admin-auth, phase-9-admin-persistence, phase-10-60-live-tools, phase-10-runtime-hardening, phase-11-browser-smoke-tests, phase-12-light-discovery-redesign, phase-13-homepage-gallery-footer, phase-13-ui-critical-fixes, phase-13-search-marquee-autocomplete]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify tool catalog
+        run: npm run test:tools
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
+      - name: Browser smoke tests
+        run: npm run test:e2e
