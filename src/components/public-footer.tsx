@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { categories as catalogCategories, tools as catalogTools } from "@/lib/tools";
 import type { PublicCategory } from "./public-sidebar";
+import BrandLogo from "@/components/brand-logo";
 
 type SocialLinks = Record<string, string>;
 type SocialProfile = readonly [key: string, label: string, kind: "facebook" | "instagram" | "x" | "linkedin"];
@@ -14,15 +15,6 @@ const socialProfiles: SocialProfile[] = [
   ["socialX", "X", "x"],
   ["socialLinkedIn", "LinkedIn", "linkedin"],
 ];
-const popularFallbackSlugs = [
-  "prompt-generator",
-  "word-counter",
-  "image-compressor",
-  "json-formatter",
-  "color-palette-builder",
-  "text-summarizer",
-];
-
 function SocialIcon({ kind }: { kind: SocialProfile[2] }) {
   if (kind === "facebook") return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.7 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5H17V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.6V13h2.7v8h3.4Z" /></svg>;
   if (kind === "instagram") return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.6" cy="6.8" r=".8" fill="currentColor" stroke="none" /></svg>;
@@ -71,24 +63,14 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
     }
   }, [categories]);
 
-  const popularTools = useMemo(() => {
-    const ranked = popularSlugs.map((slug) => catalogTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof catalogTools)[number] => Boolean(tool));
-    const bySlug = new Map<string, (typeof catalogTools)[number]>();
-    for (const tool of [...ranked, ...popularFallbackSlugs.map((slug) => catalogTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof catalogTools)[number] => Boolean(tool))]) {
-      if (!bySlug.has(tool.slug)) bySlug.set(tool.slug, tool);
-      if (bySlug.size === 6) break;
-    }
-    return [...bySlug.values()];
-  }, [popularSlugs]);
+  const popularTools = useMemo(() => popularSlugs.map((slug) => catalogTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof catalogTools)[number] => Boolean(tool)).slice(0, 6), [popularSlugs]);
 
   return (
     <footer className="professional-footer">
       <div className="footer-inner">
         <section className="footer-section footer-brand-column" aria-labelledby="footer-brand-heading">
           <h2 id="footer-brand-heading" className="sr-only">AIToolss</h2>
-          <Link href="/" aria-label="AIToolss home" className="footer-brand">
-            <span className="light-brand-mark" aria-hidden="true">A</span><span>AIToolss<span className="footer-brand-dot">.</span></span>
-          </Link>
+          <BrandLogo className="footer-brand" size={52} />
           <p>A thoughtful collection of practical tools for creativity, productivity, coding and everyday work.</p>
           <div className="footer-socials" aria-label="Configured social media accounts">
             {socialProfiles.map(([key, label, kind]) => socialLinks[key] ? (
@@ -102,7 +84,7 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
         <section className="footer-section" aria-labelledby="footer-popular-heading">
           <h3 id="footer-popular-heading">Popular Tools</h3>
           <nav className="footer-link-list" aria-label="Popular tools">
-            {popularTools.map((tool) => <Link key={tool.slug} href={`/tools/${tool.slug}`}>{tool.name}</Link>)}
+            {popularTools.length ? popularTools.map((tool) => <Link key={tool.slug} href={`/tools/${tool.slug}`}>{tool.name}</Link>) : <span className="footer-empty-note">Visit data is still building.</span>}
           </nav>
         </section>
 
@@ -118,6 +100,8 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
           <nav className="footer-link-list" aria-label="Resources">
             <Link href="/types-of-tools">Types of Tools</Link>
             <Link href="/categories">Categories</Link>
+            <Link href="/popular-tools">Popular Tools</Link>
+            <Link href="/new-trending-tools">New &amp; Trending Tools</Link>
           </nav>
         </section>
 

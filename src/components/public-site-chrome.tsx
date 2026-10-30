@@ -10,7 +10,6 @@ export default function PublicSiteChrome({ children }: { children: ReactNode }) 
   const pathname = usePathname();
   const slug = pathname.split("/").filter(Boolean).at(-1) ?? "";
   const activeCategory = tools.find((tool) => tool.slug === slug)?.category ?? "";
-
   return (
     <div className="public-site-layout">
       <PublicSidebar activeCategory={activeCategory} />

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createGalleryItem, deleteGalleryItem, saveGalleryLayout, updateGalleryItem } from "./actions";
 import { DeleteGalleryForm } from "./delete-button";
+import GalleryMediaInput from "./media-input";
 
 export const metadata = { title: "Gallery management | AIToolss Admin", robots: { index: false, follow: false } };
 
@@ -15,11 +16,11 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   const settings = (settingsRow?.value ?? { columns: 4, rows: 4 }) as { columns?: number; rows?: number };
   const columns = [4,5,6].includes(Number(settings.columns)) ? Number(settings.columns) : 4;
   const rows = [3,4,5,6].includes(Number(settings.rows)) ? Number(settings.rows) : 4;
-  const messages: Record<string,string> = { "invalid-layout":"Choose a supported column and row count.", "save-layout":"Could not save the gallery settings. Confirm the Phase 13 migration is applied.", "invalid-media":"Media and thumbnail URLs must be valid HTTPS URLs; check required fields.", create:"Could not create the media entry.", update:"Could not update this media entry.", delete:"Could not delete this media entry.", "invalid-id":"The media entry ID is invalid." };
+  const messages: Record<string,string> = { "invalid-layout":"Choose a supported column and row count.", "save-layout":"Could not save the gallery settings. Confirm the Phase 13 migration is applied.", "invalid-media":"The file could not be uploaded or the media URL is invalid. Check the file type/size and confirm the Supabase gallery storage migration is applied.", create:"Could not create the media entry.", update:"Could not update this media entry.", delete:"Could not delete this media entry.", "invalid-id":"The media entry ID is invalid." };
   return <main style={{minHeight:"100vh",background:"#faf9ff",color:"#28233f",padding:"clamp(1rem,4vw,3rem)"}}>
     <div style={{maxWidth:1100,margin:"0 auto"}}>
       <Link href="/admin" style={{color:"#654ed0",fontWeight:700}}>← Back to Admin Studio</Link>
-      <header style={{margin:"1.5rem 0 2rem"}}><p style={{fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#7657ff"}}>AIToolss / CONTENT</p><h1 style={{fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,letterSpacing:"-.04em"}}>AI Creations Gallery</h1><p style={{color:"#77718e",marginTop:8}}>Manage HTTPS media URLs, publication, order and shared gallery layout. Direct file uploads are not configured in this project.</p></header>
+      <header style={{margin:"1.5rem 0 2rem"}}><p style={{fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#7657ff"}}>AIToolss / CONTENT</p><h1 style={{fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,letterSpacing:"-.04em"}}>AI Creations Gallery</h1><p style={{color:"#77718e",marginTop:8}}>Manage HTTPS media URLs, publication, order and shared gallery layout. Upload files directly to the configured persistent Supabase Storage bucket, or paste a publicly accessible HTTPS media URL.</p></header>
       {params.saved && <p role="status" style={{padding:12,borderRadius:12,background:"#e6faef",color:"#17683b",marginBottom:16}}>Saved successfully: {params.saved.replaceAll("-"," ")}.</p>}
       {params.error && <p role="alert" style={{padding:12,borderRadius:12,background:"#fff0f0",color:"#9c2828",marginBottom:16}}>{messages[params.error] ?? "The request could not be completed."}</p>}
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
@@ -31,10 +32,11 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
         </form>
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
-        <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2>
+        <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>A media URL is the public web address of an image or video. Paste a direct HTTPS file URL that visitors can access. Image links may point to JPG, PNG or WebP files; video links must be supported by the website player. A Google Drive sharing page is not necessarily a direct media file, and private or embedding-restricted files may not display. You can upload supported files directly to the configured Supabase Storage bucket, or use the public URL option. If storage setup has not been applied, uploads will return a clear error.</p>
         <form action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media type<select name="media_type" required style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="image">Image</option><option value="video">Video</option></select></label>
-          <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media URL (HTTPS)<input name="media_url" type="url" required placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
+          <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media URL (HTTPS, optional if uploading)<input name="media_url" type="url" placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
+          <GalleryMediaInput label="Upload image or video (optional if using a URL)" />
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Thumbnail / poster URL<input name="thumbnail_url" type="url" placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Title<input name="title" maxLength={160} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Creator / attribution<input name="creator" maxLength={100} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
@@ -46,10 +48,12 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
       <section><h2 style={{fontSize:20,fontWeight:850,marginBottom:12}}>Existing media ({items?.length ?? 0})</h2>
         {itemsError ? <p role="alert">Could not load gallery items. Confirm the Phase 13 migration and admin permissions.</p> : !items?.length ? <div style={{padding:24,border:"1px dashed #cfc5f5",borderRadius:16,color:"#77718e"}}>No media entries yet. Add a relevant AI-generated image or video URL above. Nothing is published until you choose Publish.</div> :
         <div style={{display:"grid",gap:14}}>{items.map((item) => <article key={item.id} style={{padding:16,border:"1px solid #e8e2f6",borderRadius:16,background:"#fff"}}>
+          <div style={{marginBottom:12}}>{item.media_type === "image" ? <img src={item.media_url} alt={item.title || "Gallery media"} style={{maxWidth:260,maxHeight:160,objectFit:"contain",borderRadius:10}} /> : <video src={item.media_url} controls style={{maxWidth:320,maxHeight:180,borderRadius:10}} />}</div>
           <form action={updateGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}}>
             <input type="hidden" name="id" value={item.id} />
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Type<select name="media_type" defaultValue={item.media_type} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}}><option value="image">Image</option><option value="video">Video</option></select></label>
-            <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Media URL<input name="media_url" type="url" required defaultValue={item.media_url} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>
+            <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Media URL<input name="media_url" type="url" defaultValue={item.media_url} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>
+            <GalleryMediaInput label="Replace media with a new upload (optional)" />
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Thumbnail URL<input name="thumbnail_url" type="url" defaultValue={item.thumbnail_url ?? ""} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Title<input name="title" maxLength={160} defaultValue={item.title} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Creator<input name="creator" maxLength={100} defaultValue={item.creator} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PublicSiteChrome from "@/components/public-site-chrome";
+import CmsPageContent from "@/components/cms-page-content";
 
 const STORAGE_KEY = "aitoolss-cookie-preferences-v1";
 
@@ -57,11 +58,7 @@ export default function CookieConsentPage() {
     <PublicSiteChrome>
       <main className="info-page">
         <section className="info-article">
-          <p className="section-kicker">PRIVACY CONTROLS</p>
-          <h1 className="mt-3 text-4xl font-light tracking-tight sm:text-5xl">Cookie &amp; consent preferences.</h1>
-          <p className="section-description mt-4 max-w-2xl text-base leading-7">
-            Manage the preference saved by this browser. Essential session storage is always available for core site functions. Optional analytics are off by default.
-          </p>
+          <CmsPageContent slug="cookie-consent" fallbackTitle="Cookie & consent preferences." fallbackIntro="Manage the preference saved by this browser. Essential storage supports core functions. Optional analytics are off by default." preserveChildren>
 
           <div className="consent-preferences-panel mt-8">
             <div className="consent-preference-row">
@@ -95,6 +92,7 @@ export default function CookieConsentPage() {
           <p className="mt-6 text-sm leading-7 text-muted">
             For details on how the website is intended to handle information, see the <a className="font-semibold text-violet-700 underline underline-offset-4" href="/privacy">Privacy Policy</a>. Cookie and storage behavior may change as site features are added; this page does not represent that unconfigured tracking services are active.
           </p>
+          </CmsPageContent>
         </section>
       </main>
     </PublicSiteChrome>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
-import { getTool } from "@/lib/tools";
+import { getTool, tools as catalogTools } from "@/lib/tools";
 
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -54,8 +54,37 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
   const [option, setOption] = useState("default");
   const [output, setOutput] = useState("");
   const [imageInfo, setImageInfo] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const tool = useMemo(() => getTool(slug), [slug]);
-  const process = () => setOutput(run(slug, input, option));
+  const relatedTools = useMemo(() => {
+    if (!tool) return [];
+    const currentTags = new Set(tool.tags.map((tag) => tag.toLowerCase()));
+    return catalogTools.filter((candidate) => candidate.slug !== tool.slug)
+      .map((candidate) => ({
+        candidate,
+        score: (candidate.category === tool.category ? 100 : 0) +
+          candidate.tags.reduce((score, tag) => score + (currentTags.has(tag.toLowerCase()) ? 12 : 0), 0) +
+          (candidate.mode === tool.mode ? 5 : 0),
+      }))
+      .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+      .slice(0, 8)
+      .map(({ candidate }) => candidate);
+  }, [tool]);
+  const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter"];
+  const usesAI = aiToolSlugs.includes(slug);
+  const process = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true); setOutput("");
+    try {
+      if (usesAI) {
+        const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "AI generation failed.");
+        setOutput(data.output);
+      } else setOutput(run(slug, input, option));
+    } catch (error) { setOutput(error instanceof Error ? error.message : "The tool could not complete this request."); }
+    finally { setIsProcessing(false); }
+  };
   const onImage = (picked: File | null) => {
     setOutput("");
     if (!picked) { setImageInfo(""); return; }
@@ -86,7 +115,7 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
           {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option></select></label>}
           {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
           <div className="tool-actions">
-            <button disabled={runDisabled} onClick={process} className="tool-primary-button">{isImage ? "Image selected" : "Run tool"} ↗</button>
+            <button disabled={runDisabled || isProcessing} onClick={process} className="tool-primary-button">{isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
             <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
           </div>
         </div>
@@ -94,8 +123,16 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
           <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
           {output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download="aitoolss-compressed.jpg" className="tool-download-link">Download compressed image</a></> : <pre className="tool-output-text">{output}</pre>}
         </section>}
-        <p className="tool-privacy-note">Privacy-first processing: most tools run in your browser and do not send your input to an AI service. Outputs are rule-based helpers, not professional advice. No AI API key is required.</p>
+        <p className="tool-privacy-note">{usesAI ? "AI-powered generation: your input is sent securely from the server to the configured model provider. Do not submit passwords, personal secrets or confidential information. AI output may contain errors and should be reviewed." : "This utility runs locally in your browser and does not send your input to an AI service. Outputs are general-purpose helpers, not professional advice."}</p>
       </section>
+      {relatedTools.length > 0 && <section className="related-tools-section" aria-labelledby="related-tools-heading">
+        <div className="section-topline"><div><p className="light-kicker">KEEP EXPLORING</p><h2 id="related-tools-heading">Related tools<span>.</span></h2><p>More useful tools from this catalogue, selected by category and shared tags.</p></div></div>
+        <div className="related-tools-grid mt-5">
+          {relatedTools.map((related) => <Link key={related.slug} href={`/tools/${related.slug}`} className="related-tool-card">
+            <strong>{related.icon} {related.name}</strong><span>{related.category} · {related.description}</span>
+          </Link>)}
+        </div>
+      </section>}
     </div>
   </main>;
 }
