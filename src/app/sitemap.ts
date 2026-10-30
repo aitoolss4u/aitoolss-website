@@ -1,12 +1,19 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site";
+import { tools, categories } from "@/lib/tools";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ["", "/privacy", "/terms", "/tools/word-counter", "/tools/text-summarizer", "/tools/image-compressor"];
+  const routes = [
+    "", "/about", "/contact-us", "/privacy", "/terms", "/disclaimer",
+    "/cookie-consent", "/categories", "/types-of-tools", "/popular-tools",
+    "/new-trending-tools",
+    ...categories.map((category) => `/?category=${encodeURIComponent(category)}`),
+    ...tools.map((tool) => `/tools/${tool.slug}`),
+  ];
   return routes.map((route) => ({
-    url: `${siteConfig.url}${route}`,
-    lastModified: new Date("2026-10-28"),
-    changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1 : route.startsWith("/tools/") ? 0.8 : 0.5,
+    url: route.startsWith("http") ? route : `${siteConfig.url}${route}`,
+    lastModified: new Date(),
+    changeFrequency: route === "" ? "weekly" : route.startsWith("/tools/") ? "monthly" : "weekly",
+    priority: route === "" ? 1 : route.startsWith("/tools/") ? 0.8 : 0.6,
   }));
 }
