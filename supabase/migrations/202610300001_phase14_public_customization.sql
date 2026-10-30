@@ -202,3 +202,27 @@ returns jsonb language sql stable security definer set search_path=public as $$
 $$;
 revoke all on function public.get_public_site_metadata() from public;
 grant execute on function public.get_public_site_metadata() to anon, authenticated;
+
+
+create table if not exists public.contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (char_length(name) between 1 and 120),
+  email text not null check (char_length(email) between 3 and 254),
+  subject text not null check (char_length(subject) between 1 and 180),
+  message text not null check (char_length(message) between 1 and 8000),
+  status text not null default 'new' check (status in ('new','read','archived')),
+  created_at timestamptz not null default now()
+);
+alter table public.contact_messages enable row level security;
+drop policy if exists "Visitors can submit contact messages" on public.contact_messages;
+create policy "Visitors can submit contact messages" on public.contact_messages
+  for insert to anon, authenticated with check (status='new');
+drop policy if exists "Admins can read contact messages" on public.contact_messages;
+create policy "Admins can read contact messages" on public.contact_messages
+  for select to authenticated using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+drop policy if exists "Admins can update contact messages" on public.contact_messages;
+create policy "Admins can update contact messages" on public.contact_messages
+  for update to authenticated using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+grant insert on public.contact_messages to anon, authenticated;
+grant select, update on public.contact_messages to authenticated;
