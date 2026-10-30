@@ -1506,3 +1506,13 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 .admin-brand .aitoolss-brand-image { width:46px; height:46px; }
 .admin-brand > span { display:block; font-size:.7rem; font-weight:800; letter-spacing:.14em; color:#8b84a0; }
 @media (max-width:760px) { .mobile-site-brand .aitoolss-brand-image { width:40px; height:40px; } }
+
+
+.cms-page-content { display:block; width:100%; }
+.cms-page-content > .section-kicker { color:var(--color-violet); font-size:.72rem; font-weight:800; letter-spacing:.15em; }
+.cms-page-body, .cms-fallback-body { margin-top:2rem; color:var(--color-muted); font-size:.95rem; line-height:1.85; }
+.cms-page-body h2, .cms-fallback-body h2 { margin:1.8rem 0 .55rem; color:var(--color-foreground); font-size:1.2rem; font-weight:800; }
+.cms-page-body h3, .cms-fallback-body h3 { margin:1.3rem 0 .45rem; color:var(--color-foreground); font-size:1.05rem; font-weight:750; }
+.cms-page-body p, .cms-fallback-body p { margin:.55rem 0 1rem; }
+.cms-page-body ul, .cms-fallback-body ul { margin:.5rem 0 1rem; padding-left:1.4rem; list-style:disc; }
+.cms-page-body li, .cms-fallback-body li { margin:.25rem 0; }
