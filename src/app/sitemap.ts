@@ -10,7 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...tools.map((tool) => `/tools/${tool.slug}`),
   ];
   return routes.map((route) => ({
-    url: route.startsWith("http") ? route : `${siteConfig.url}${route}`,
+    url: `${siteConfig.url}${route}`,
     changeFrequency: route === "" ? "weekly" : route.startsWith("/tools/") ? "monthly" : "weekly",
     priority: route === "" ? 1 : route.startsWith("/tools/") ? 0.8 : 0.6,
   }));
