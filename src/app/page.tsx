@@ -90,6 +90,9 @@ export default function Home() {
   const [categoryNames, setCategoryNames] = useState<string[]>(toolCategories);
   const [showTop, setShowTop] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const searchFormRef = useRef<HTMLFormElement>(null);
+  const backToTopRef = useRef<HTMLButtonElement>(null);
+  const [topButtonOverFooter, setTopButtonOverFooter] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const featuredWindowRef = useRef<HTMLDivElement>(null);
@@ -112,11 +115,11 @@ export default function Home() {
       .slice(0, 8)
       .map((result) => result.tool);
   }, [query, activeCategory]);
-  const isSuggestionsVisible = suggestionsOpen && (Boolean(query.trim()) || Boolean(activeCategory));
+  const isSuggestionsVisible = suggestionsOpen && Boolean(query.trim());
   const featured = useMemo(() => featuredSlugs.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
 
   useEffect(() => {
-    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(true); setActiveSuggestionIndex(0); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(true); setActiveSuggestionIndex(0); } });
+    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(true); setActiveSuggestionIndex(0); } });
     fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([4,5,6].includes(data.columns) ? data.columns : 4); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
   }, []);
@@ -136,11 +139,38 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      if (searchFormRef.current && !searchFormRef.current.contains(event.target as Node)) {
+        setSuggestionsOpen(false);
+        setActiveSuggestionIndex(-1);
+      }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, []);
+
+  useEffect(() => {
+    const updateFooterOverlap = () => {
+      const button = backToTopRef.current;
+      const footer = document.querySelector(".professional-footer");
+      if (!button || !footer) return setTopButtonOverFooter(false);
+      const buttonRect = button.getBoundingClientRect();
+      const footerRect = footer.getBoundingClientRect();
+      const centerY = buttonRect.top + buttonRect.height / 2;
+      setTopButtonOverFooter(centerY >= footerRect.top && centerY <= footerRect.bottom);
+    };
+    updateFooterOverlap();
+    window.addEventListener("scroll", updateFooterOverlap, { passive: true });
+    window.addEventListener("resize", updateFooterOverlap);
+    return () => { window.removeEventListener("scroll", updateFooterOverlap); window.removeEventListener("resize", updateFooterOverlap); };
+  }, []);
+
   function chooseCategory(category: string, focusSearch = false) {
     setActiveCategory(category);
     setQuery("");
-    setSuggestionsOpen(true);
-    setActiveSuggestionIndex(0);
+    setSuggestionsOpen(false);
+    setActiveSuggestionIndex(-1);
     if (focusSearch) searchInputRef.current?.focus();
   }
   function openSuggestedTool(tool: (typeof tools)[number]) {
@@ -187,16 +217,15 @@ export default function Home() {
   return (
     <div className="light-shell min-h-screen"><main className="app-layout">
       <div className="homepage-layout">
-        <PublicSidebar categories={categories} activeCategory={activeCategory} onCategoryChange={(category) => chooseCategory(category, true)} />
+        <PublicSidebar categories={categories} activeCategory={activeCategory} onCategoryChange={(category) => chooseCategory(category, false)} />
 
         <div className="homepage-main min-w-0">
       <section className="light-hero relative px-5 pb-8 pt-8 sm:px-8 sm:pb-10 sm:pt-12">
         <div aria-hidden="true" className="hero-orb hero-orb-one" /><div aria-hidden="true" className="hero-orb hero-orb-two" />
         <div className="hero-content relative z-10 w-full text-center">
-          <div className="light-eyebrow mx-auto"><span className="eyebrow-spark">✳</span> YOUR FRIENDLY AI TOOLKIT</div>
           <h1 aria-label="Your Entire AI Universe." className="light-hero-title mx-auto mt-5"><span aria-hidden="true" className="headline-shine-line">{Array.from("Your Entire AI Universe.").map((character, index) => character === " " ? " " : <span key={index} className="headline-shine-letter" style={{ "--letter-index": index } as React.CSSProperties}>{character}</span>)}</span></h1>
           <p className="light-hero-copy mx-auto mt-3 max-w-2xl">Discover useful tools for creativity, productivity, coding, research and everyday work. Find your spark, then make it happen.</p>
-          <form id="search" role="search" onSubmit={handleSearchSubmit} className="light-search-wrap mx-auto mt-5">
+          <form ref={searchFormRef} id="search" role="search" onSubmit={handleSearchSubmit} className="light-search-wrap mx-auto mt-5">
             <div className="light-search">
               <span aria-hidden="true" className="search-glyph">⌕</span>
               <input
@@ -304,7 +333,7 @@ export default function Home() {
 
       </main>
       <PublicFooter categories={categories} />
-      {showTop && <button type="button" className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })} aria-label="Back to top" title="Back to top">↑</button>}
+      {showTop && <button ref={backToTopRef} type="button" className={`back-to-top ${topButtonOverFooter ? "back-to-top-over-footer" : ""}`} onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })} aria-label="Back to top" title="Back to top">↑</button>}
     </div>
   );
 }
