@@ -6,9 +6,9 @@
  * Keep component styling on these tokens so future tools stay consistent.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --color-midnight: #0b1020;
+  --color-midnight: #faf9ff;
   --color-surface: #101625;
   --color-surface-raised: #131b2d;
   --color-surface-soft: #171f33;
@@ -673,7 +673,7 @@ body { background: #faf9ff; color: #211d32; font-family: Inter, ui-sans-serif, s
 /* Phase 13 — full-width discovery shell, luminous search, gallery and professional footer */
 :root { color-scheme: light; --background: #faf9ff; --foreground: #201d35; }
 body { background: #faf9ff; color: #201d35; }
-.light-shell { width: 100%; max-width: none; overflow-x: clip; background: #faf9ff; color: #201d35; }
+.light-shell { width: 100%; max-width: none; overflow-x: clip; background: var(--background); color: #201d35; }
 .app-layout { width: 100%; }
 .homepage-layout { display: grid; grid-template-columns: minmax(190px, 218px) minmax(0, 1fr); gap: 0; width: 100%; padding: 0 0 3.5rem; align-items: start; }
 .category-sidebar { position: sticky; top: 0; height: 100vh; min-height: 620px; padding: 1.25rem 1rem; overflow-y: auto; border-right: 1px solid #e9e5f5; background: rgb(250 249 255 / 92%); backdrop-filter: blur(18px); z-index: 30; }
@@ -833,7 +833,7 @@ body { background: #faf9ff; color: #201d35; }
 @media (max-width:760px) { .public-site-layout { display:flex; flex-direction:column; } .public-site-layout > .category-sidebar { width:100%; height:auto; min-height:0; position:relative; } .public-site-main { width:100%; } .tool-page-shell { padding:1rem .75rem; } .tool-page-content { padding-block:.5rem 2rem; } .tool-panel { margin-top:1rem; } }
 
 
-.info-page { flex:1 0 auto; width:100%; min-width:0; min-height:70vh; padding:clamp(1.5rem,5vw,4rem); background:radial-gradient(ellipse at 12% 0%,#f2edff 0,transparent 42%),radial-gradient(ellipse at 96% 12%,#e5f7ff 0,transparent 35%),#faf9ff; color:#29233f; }
+.info-page { flex:1 0 auto; width:100%; min-width:0; min-height:70vh; padding:clamp(1.5rem,5vw,4rem); background:radial-gradient(ellipse at 12% 0%,#f2edff 0,transparent 42%),radial-gradient(ellipse at 96% 12%,#e5f7ff 0,transparent 35%),var(--background); color:#29233f; }
 .info-page h1,.info-page h2 { color:#29233f; }
 .info-page p,.info-page .text-muted,.info-page .section-description { color:#756f89; }
 .info-page .section-kicker { color:#8a76ce; }
@@ -1540,3 +1540,11 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 .category-filter-heading p:not(.light-kicker) { margin-top:.25rem; color:#817891; font-size:.8rem; }
 .category-filter-clear { padding:.55rem .8rem; border:1px solid #e6e0f1; border-radius:.7rem; color:#5c4a8c; font-size:.8rem; font-weight:750; }
 .category-filter-clear:hover { background:#f3efff; }
+
+
+/* Publishable brand color tokens apply to the visible light UI. */
+.light-search-submit, .tool-primary-button, .consent-primary-button { background:var(--color-violet) !important; }
+.light-search-submit:hover, .tool-primary-button:hover, .consent-primary-button:hover { filter:brightness(1.06); }
+.heading-period, .brand-dot, .footer-brand-dot, .sidebar-brand-dot { color:var(--color-cyan); }
+.back-to-top { border-color:var(--color-violet); background:var(--color-violet); }
+.tool-page-shell { background:var(--background); }
