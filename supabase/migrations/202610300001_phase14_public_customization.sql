@@ -116,7 +116,7 @@ Tool availability and results may depend on the browser, device, external provid
 ## Contact
 
 For questions, contact aitoolss4u@gmail.com.','Disclaimer | AIToolss','Important information about AI-generated output, independent verification, professional advice and third-party tools.'),
-('cookie-consent','Cookie Policy & Consent','Manage essential storage and optional analytics preferences for this browser.','## Essential storage
+('cookie-consent','Cookie & consent preferences.','Manage essential storage and optional analytics preferences for this browser.','## Essential storage
 
 Essential cookies or browser storage may support sign-in sessions, security and core site functionality. These are not optional when the related feature is used.
 
