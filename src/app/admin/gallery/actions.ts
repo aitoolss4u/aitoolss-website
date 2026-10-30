@@ -96,7 +96,9 @@ export async function deleteGalleryItem(formData: FormData) {
   const id = clean(formData.get("id"), 64);
   if (!/^[0-9a-f-]{36}$/i.test(id)) redirect("/admin/gallery?error=invalid-id");
   const { data: existing } = await supabase.from("gallery_items").select("media_url").eq("id", id).maybeSingle();
-  const storagePrefix = process.env.NEXT_PUBLIC_SUPABASE_URL ? process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\\/$/, "") + "/storage/v1/object/public/aitoolss-gallery/" : "";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const normalizedSupabaseUrl = supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl;
+  const storagePrefix = normalizedSupabaseUrl ? normalizedSupabaseUrl + "/storage/v1/object/public/aitoolss-gallery/" : "";
   if (existing?.media_url && storagePrefix && existing.media_url.startsWith(storagePrefix)) {
     await supabase.storage.from("aitoolss-gallery").remove([existing.media_url.slice(storagePrefix.length)]);
   }
