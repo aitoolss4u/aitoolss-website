@@ -172,11 +172,11 @@ returns jsonb language sql stable security definer set search_path=public as $$
     'siteName', coalesce(value->>'siteName','AIToolss'),
     'primaryColor', coalesce(value->>'primaryColor','#7657FF'),
     'accentColor', coalesce(value->>'accentColor','#35D9FF'),
-    'backgroundColor', coalesce(value->>'backgroundColor','#0B1020'),
+    'backgroundColor', coalesce(value->>'backgroundColor','#FAF9FF'),
     'font', coalesce(value->>'font','Arial')
   ) from public.site_settings where key='global'
   union all
-  select jsonb_build_object('siteName','AIToolss','primaryColor','#7657FF','accentColor','#35D9FF','backgroundColor','#0B1020','font','Arial')
+  select jsonb_build_object('siteName','AIToolss','primaryColor','#7657FF','accentColor','#35D9FF','backgroundColor','#FAF9FF','font','Arial')
   where not exists (select 1 from public.site_settings where key='global')
   limit 1;
 $$;
