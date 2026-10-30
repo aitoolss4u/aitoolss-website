@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { categories as catalogCategories } from "@/lib/tools";
+import BrandLogo from "@/components/brand-logo";
 
 export type PublicCategory = {
   name: string;
@@ -65,9 +66,7 @@ export default function PublicSidebar({
   return (
     <>
     <div className="mobile-site-header" ref={mobileMenuRef}>
-      <Link href="/" className="mobile-site-brand" aria-label="AIToolss Home">
-        <span className="light-brand-mark" aria-hidden="true">A</span><span>AIToolss<span className="sidebar-brand-dot">.</span></span>
-      </Link>
+      <BrandLogo className="mobile-site-brand" size={44} />
       <button type="button" className="mobile-menu-toggle" aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={menuOpen} aria-controls="mobile-site-menu" onClick={() => setMenuOpen((open) => !open)}>
         <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
       </button>
@@ -82,10 +81,7 @@ export default function PublicSidebar({
     </div>
     <aside className="category-sidebar" aria-label="Main site navigation">
       <div className="sidebar-inner">
-        <Link href="/" className="sidebar-brand" aria-label="AIToolss home">
-          <span className="light-brand-mark" aria-hidden="true">A</span>
-          <span>AIToolss<span className="sidebar-brand-dot">.</span></span>
-        </Link>
+        <BrandLogo className="sidebar-brand" size={48} />
         <Link href="/" className="sidebar-home" aria-current={pathname === "/" ? "page" : undefined}>
           <span aria-hidden="true">⌂</span><span>Home</span>
         </Link>
