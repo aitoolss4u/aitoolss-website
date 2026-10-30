@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
   return routes.map((route) => ({
     url: route.startsWith("http") ? route : `${siteConfig.url}${route}`,
-    lastModified: new Date(),
     changeFrequency: route === "" ? "weekly" : route.startsWith("/tools/") ? "monthly" : "weekly",
     priority: route === "" ? 1 : route.startsWith("/tools/") ? 0.8 : 0.6,
   }));
