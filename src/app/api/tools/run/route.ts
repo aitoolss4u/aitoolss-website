@@ -23,9 +23,9 @@ export async function POST(request:Request) {
   const now=Date.now(); const recent=(requests.get(ip)||[]).filter(t=>now-t<60_000);
   if(recent.length>=8) return NextResponse.json({error:"Please wait a minute before requesting another AI response."},{status:429});
   recent.push(now); requests.set(ip,recent);
-  const key=process.env.AI_GATEWAY_API_KEY;
+  const credential=process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
   const model=process.env.AI_MODEL;
-  if(!key||!model) return NextResponse.json({error:"AI generation is not configured yet. Add AI_GATEWAY_API_KEY and AI_MODEL to the Vercel project environment variables."},{status:503});
+  if(!credential||!model) return NextResponse.json({error:"AI generation is not configured yet. Link Vercel OIDC or configure AI_GATEWAY_API_KEY and AI_MODEL in the Vercel project environment variables."},{status:503});
   const system=[
    "You are the generation engine for AIToolss, a practical collection of digital tools.",
    "Complete the requested task using the supplied input and tool description.",
@@ -37,7 +37,7 @@ export async function POST(request:Request) {
   const prompt=`Tool: ${tool.name}\nTool purpose: ${tool.description}\nRequested option: ${option||"Default"}\n\nUser input:\n${input}`;
   const response=await fetch("https://ai-gateway.vercel.sh/v1/chat/completions",{
    method:"POST",
-   headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},
+   headers:{Authorization:`Bearer ${credential}`,"Content-Type":"application/json"},
    body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:prompt}],temperature:0.45,max_tokens:1400}),
    signal:AbortSignal.timeout(45_000)
   });
