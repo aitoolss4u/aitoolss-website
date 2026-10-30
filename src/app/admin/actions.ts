@@ -83,6 +83,12 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
   if (JSON.stringify(settings).length > 20000) return { ok: false as const, message: "Settings payload is too large." };
   const hex = /^#[0-9a-f]{6}$/i;
   for (const key of ["primaryColor","accentColor","backgroundColor"]) if (settings[key] !== undefined && (typeof settings[key] !== "string" || !hex.test(String(settings[key])))) return { ok: false as const, message: "Brand colors must be valid six-digit hex values." };
+  if (typeof settings.backgroundColor === "string") {
+    const hexColor = settings.backgroundColor.slice(1);
+    const channels = [0, 2, 4].map((offset) => parseInt(hexColor.slice(offset, offset + 2), 16) / 255).map((value) => value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2));
+    const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    if (luminance < 0.72) return { ok: false as const, message: "Choose a light background color so text remains readable across the public website." };
+  }
   if (settings.font !== undefined && !["Arial","Helvetica","Georgia","Verdana","Tahoma","Trebuchet MS","system-ui"].includes(String(settings.font))) return { ok: false as const, message: "Choose a supported system font." };
   for (const key of ["siteName","siteDescription","defaultMetaTitle","defaultMetaDescription"]) if (settings[key] !== undefined && (typeof settings[key] !== "string" || String(settings[key]).length > 320)) return { ok: false as const, message: "Check the length of your site and SEO text." };
 
