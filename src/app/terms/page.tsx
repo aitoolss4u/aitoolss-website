@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
 import PublicSiteChrome from "@/components/public-site-chrome";
-
-export const metadata: Metadata = { title: "Terms & Conditions", description: "Terms and conditions for using AIToolss and its browser-based utilities." };
-
+import CmsPageContent from "@/components/cms-page-content";
+export const metadata: Metadata = { title: "Terms & Conditions", description: "Terms for using AIToolss and its browser-based utilities." };
 export default function TermsPage() {
-  return <PublicSiteChrome><main className="info-page"><article className="info-article"><p className="section-kicker">USAGE GUIDELINES</p><h1 className="mt-3 text-4xl font-black sm:text-5xl">Terms & Conditions</h1><p className="section-description mt-4">Last updated: October 2026</p><div className="mt-8 space-y-6 text-sm leading-7 text-muted"><section><h2 className="mb-2 text-lg font-bold text-foreground">Using the website</h2><p>AIToolss provides a directory and simple browser-based utilities for general informational and productivity purposes. By using the website, you agree to use it lawfully and not to disrupt, damage or attempt to gain unauthorized access to the service.</p></section><section><h2 className="mb-2 text-lg font-bold text-foreground">Tool output</h2><p>Tools are provided on an “as is” and “as available” basis. Check results before relying on them. Text summaries may omit context, and image compression can affect quality. AIToolss does not guarantee that outputs are complete, accurate or suitable for a particular purpose.</p></section><section><h2 className="mb-2 text-lg font-bold text-foreground">Third-party services</h2><p>Directory listings may link to third-party products and websites. AIToolss does not control or guarantee their availability, content, pricing or policies. Visiting third-party services is at your own discretion.</p></section><section><h2 className="mb-2 text-lg font-bold text-foreground">Intellectual property</h2><p>You remain responsible for ensuring that you have the rights to content you submit to or process with tools. The website’s branding and original site content may not be copied or misrepresented without permission.</p></section><section><h2 className="mb-2 text-lg font-bold text-foreground">Changes</h2><p>These terms may be updated as the service changes. Continued use after an update means you accept the revised terms to the extent permitted by applicable law.</p></section></div><p className="mt-8 text-xs text-muted">This template is informational and is not legal advice. Review it for your business and applicable jurisdiction before launch.</p></article></main></PublicSiteChrome>;
+ return <PublicSiteChrome><main className="info-page"><article className="info-article">
+  <CmsPageContent slug="terms" fallbackTitle="Terms & Conditions" fallbackIntro="Please use AIToolss lawfully and review tool outputs before relying on them. Last updated: October 30, 2026.">
+   <div className="cms-fallback-body">
+    <h2>Using the website</h2><p>AIToolss provides a tool directory and digital utilities for general informational and productivity purposes. You agree not to misuse the service, interfere with its operation, attempt unauthorized access or use the site in violation of applicable law.</p>
+    <h2>Tool output and responsibility</h2><p>Tools are provided as available. Outputs may be incomplete, inaccurate or unsuitable for a particular purpose. You are responsible for reviewing results before relying on them.</p>
+    <h2>User content</h2><p>You remain responsible for having the rights and permissions needed to submit, process or publish content. Do not submit unlawful, infringing or confidential material you are not authorized to share.</p>
+    <h2>Third-party services</h2><p>Listings and links may lead to services operated by other organizations. Their availability, prices, terms and privacy practices are controlled by those providers, not AIToolss.</p>
+    <h2>Availability and changes</h2><p>Features may change, be suspended or be removed. We do not guarantee uninterrupted availability or a particular result.</p>
+    <h2>Contact</h2><p>Questions about these terms can be sent to aitoolss4u@gmail.com. This information is general and is not legal advice.</p>
+   </div>
+  </CmsPageContent>
+ </article></main></PublicSiteChrome>;
 }
