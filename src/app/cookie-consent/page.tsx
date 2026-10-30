@@ -58,7 +58,7 @@ export default function CookieConsentPage() {
     <PublicSiteChrome>
       <main className="info-page">
         <section className="info-article">
-          <CmsPageContent slug="cookie-consent" fallbackTitle="Cookie & consent preferences" fallbackIntro="Manage the preference saved by this browser. Essential storage supports core functions. Optional analytics are off by default." preserveChildren>
+          <CmsPageContent slug="cookie-consent" fallbackTitle="Cookie & consent preferences." fallbackIntro="Manage the preference saved by this browser. Essential storage supports core functions. Optional analytics are off by default." preserveChildren>
 
           <div className="consent-preferences-panel mt-8">
             <div className="consent-preference-row">
