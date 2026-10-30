@@ -182,3 +182,23 @@ returns jsonb language sql stable security definer set search_path=public as $$
 $$;
 revoke all on function public.get_public_site_theme() from public;
 grant execute on function public.get_public_site_theme() to anon, authenticated;
+
+
+create or replace function public.get_public_site_metadata()
+returns jsonb language sql stable security definer set search_path=public as $$
+  select jsonb_build_object(
+    'siteName', coalesce(value->>'siteName','AIToolss'),
+    'defaultMetaTitle', coalesce(value->>'defaultMetaTitle','AIToolss — Discover AI Tools That Help You Do More'),
+    'defaultMetaDescription', coalesce(value->>'defaultMetaDescription','Explore useful tools for creativity, productivity, coding and everyday work.')
+  ) from public.site_settings where key='global'
+  union all
+  select jsonb_build_object(
+    'siteName','AIToolss',
+    'defaultMetaTitle','AIToolss — Discover AI Tools That Help You Do More',
+    'defaultMetaDescription','Explore useful tools for creativity, productivity, coding and everyday work.'
+  )
+  where not exists (select 1 from public.site_settings where key='global')
+  limit 1;
+$$;
+revoke all on function public.get_public_site_metadata() from public;
+grant execute on function public.get_public_site_metadata() to anon, authenticated;
