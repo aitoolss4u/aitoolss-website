@@ -36,7 +36,6 @@ const defaultCategories: Category[] = [
 const defaults: AdminData = { settings: defaultSettings, categories: defaultCategories };
 
 const menu = [
-  { id: "pages", label: "Company & Legal pages", icon: "▤" },
   { id: "overview", label: "Overview", icon: "◫" }, { id: "categories", label: "Categories & tags", icon: "▦" },
   { id: "seo", label: "SEO controls", icon: "⌕" }, { id: "design", label: "Design studio", icon: "◈" },
   { id: "settings", label: "Site settings", icon: "⚙" }, { id: "social", label: "Social links", icon: "↗" },
