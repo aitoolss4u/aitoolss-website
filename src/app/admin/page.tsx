@@ -135,7 +135,7 @@ export default function AdminPage() {
     <main className="admin-shell" style={{ "--admin-primary": data.settings.primaryColor, "--admin-accent": data.settings.accentColor, "--admin-bg": data.settings.backgroundColor, fontFamily: data.settings.font } as React.CSSProperties}>
       <aside className="admin-sidebar">
         <div className="admin-brand"><BrandLogo size={48} /><span>CONTROL CENTER</span></div>
-        <p className="admin-nav-label">WORKSPACE</p><Link href="/admin/gallery" className="admin-gallery-link">AI Creations Gallery ↗</Link><Link href="/admin/pages" className="admin-gallery-link">Company &amp; Legal pages ↗</Link>
+        <p className="admin-nav-label">WORKSPACE</p><Link href="/admin/gallery" className="admin-gallery-link">AI Creations Gallery ↗</Link><Link href="/admin/pages" className="admin-gallery-link">Company &amp; Legal pages ↗</Link><Link href="/admin/messages" className="admin-gallery-link">Contact inbox ↗</Link>
         <nav aria-label="Admin sections">{menu.map((item) => <button key={item.id} onClick={() => setSection(item.id)} className={section === item.id ? "active" : ""}><span>{item.icon}</span>{item.label}{section === item.id && <b>•</b>}</button>)}</nav>
         <div className="admin-sidebar-bottom"><span className="admin-status-dot" /> Supabase connected <small>Database connection depends on your project setup</small><Link href="/">← Back to website</Link></div>
       </aside>
