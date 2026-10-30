@@ -3,8 +3,6 @@
 import { useState, type FormEvent } from "react";
 import PublicSiteChrome from "@/components/public-site-chrome";
 
-export const metadata = { title: "Contact AIToolss", description: "Contact the AIToolss project team." };
-
 export default function ContactPage() {
   const [status, setStatus] = useState("");
   const [sending, setSending] = useState(false);
