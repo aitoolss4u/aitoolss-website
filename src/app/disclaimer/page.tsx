@@ -1,4 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PublicSiteChrome from "@/components/public-site-chrome";
-export const metadata = { title: "Disclaimer | AIToolss", description: "Important information about AIToolss tools and third-party services." };
-export default function DisclaimerPage() { return <PublicSiteChrome><main className="info-page"><article style={{maxWidth:850,margin:"0 auto"}}><Link href="/" style={{color:"#654ed0",fontWeight:700}}>← AIToolss home</Link><h1 style={{fontSize:"clamp(2.4rem,6vw,4rem)",fontWeight:900,letterSpacing:"-.04em",marginTop:48}}>Disclaimer</h1><p style={{color:"#88819e",marginTop:8}}>Last updated: October 29, 2026</p><h2 style={{fontSize:22,fontWeight:850,marginTop:28}}>General information</h2><p style={{lineHeight:1.8,color:"#69627f",marginTop:10}}>AIToolss provides a directory and browser-based utilities for general informational and productivity purposes. Outputs may be incomplete or inaccurate and should be reviewed before use.</p><h2 style={{fontSize:22,fontWeight:850,marginTop:24}}>Third-party services</h2><p style={{lineHeight:1.8,color:"#69627f",marginTop:10}}>Tool names, services and external links may belong to their respective owners. A listing does not imply endorsement. External services have their own terms and privacy practices.</p><h2 style={{fontSize:22,fontWeight:850,marginTop:24}}>No professional advice</h2><p style={{lineHeight:1.8,color:"#69627f",marginTop:10}}>Content and utility outputs are not a substitute for professional legal, financial, medical, or other specialized advice. You are responsible for reviewing outputs and deciding whether they are suitable for your use.</p><p style={{lineHeight:1.8,color:"#69627f",marginTop:20}}>For information about data handling, review our <Link href="/privacy" style={{color:"#654ed0",fontWeight:700}}>Privacy Policy</Link>.</p></article></main></PublicSiteChrome>; }
+import CmsPageContent from "@/components/cms-page-content";
+export const metadata: Metadata = { title: "Disclaimer | AIToolss", description: "Important information about AI-assisted output, tools and third-party services." };
+export default function DisclaimerPage() {
+ return <PublicSiteChrome><main className="info-page"><article className="info-article">
+  <CmsPageContent slug="disclaimer" fallbackTitle="Disclaimer" fallbackIntro="Important information about AI-assisted outputs, tools and third-party services.">
+   <div className="cms-fallback-body">
+    <h2>General information</h2><p>AIToolss provides a directory and practical utilities for general informational and productivity purposes. Website content is not a guarantee of a particular outcome.</p>
+    <h2>AI-generated output</h2><p>AI-generated content may contain errors, omissions, bias or outdated information. Review and independently verify important claims, calculations, citations and recommendations before using them.</p>
+    <h2>No professional advice</h2><p>Tools and generated content are not a substitute for professional legal, financial, medical, tax, safety or other specialized advice.</p>
+    <h2>Third-party tools</h2><p>Some listed products and services are owned and operated by third parties. A listing does not mean AIToolss owns, controls, verifies or endorses that service. Providers may have separate terms, privacy policies, fees and availability.</p>
+    <h2>Availability and results</h2><p>Tool availability and results may depend on the browser, device, external providers, model availability and configuration. AIToolss does not guarantee uninterrupted access, accuracy or suitability.</p>
+    <p>For information about data handling, review our <Link href="/privacy" className="font-semibold text-violet-700 underline">Privacy Policy</Link>.</p>
+   </div>
+  </CmsPageContent>
+ </article></main></PublicSiteChrome>;
+}
