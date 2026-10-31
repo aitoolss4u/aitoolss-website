@@ -1,3 +1,4 @@
+import { persistedToolSeoContent } from "@/lib/tool-seo-data";
 import type { ToolDefinition } from "@/lib/tools";
 export type ToolSeoFaq={question:string;answer:string};
 export type ToolSeoContent={slug:string;introduction:string;whatIs:string;howToUse:string[];faqs:ToolSeoFaq[];metaTitle:string;metaDescription:string;ogTitle:string;ogDescription:string};
@@ -20,6 +21,8 @@ function howTo(tool:ToolDefinition):string[]{
  return["Enter the text or data required by "+tool.name+" in the input field.","Select Run tool to apply the operation described above the input.","Review the output against your original input and intended use before copying it."];
 }
 export function buildToolSeoContent(tool:ToolDefinition):ToolSeoContent{
+ const persisted = persistedToolSeoContent[tool.slug];
+ if (persisted) return persisted;
  const details=tool.description.replace(/\\.$/,"");
  const audience:Record<string,string>={Writing:"writers, students, editors, and people preparing everyday documents",Images:"designers, content creators, and anyone working with image assets",Productivity:"people organizing focused work, tasks, and day-to-day workflows",Coding:"developers and learners who need a practical coding utility",Marketing:"marketers, creators, and website owners preparing campaign content",Education:"students, teachers, and researchers organizing learning material",Business:"founders, operators, and teams working through business tasks",Career:"job seekers and professionals preparing career materials"};
  const who=audience[tool.category]??"people completing everyday digital tasks";
