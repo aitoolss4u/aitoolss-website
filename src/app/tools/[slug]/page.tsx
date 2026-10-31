@@ -1,147 +1,22 @@
-"use client";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getTool } from "@/lib/tools";
+import { createToolMetadata, getToolSeoContent } from "@/lib/tool-seo.server";
+import ToolPageClient from "./tool-page-client";
 
-import Link from "next/link";
-import { use, useMemo, useState } from "react";
-import { getTool, tools as catalogTools } from "@/lib/tools";
-import PomodoroTimer from "@/components/pomodoro-timer";
+type PageProps = { params: Promise<{ slug: string }> };
 
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const seo = await getToolSeoContent(slug);
+  return seo ? createToolMetadata(slug, seo) : {};
 }
-function words(value: string) { return value.trim() ? value.trim().split(/\s+/).length : 0; }
-function sentenceCase(value: string) { return value.replace(/\s+/g, " ").trim().replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix, letter: string) => prefix + letter.toUpperCase()); }
-function titleCase(value: string) { return value.toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase()); }
-function escapeHtml(value: string) { return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
-function run(slug: string, input: string, option: string): string {
-  const text = input.trim();
-  if (!text) return "Add some input above, then select Run tool.";
-  switch (slug) {
-    case "citation-generator": { const fields = Object.fromEntries(text.split("\\n").map((line) => { const i = line.indexOf(":"); return i > 0 ? [line.slice(0,i).trim().toLowerCase(),line.slice(i+1).trim()] : ["", ""]; }).filter(([key]) => key)); const author=fields.author||"Author"; const title=fields.title||"Title"; const year=fields.year||"n.d."; const source=fields.source||fields.publisher||"Publisher"; const url=fields.url||""; if(option==="mla") return `${author}. "${title}." ${source}, ${year}.${url ? " "+url : ""}`; if(option==="chicago") return `${author}. "${title}." ${source}. ${year}.${url ? " "+url : ""}`; return `${author} (${year}). ${title}. ${source}.${url ? " "+url : ""}`; }
-    case "word-counter": return JSON.stringify({ words: words(text), characters: text.length, charactersWithoutSpaces: text.replace(/\s/g, "").length, sentences: (text.match(/[.!?]+(?=\s|$)/g) || []).length || (text ? 1 : 0), paragraphs: text.split(/\n\s*\n/).filter(Boolean).length, estimatedReadingTime: Math.max(1, Math.ceil(words(text) / 225)) + " min" }, null, 2);
-    case "text-summarizer": { const sentences = text.match(/[^.!?]+[.!?]*/g) || [text]; const count = Math.max(1, Math.min(sentences.length, Number(option) || Math.ceil(sentences.length / 3))); return sentences.slice(0, count).map((s) => s.trim()).filter(Boolean).join(" "); }
-    case "slug-generator": case "filename-cleaner": return slugify(text).slice(0, 120);
-    case "color-palette-builder": { const hex = text.replace(/^#/, ""); if (!/^(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return "Enter a valid 3- or 6-digit hex color, such as #7657FF."; const full = hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex; const base = [parseInt(full.slice(0,2),16),parseInt(full.slice(2,4),16),parseInt(full.slice(4,6),16)]; const mix = (target:number, amount:number) => "#" + base.map((v) => Math.round(v*(1-amount)+target*amount).toString(16).padStart(2,"0")).join("").toUpperCase(); return ["Lightest  "+mix(255,.8),"Light      "+mix(255,.45),"Base       #"+full.toUpperCase(),"Dark       "+mix(0,.25),"Darkest    "+mix(0,.5)].join("\n"); }
-    case "decision-matrix": { const rows = text.split("\n").map((line) => line.split(",").map((part) => part.trim())).filter((parts) => parts.length >= 2 && parts[0]); if (rows.length < 2 || rows.some((row) => row.slice(1).some((score) => !Number.isFinite(Number(score))))) return "Enter one option per line, followed by numeric scores separated by commas. Example: Option A, 4, 5, 3"; const scored = rows.map((row) => ({ name: row[0], scores: row.slice(1).map(Number) })); return scored.map((row) => row.name + ": " + row.scores.join(" + ") + " = " + row.scores.reduce((sum, n) => sum+n, 0)).sort((a,b) => Number(b.split(" = ").pop()) - Number(a.split(" = ").pop())).join("\n"); }
-    case "random-password-generator": { const length = Math.max(8, Math.min(64, Number(text) || 20)); const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*_-+="; const bytes = new Uint8Array(length); crypto.getRandomValues(bytes); return Array.from(bytes, (byte) => chars[byte % chars.length]).join(""); }
-    case "json-formatter": { try { return JSON.stringify(JSON.parse(text), null, 2); } catch (error) { return "Invalid JSON: " + (error instanceof Error ? error.message : "could not parse input"); } }
-    case "json-to-csv-converter": { try { const data = JSON.parse(text); if (!Array.isArray(data) || !data.every((row) => row && typeof row === "object" && !Array.isArray(row))) return "Input must be a JSON array of objects."; const keys = [...new Set(data.flatMap((row) => Object.keys(row)))]; const cell = (v: unknown) => '"' + String(v ?? "").replace(/"/g, '""') + '"'; return [keys.map(cell).join(","), ...data.map((row) => keys.map((key) => cell(row[key])).join(","))].join("\n"); } catch { return "Invalid JSON. Paste an array of objects."; } }
-    case "url-encoder-decoder": try { return option === "decode" ? decodeURIComponent(text) : encodeURIComponent(text); } catch { return "Could not decode this value. Check the percent-encoding."; }
-    case "base64-encoder-decoder": try { return option === "decode" ? decodeURIComponent(escape(atob(text))) : btoa(unescape(encodeURIComponent(text))); } catch { return "Could not decode Base64. Check the input."; }
-    case "html-entity-encoder": return option === "decode" ? text.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&") : escapeHtml(text);
-    case "markdown-formatter": return text.split("\n").map((line) => line.trim()).join("\n").replace(/\n{3,}/g, "\n\n");
-    case "hex-to-rgb-converter": { const hex = text.replace(/^#/, ""); if (!/^(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return "Enter a valid 3- or 6-digit hex color, such as #7657FF."; const full = hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex; const n = parseInt(full, 16); const r = n >> 16, g = n >> 8 & 255, b = n & 255; return JSON.stringify({ hex: "#" + full.toUpperCase(), rgb: "rgb(" + r + ", " + g + ", " + b + ")", hsl: rgbToHsl(r,g,b) }, null, 2); }
-    case "rgb-to-hex-converter": { const vals = text.match(/\d+(?:\.\d+)?/g)?.map(Number); if (!vals || vals.length < 3 || vals.slice(0,3).some((n) => n < 0 || n > 255)) return "Enter three RGB values between 0 and 255, e.g. 118, 87, 255."; return "#" + vals.slice(0,3).map((n) => Math.round(n).toString(16).padStart(2,"0")).join("").toUpperCase(); }
-    case "timestamp-converter": { const date = /^\d{9,13}$/.test(text) ? new Date(Number(text) * (text.length <= 10 ? 1000 : 1)) : new Date(text); return Number.isNaN(date.getTime()) ? "Enter a Unix timestamp or a date string." : JSON.stringify({ iso: date.toISOString(), local: date.toString(), unixSeconds: Math.floor(date.getTime()/1000), unixMilliseconds: date.getTime() }, null, 2); }
-    case "reading-time-estimator": return words(text) + " words · about " + Math.max(1, Math.ceil(words(text) / 225)) + " minute(s) at 225 words per minute.";
-    case "paragraph-rewriter": case "tone-changer": case "achievement-bullet-rewriter": return (option === "formal" ? sentenceCase(text) : option === "friendly" ? sentenceCase(text).replace(/\butilize\b/gi, "use").replace(/\btherefore\b/gi, "so") : sentenceCase(text)).replace(/\s+/g, " ");
-    case "bullet-point-maker": case "vocabulary-list-maker": return [...new Set(text.split(/[\n.!?;]+/).map((s) => s.trim()).filter(Boolean))].map((s) => "• " + s).join("\n");
-    case "meta-description-writer": return text.replace(/\s+/g, " ").slice(0, 155).trim() + (text.length > 155 ? "…" : "");
-    case "email-draft-helper": return "Subject: " + text.split(/[.!?\n]/)[0].slice(0, 70) + "\n\nHello,\n\n" + text + "\n\nPlease let me know if you have any questions.\n\nBest,";
-    case "cover-letter-builder": return "Dear Hiring Manager,\n\nI am excited to apply for this opportunity. " + text + "\n\nI would welcome the opportunity to discuss how my experience can contribute to your team.\n\nSincerely,\n[Your name]";
-    case "social-caption-writer": return text + "\n\nWhat do you think? Share your thoughts below.\n\n# " + text.split(/\s+/).filter((w) => w.length > 4).slice(0,3).map(slugify).join(" #");
-    case "wordpress-excerpt-maker": case "product-description-writer": case "image-alt-text-helper": return text.replace(/\s+/g, " ").slice(0, slug === "wordpress-excerpt-maker" ? 220 : 500) + (text.length > 500 ? "…" : "");
-    case "utm-link-builder": { try { const url = new URL(text); url.searchParams.set("utm_source", option || "website"); url.searchParams.set("utm_medium", "referral"); url.searchParams.set("utm_campaign", "campaign"); return url.toString(); } catch { return "Enter a full URL including https://"; } }
-    case "aspect-ratio-calculator": case "pomodoro-session-planner": case "salary-hourly-converter": case "invoice-tax-calculator": case "break-even-calculator": { const n = text.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || []; if (slug === "aspect-ratio-calculator") { if (n.length < 2 || !n[0] || !n[1]) return "Enter width and height, e.g. 1920, 1080."; const gcd=(a:number,b:number):number=>b?gcd(b,a%b):a; const d=gcd(Math.round(n[0]),Math.round(n[1])); return JSON.stringify({ ratio: (n[0]/d)+":"+(n[1]/d), width:n[0], height:n[1] },null,2); } if (slug === "pomodoro-session-planner") { const work=Math.max(1,n[0]||25), br=Math.max(1,n[1]||5), rounds=Math.max(1,Math.floor(n[2]||4)); return Array.from({length:rounds},(_,i)=>"Round "+(i+1)+": Focus "+work+" min → Break "+br+" min").join("\n")+"\nTotal planned time: "+(rounds*(work+br))+" minutes."; } if (slug === "salary-hourly-converter") return n.length ? "$"+(n[0]/2080).toFixed(2)+" per hour (assuming 40 hours/week × 52 weeks)." : "Enter annual salary, e.g. 65000."; if (slug === "invoice-tax-calculator") return n.length>=2 ? JSON.stringify({subtotal:n[0],taxRate:n[1]+"%",taxAmount:+(n[0]*n[1]/100).toFixed(2),total:+(n[0]*(1+n[1]/100)).toFixed(2)},null,2) : "Enter subtotal and tax rate, e.g. 1000, 18."; return n.length>=2 && n[1]>0 ? "Break-even units: "+Math.ceil(n[0]/n[1])+" (fixed costs ÷ contribution per unit)." : "Enter fixed costs and contribution per unit, e.g. 5000, 25."; }
-    case "daily-planner": case "goal-breakdown": case "habit-tracker-template": case "resume-checklist": case "grammar-checklist": case "citation-checklist": case "swot-analysis-builder": { const items = slug === "resume-checklist" ? ["Contact details and professional summary","Relevant experience with measurable impact","Skills matched to the role","Education and certifications","Proofread dates, spelling and formatting"] : slug === "grammar-checklist" ? ["Check subject–verb agreement","Review punctuation and sentence boundaries","Replace unclear pronouns","Check consistent tense","Read aloud for awkward phrasing"] : slug === "citation-checklist" ? ["Author or organization","Publication date","Title of work","Publisher or site name","URL or DOI where applicable","Required style guide formatting"] : slug === "swot-analysis-builder" ? ["Strengths — internal advantages","Weaknesses — internal limitations","Opportunities — external openings","Threats — external risks"] : slug === "habit-tracker-template" ? ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"] : slug === "goal-breakdown" ? ["Define the outcome and success measure","Split into 3–5 milestones","Choose the next small action","Set a review date","Track progress and adjust"] : ["Top priority","Second priority","Quick task","Break / reset","End-of-day review"]; return (text ? "Focus: "+text+"\n\n" : "")+items.map((item)=>"☐ "+item).join("\n"); }
-    case "business-name-ideas": case "headline-generator": case "blog-outline-builder": case "prompt-generator": case "hashtag-ideas": case "video-script-outline": case "interview-practice-questions": case "quiz-question-builder": case "essay-outline-builder": case "flashcard-maker": case "meeting-agenda-maker": case "meeting-notes-formatter": case "study-notes-organizer": case "regex-cheat-sheet": case "code-explainer": case "youtube-description-builder": { const topic=text; const templates: Record<string,string[]> = { "business-name-ideas":["Bright "+titleCase(topic),"Next "+titleCase(topic),"Nova "+titleCase(topic),titleCase(topic)+" Studio", "True "+titleCase(topic)], "headline-generator":["The Complete Guide to "+titleCase(topic),"What to Know About "+titleCase(topic),"5 Ways to Improve "+titleCase(topic),"A Smarter Approach to "+titleCase(topic)], "blog-outline-builder":["Introduction: why "+topic+" matters","Key concepts and context","Practical steps or examples","Common mistakes to avoid","Conclusion and next steps"], "prompt-generator":["Role: Act as an experienced specialist in "+topic+".","Goal: Help me achieve a specific, measurable outcome.","Context: [Add audience, constraints and background].","Output: Provide a structured, actionable response.","Quality bar: State assumptions and ask clarifying questions when needed."], "hashtag-ideas": ["#"+slugify(topic),"#"+slugify(topic+"tips"),"#"+slugify(topic+"community"),"#learn"+titleCase(topic).replace(/\s/g,""),"#"+slugify("how to "+topic)], "video-script-outline":["Hook (0–5 sec): open with a clear promise about "+topic,"Context: explain why it matters","Main point 1: teach or demonstrate","Main point 2: show an example","Wrap-up: recap and invite action"], "interview-practice-questions":["Tell me about your experience with "+topic+".","Describe a challenge you solved related to "+topic+".","How do you prioritize when deadlines compete?","What would you improve about your current approach?"], "quiz-question-builder":["Define the central idea of "+topic+".","What is one practical example of "+topic+"?","Compare two important aspects of "+topic+".","What common misconception exists about "+topic+"?"], "essay-outline-builder":["Introduction and thesis about "+topic,"Background and key terms","Main argument 1 with evidence","Main argument 2 with evidence","Counterargument and response","Conclusion"], "flashcard-maker":topic.split(/\n/).filter(Boolean).map((line)=>"Q: "+line.split(/[:–-]/)[0]+"\nA: "+(line.split(/[:–-]/).slice(1).join("-").trim()||"Add a definition for this term.")), "meeting-agenda-maker":["Objective: "+topic,"Updates and context (5 min)","Discussion and decisions (15 min)","Owners and next actions (5 min)"], "meeting-notes-formatter":["## Summary",""+topic,"## Decisions","- [Add decision]","## Action items","- [Owner] — [Task] — [Due date]"], "study-notes-organizer":["## Topic: "+topic,"### Key ideas","- "+topic.split(/[.!?\n]/).filter(Boolean).slice(0,4).join("\n- "),"### Questions to review","- What is the main concept?","- How could it be applied?"], "regex-cheat-sheet":["Email-like pattern: ^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$","Digits: \\d+","Word boundary: \\bword\\b","Whitespace: \\s+","Start/end: ^pattern$"], "code-explainer":["Input received: "+topic,"Look for declarations, functions, control flow and data transformations.","Check edge cases, external dependencies and error handling.","This is a heuristic overview, not an AI-generated code review."], "youtube-description-builder":["[One-sentence video summary about "+topic+"]","","⏱️ Chapters","00:00 Introduction","00:30 Main topic","","🔗 Resources","[Add links]","","Subscribe for more and leave your questions below."], "swot-analysis-builder":["Strengths: internal advantages of "+topic,"Weaknesses: internal limitations to address","Opportunities: external openings to explore","Threats: external risks to monitor"] }; return (templates[slug] || ["Introduction: "+topic,"Main point: "+topic,"Next step: add detail and examples"]).join("\n"); }
-    default: { const definition = getTool(slug); const lines = text.split(/[\n.!?;]+/).map((line) => line.trim()).filter(Boolean); if (definition?.mode === "ideas") return ["Starting point: " + text, "Angle 1: explain the problem and who it affects", "Angle 2: share a practical example", "Angle 3: offer a step-by-step solution", "Next step: choose one angle and add specific details."].join("\n"); if (definition?.mode === "checklist") return ["Goal: " + text, "☐ Define the desired outcome", "☐ Gather the relevant details", "☐ Identify risks or missing information", "☐ Complete the next action", "☐ Review and refine"].join("\n"); if (definition?.mode === "formatter") return lines.map((line) => "• " + line).join("\n"); if (definition?.mode === "json") { try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return "Input is not valid JSON. Check commas, quotes, brackets and braces."; } } return lines.join("\n"); }
-  }
-}
-function rgbToHsl(r:number,g:number,b:number) { const rr=r/255,gg=g/255,bb=b/255,max=Math.max(rr,gg,bb),min=Math.min(rr,gg,bb); let h=0,s=0; const l=(max+min)/2; if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case rr:h=(gg-bb)/d+(gg<bb?6:0);break;case gg:h=(bb-rr)/d+2;break;default:h=(rr-gg)/d+4;}h/=6;}return "hsl("+Math.round(h*360)+", "+Math.round(s*100)+"%, "+Math.round(l*100)+"%)"; }
-
-export default function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
-  const [input, setInput] = useState("");
-  const [option, setOption] = useState("default");
-  const [output, setOutput] = useState("");
-  const [imageInfo, setImageInfo] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const tool = useMemo(() => getTool(slug), [slug]);
-  const relatedTools = useMemo(() => {
-    if (!tool) return [];
-    const currentTags = new Set(tool.tags.map((tag) => tag.toLowerCase()));
-    return catalogTools.filter((candidate) => candidate.slug !== tool.slug)
-      .map((candidate) => ({
-        candidate,
-        score: (candidate.category === tool.category ? 100 : 0) +
-          candidate.tags.reduce((score, tag) => score + (currentTags.has(tag.toLowerCase()) ? 12 : 0), 0) +
-          (candidate.mode === tool.mode ? 5 : 0),
-      }))
-      .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
-      .slice(0, 8)
-      .map(({ candidate }) => candidate);
-  }, [tool]);
-  const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
-  const usesAI = aiToolSlugs.includes(slug);
-  const isExternalImageTool = ["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover"].includes(slug);
-  const process = async () => {
-    if (isProcessing) return;
-    setIsProcessing(true); setOutput("");
-    try {
-      if (slug === "dictionary") {
-        const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");
-        setOutput(data.output);
-      } else if (usesAI) {
-        const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "AI generation failed.");
-        setOutput(data.output);
-      } else setOutput(run(slug, input, option));
-    } catch (error) { setOutput(error instanceof Error ? error.message : "The tool could not complete this request."); }
-    finally { setIsProcessing(false); }
-  };
-  const onImage = (picked: File | null) => {
-    setOutput("");
-    if (!picked) { setImageInfo(""); return; }
-    const url = URL.createObjectURL(picked);
-    const image = new Image();
-    image.onload = () => { URL.revokeObjectURL(url); setImageInfo(image.width+" × "+image.height+" px · "+(picked.size/1024).toFixed(1)+" KB"); if (slug === "image-dimension-checker") { setOutput("Image dimensions: "+image.width+" × "+image.height+" px\nFile size: "+(picked.size/1024).toFixed(1)+" KB\nFile type: "+(picked.type || "unknown")); } if (slug === "image-compressor") { const canvas = document.createElement("canvas"); canvas.width=image.width; canvas.height=image.height; const ctx=canvas.getContext("2d"); if (!ctx) return; ctx.drawImage(image,0,0); canvas.toBlob((blob)=>{ if (!blob) return; const resultUrl=URL.createObjectURL(blob); setOutput("Compressed image ready · "+(blob.size/1024).toFixed(1)+" KB · "+Math.round((1-blob.size/picked.size)*100)+"% size change. Use the download button below."); setImageInfo(image.width+" × "+image.height+" px · "+(picked.size/1024).toFixed(1)+" KB → "+(blob.size/1024).toFixed(1)+" KB"); setOutput(resultUrl); }, "image/jpeg", .78); } };
-    image.onerror = () => { URL.revokeObjectURL(url); setImageInfo("Could not read this image file."); };
-    image.src = url;
-  };
-  if (!tool) return <main className="tool-page-shell"><div className="tool-page-content"><p className="tool-eyebrow">AIToolss / Tool not found</p><h1 className="tool-page-title">We couldn’t find that tool.</h1><Link href="/" className="tool-primary-button">Back to all tools</Link></div></main>;
-  const isImage = tool.mode === "image";
-  const runDisabled = !isImage && !input.trim();
-  return <main className="tool-page-shell">
-    <div className="tool-page-content">
-      <Link href="/" className="tool-back-link">← Home</Link>
-      <section className="tool-panel">
-        <div className="tool-eyebrow">{tool.category} · Browser tool</div>
-        <div className="tool-heading-row">
-          <span className="tool-heading-icon" aria-hidden="true">{tool.icon}</span>
-          <div className="tool-heading-copy"><h1 className="tool-page-title">{tool.name}</h1><p className="tool-page-description">{tool.description}</p></div>
-        </div>
-        {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
-          <label htmlFor="tool-input" className="tool-field-label">{isImage ? "Choose an image" : "Your input"}</label>
-          {isImage
-            ? <input id="tool-input" type="file" accept="image/*" onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
-            : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="tool-input" />}
-          {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
-          {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
-          {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
-          {isExternalImageTool && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This tool needs a verified external provider integration before it can analyse or edit files. File upload is available, but no result will be fabricated. It will become runnable once the provider credentials are configured.</p>}
-          <div className="tool-actions">
-            <button disabled={runDisabled || isProcessing || isExternalImageTool || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isExternalImageTool ? "Provider not configured" : isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
-            <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
-          </div>
-        </div>}
-        {output && <section className="tool-result">
-          <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
-          {output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download="aitoolss-compressed.jpg" className="tool-download-link">Download compressed image</a></> : <pre className="tool-output-text">{output}</pre>}
-        </section>}
-        <p className="tool-privacy-note">{usesAI ? "AI-powered generation: your input is sent securely from the server to the configured model provider. Do not submit passwords, personal secrets or confidential information. AI output may contain errors and should be reviewed." : "This utility runs locally in your browser and does not send your input to an AI service. Outputs are general-purpose helpers, not professional advice."}</p>
-      </section>
-      {relatedTools.length > 0 && <section className="related-tools-section" aria-labelledby="related-tools-heading">
-        <div className="section-topline"><div><p className="light-kicker">KEEP EXPLORING</p><h2 id="related-tools-heading">Related tools<span>.</span></h2><p>More useful tools from this catalogue, selected by category and shared tags.</p></div></div>
-        <div className="related-tools-grid mt-5">
-          {relatedTools.map((related) => <Link key={related.slug} href={`/tools/${related.slug}`} className="related-tool-card">
-            <strong>{related.icon} {related.name}</strong><span>{related.category} · {related.description}</span>
-          </Link>)}
-        </div>
-      </section>}
-    </div>
-  </main>;
+export default async function ToolPage({ params }: PageProps) {
+  const { slug } = await params;
+  const tool = getTool(slug);
+  if (!tool) notFound();
+  const seo = await getToolSeoContent(slug);
+  if (!seo) notFound();
+  return <ToolPageClient slug={slug} seo={seo} />;
 }
