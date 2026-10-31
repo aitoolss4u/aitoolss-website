@@ -18,20 +18,12 @@ export default function PomodoroTimer() {
   useEffect(() => {
     if (!running) return;
     const timer = window.setInterval(() => {
-      setRemaining((current) => {
-        if (current <= 1) {
-          window.clearInterval(timer);
-          setRunning(false);
-          if (mode === "focus") setSessions((count) => count + 1);
-          return 0;
-        }
-        return current - 1;
-      });
+      setRemaining((current) => Math.max(0, current - 1));
     }, 1000);
     return () => window.clearInterval(timer);
   }, [running, mode]);
 
-  const chooseMode = (next: Mode) => {
+  useEffect(() => {\n    if (remaining === 0 && running) {\n      setRunning(false);\n      if (mode === "focus") setSessions((count) => count + 1);\n    }\n  }, [remaining, running, mode]);\n\n  const chooseMode = (next: Mode) => {
     setRunning(false);
     setMode(next);
     setRemaining(durations[next]);
