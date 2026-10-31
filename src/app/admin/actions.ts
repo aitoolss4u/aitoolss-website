@@ -104,6 +104,23 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
   const slugs = payload.categories.map((item) => item.slug);
   if (new Set(slugs).size !== slugs.length) return { ok: false as const, message: "Category slugs must be unique." };
   const allowedSettings = ["siteName","siteDescription","defaultMetaTitle","defaultMetaDescription","primaryColor","accentColor","backgroundColor","font","maintenanceMode","showRoadmapTools","enableAnalytics","enableAds","socialFacebook","socialInstagram","socialYouTube","socialLinkedIn","socialX"];
+  const socialHosts: Record<string, string[]> = {
+    socialFacebook: ["facebook.com", "fb.com"], socialInstagram: ["instagram.com"],
+    socialYouTube: ["youtube.com", "youtu.be"], socialLinkedIn: ["linkedin.com"], socialX: ["x.com", "twitter.com"],
+  };
+  for (const [key, hosts] of Object.entries(socialHosts)) {
+    const value = settings[key];
+    if (value === undefined || value === "") continue;
+    if (typeof value !== "string" || value.length > 2048) return { ok: false as const, message: "Enter a valid HTTPS social profile URL for " + key + "." };
+    try {
+      const url = new URL(value);
+      const host = url.hostname.toLowerCase().replace(/^www\\./u, "");
+      if (url.protocol !== "https:" || url.pathname === "/" || url.pathname === "/home" || !hosts.some((domain) => host === domain || host.endsWith("." + domain))) return { ok: false as const, message: "Use the official profile URL for " + key + "; generic homepage links are not accepted." };
+    } catch {
+      return { ok: false as const, message: "Enter a valid HTTPS social profile URL for " + key + "." };
+    }
+  }
+
   const settings = Object.fromEntries(allowedSettings.filter((key) => key in payload.settings).map((key) => [key, payload.settings[key]]));
   if (JSON.stringify(settings).length > 20000) return { ok: false as const, message: "Settings payload is too large." };
   const hex = /^#[0-9a-f]{6}$/i;
