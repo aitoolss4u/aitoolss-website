@@ -73,13 +73,17 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
       .map(({ candidate }) => candidate);
   }, [tool]);
   const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
-  const usesAI = aiToolSlugs.includes(slug);\n  const isExternalImageTool = ["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover"].includes(slug);
+  const usesAI = aiToolSlugs.includes(slug);
+  const isExternalImageTool = ["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover"].includes(slug);
   const process = async () => {
     if (isProcessing) return;
     setIsProcessing(true); setOutput("");
     try {
       if (slug === "dictionary") {
-        const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));\n        const data = await response.json();\n        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");\n        setOutput(data.output);\n      } else if (usesAI) {
+        const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");\n        setOutput(data.output);
+      } else if (usesAI) {
         const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "AI generation failed.");
