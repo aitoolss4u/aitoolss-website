@@ -3,7 +3,6 @@ export type ToolDefinition = { name: string; slug: string; category: string; ico
 
 const entries: Array<[string, string, string, string, string, ToolMode]> = [
 ["Text Summarizer","text-summarizer","Writing","✦","Turn long text into a concise, readable summary.","text"],
-["Word Counter","word-counter","Writing","Aa","Count words, characters, sentences and reading time.","text"],
 ["Paragraph Rewriter","paragraph-rewriter","Writing","↻","Rewrite a paragraph with clearer wording and flow.","text"],
 ["Grammar Checklist","grammar-checklist","Writing","✓","Review common grammar and punctuation issues.","checklist"],
 ["Headline Generator","headline-generator","Writing","H","Draft headline ideas from a topic.","ideas"],
