@@ -226,3 +226,65 @@ test("resource directory and cookie preferences lead to useful, functional pages
   expect(stored.essential).toBe(true);
   expect(stored.optionalAnalytics).toBe(true);
 });
+
+
+test("all representative tool pages keep interface, related tools and SEO in the required order", async ({ page }) => {
+  const samples = [
+    "/tools/word-counter",
+    "/tools/pomodoro-timer",
+    "/tools/image-compressor",
+    "/tools/grammar-checker",
+    "/tools/json-formatter",
+    "/tools/invoice-tax-calculator",
+  ];
+  for (const path of samples) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(200);
+    const detail = page.locator("[data-tool-detail-page]");
+    await expect(detail).toBeVisible();
+    const sections = await detail.evaluate((element) =>
+      Array.from(element.querySelectorAll(":scope > .tool-page-content > [data-section]"))
+        .map((section) => section.getAttribute("data-section"))
+    );
+    expect(sections, path).toEqual(["breadcrumb", "heading", "tool-interface", "related-tools", "seo-content"]);
+    await expect(detail.locator("[data-related-tool-card]")).toHaveCount(6);
+    await expect(detail.locator("[data-faq-item]")).toHaveCount(6);
+    const cardLinks = await detail.locator("[data-related-tool-card]").evaluateAll((cards) =>
+      cards.map((card) => (card as HTMLAnchorElement).getAttribute("href"))
+    );
+    expect(new Set(cardLinks).size, path).toBe(6);
+    expect(cardLinks, path).not.toContain(path);
+    await expect(detail.locator('[data-seo-block="introduction"]')).toBeVisible();
+    await expect(detail.locator('[data-seo-block="what-is"]')).toBeVisible();
+    await expect(detail.locator('[data-seo-block="how-to-use"] li')).toHaveCount(3);
+    await expect(detail.locator('[data-seo-block="faqs"]')).toBeVisible();
+    const firstFaq = detail.locator("[data-faq-item]").first();
+    const toggle = firstFaq.getByRole("button");
+    await expect(toggle).toContainText("+");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(toggle).toContainText("−");
+    await expect(firstFaq.locator(".tool-faq-answer")).toHaveAttribute("aria-hidden", "false");
+    await toggle.click();
+    await expect(toggle).toContainText("+");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
+    expect(canonical).toContain(path);
+    expect(await page.title()).toContain("AIToolss");
+  }
+});
+
+test("related tool cards render three columns on desktop and stack on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.goto("/tools/word-counter");
+  const grid = page.locator(".related-tools-grid");
+  await expect(grid.locator("a")).toHaveCount(6);
+  const desktopColumns = await grid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
+  expect(desktopColumns).toBe(3);
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.reload();
+  const mobileColumns = await grid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
+  expect(mobileColumns).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+});
