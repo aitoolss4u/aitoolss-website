@@ -117,7 +117,7 @@ export default function Home() {
       .map((result) => result.tool);
   }, [query, activeCategory, dynamicTools]);
   const isSuggestionsVisible = suggestionsOpen && Boolean(query.trim());
-  const featured = useMemo(() => featuredSlugs.map((slug) => dynamicTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
+  const featured = useMemo(() => featuredSlugs.map((slug) => dynamicTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), [dynamicTools]);
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
