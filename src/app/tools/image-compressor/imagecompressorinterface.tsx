@@ -47,8 +47,7 @@ export default function ImageCompressorInterface() {
     }
   }
 
-  return 
-    
+  return (
     <section className="tool-panel">
       <div className="ds-panel mt-8 p-5 sm:p-7"><label htmlFor="image-file" className="block text-sm font-bold">Choose an image</label><input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { setFile(event.target.files?.[0] ?? null); setResult(null); setError(""); }} className="mt-3 block w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-violet-500 file:px-4 file:py-2 file:font-bold file:text-white"/>{file && <p className="mt-3 text-sm text-muted">Selected: {file.name} · {formatBytes(file.size)}</p>}
         <div className="mt-6 grid gap-5 sm:grid-cols-2"><div><label htmlFor="quality" className="flex justify-between text-sm font-semibold"><span>Quality</span><span>{Math.round(quality * 100)}%</span></label><input id="quality" type="range" min="0.2" max="1" step="0.05" value={quality} onChange={(event) => setQuality(Number(event.target.value))} className="mt-3 w-full accent-violet-400"/><p className="mt-1 text-xs text-muted">Lower quality often creates smaller files.</p></div><div><label htmlFor="format" className="block text-sm font-semibold">Output format</label><select id="format" value={format} onChange={(event) => setFormat(event.target.value)} className="mt-3 w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-3 text-sm"><option value="image/webp">WebP</option><option value="image/jpeg">JPEG</option><option value="image/png">PNG (quality control not supported)</option></select></div></div>
