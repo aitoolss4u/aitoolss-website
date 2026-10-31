@@ -16,7 +16,7 @@ const categoryCopy: Record<string, string> = {
   Career: "Prepare resumes, cover letters and interview practice.",
 };
 
-type CategoryItem = { name: string; description: string; image_url: string | null };
+type CategoryItem = { name: string; description: string; image_url: string | null; image_alt?: string | null };
 
 export default function CategoriesPage() {
   const [items, setItems] = useState<CategoryItem[]>(categories.map((name) => ({ name, description: "", image_url: null })));
@@ -48,7 +48,7 @@ export default function CategoriesPage() {
           <div className="resource-category-grid mt-8">
             {items.slice(0, 8).map((item, index) => (
               <Link key={item.name} href={`/?category=${encodeURIComponent(item.name)}#search`} className="resource-category-card">
-                {item.image_url ? <img src={item.image_url} alt="" className="resource-category-image" /> : <span className="resource-category-mark" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>}
+                {item.image_url ? <img src={item.image_url} alt={item.image_alt || (item.name + " category image")} className="resource-category-image" /> : <span className="resource-category-mark" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>}
                 <span className="resource-category-card-copy">
                   <strong>{item.name}</strong>
                   <span>{item.description || categoryCopy[item.name] || "Explore useful tools for this category."}</span>

@@ -12,6 +12,8 @@ export type PublicCategory = {
   tint?: string;
   subtitle?: string;
   count?: number;
+  imageUrl?: string | null;
+  imageAlt?: string;
 };
 
 const categoryIcons: Record<string, string> = {
@@ -39,6 +41,7 @@ export default function PublicSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [remoteCategories, setRemoteCategories] = useState<PublicCategory[]>(catalogCategories.map((name) => ({ name, icon: categoryIcons[name] ?? name.slice(0, 1) })));
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!menuOpen) return;
@@ -48,10 +51,17 @@ export default function PublicSidebar({
     document.addEventListener("pointerdown", onPointerDown);
     return () => { document.removeEventListener("keydown", onKeyDown); document.removeEventListener("pointerdown", onPointerDown); };
   }, [menuOpen]);
-  const visibleCategories = categories ?? catalogCategories.map((name) => ({
-    name,
-    icon: categoryIcons[name] ?? name.slice(0, 1),
-  }));
+  useEffect(() => {
+    if (categories) return;
+    let active = true;
+    fetch("/api/categories").then((response) => response.ok ? response.json() : null).then((data) => {
+      if (!active || !Array.isArray(data?.items)) return;
+      const items = data.items.filter((item: unknown): item is { name: string; image_url?: string | null; image_alt?: string | null } => !!item && typeof item === "object" && typeof (item as { name?: unknown }).name === "string" && catalogCategories.includes((item as { name: string }).name));
+      if (items.length) setRemoteCategories(items.map((item) => ({ name: item.name, icon: categoryIcons[item.name] ?? item.name.slice(0, 1), imageUrl: item.image_url ?? "", imageAlt: item.image_alt ?? "" })));
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [categories]);
+  const visibleCategories = categories ?? remoteCategories;
 
   const choose = (name: string) => {
     if (onCategoryChange) {
@@ -74,7 +84,7 @@ export default function PublicSidebar({
         <Link href="/" onClick={() => setMenuOpen(false)} aria-current={pathname === "/" ? "page" : undefined}>⌂ <span>Home</span></Link>
         <p>DISCOVER</p>
         {visibleCategories.map((category) => <button type="button" key={category.name} onClick={() => choose(category.name)} aria-pressed={activeCategory === category.name}>
-          <span aria-hidden="true">{category.icon ?? categoryIcons[category.name] ?? category.name.slice(0, 1)}</span>{category.name}
+          <span aria-hidden="true">{category.imageUrl ? <img src={category.imageUrl} alt="" className="sidebar-category-image" /> : (category.icon ?? categoryIcons[category.name] ?? category.name.slice(0, 1))}</span>{category.name}
         </button>)}
         <Link href="/admin-login" onClick={() => setMenuOpen(false)}>Admin sign in ↗</Link>
       </nav>}
@@ -94,7 +104,7 @@ export default function PublicSidebar({
             onClick={() => choose(category.name)}
             aria-pressed={activeCategory === category.name}
           >
-            <span aria-hidden="true">{category.icon ?? categoryIcons[category.name] ?? category.name.slice(0, 1)}</span>
+            <span aria-hidden="true">{category.imageUrl ? <img src={category.imageUrl} alt="" className="sidebar-category-image" /> : (category.icon ?? categoryIcons[category.name] ?? category.name.slice(0, 1))}</span>
             <span>{category.name}</span>
           </button>
         ))}

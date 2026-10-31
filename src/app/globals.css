@@ -1563,3 +1563,6 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 .aitoolss-brand-wordmark { color:inherit; font-size:1.08rem; font-weight:850; letter-spacing:-.045em; white-space:nowrap; }
 .aitoolss-brand-wordmark > span { color:#7657ff; }
 .aitoolss-brand-image { flex:0 0 auto; }
+
+/* Category artwork uses the single image_url field returned by /api/categories. */
+.light-category-image{display:block;width:100%;height:100%;object-fit:contain;border-radius:inherit}.sidebar-category-image{display:block;width:1.35rem;height:1.35rem;object-fit:contain;border-radius:.25rem}.resource-category-image{object-fit:cover}

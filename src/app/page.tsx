@@ -89,6 +89,7 @@ export default function Home() {
   const [dynamicTools, setDynamicTools] = useState(tools);
   const [activeCategory, setActiveCategory] = useState("");
   const [categoryNames, setCategoryNames] = useState<string[]>(toolCategories);
+  const [categoryImages, setCategoryImages] = useState<Record<string, { url: string; alt: string }>>({});
   const [showTop, setShowTop] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const searchFormRef = useRef<HTMLFormElement>(null);
@@ -103,8 +104,8 @@ export default function Home() {
   const [popular, setPopular] = useState<string[]>([]);
   const categories = useMemo(() => categoryNames.map((name) => {
     const meta = categoryMeta.find((category) => category.name === name);
-    return { name, icon: meta?.icon ?? name.slice(0, 1), tint: meta?.tint ?? "lilac", subtitle: meta?.subtitle ?? "Explore useful tools" };
-  }), [categoryNames]);
+    return { name, icon: meta?.icon ?? name.slice(0, 1), tint: meta?.tint ?? "lilac", subtitle: meta?.subtitle ?? "Explore useful tools", imageUrl: categoryImages[name]?.url ?? "", imageAlt: categoryImages[name]?.alt ?? "" };
+  }), [categoryNames, categoryImages]);
   const searchSuggestions = useMemo(() => {
     const normalized = normalizeSearchText(query);
     const categoryTools = activeCategory ? dynamicTools.filter((tool) => tool.category === activeCategory) : dynamicTools;
@@ -121,7 +122,7 @@ export default function Home() {
 
   useEffect(() => {
     fetch("/api/catalog/tools").then((response) => response.ok ? response.json() : null).then((data) => { if (Array.isArray(data?.tools) && data.tools.length) setDynamicTools(data.tools.map((tool: typeof tools[number]) => ({ ...tool, href: "/tools/" + tool.slug }))); }).catch(() => setDynamicTools(tools));
-    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
+    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); if (Array.isArray(data.items)) setCategoryImages(Object.fromEntries(data.items.filter((item: unknown) => !!item && typeof item === "object" && typeof (item as {name?:unknown}).name === "string").map((item: {name:string;image_url?:string|null;image_alt?:string|null}) => [item.name, { url: item.image_url ?? "", alt: item.image_alt ?? "" }]))); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
     fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([4,5,6].includes(data.columns) ? data.columns : 4); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
   }, []);
@@ -332,7 +333,7 @@ export default function Home() {
             <div className="section-topline"><div><p className="light-kicker">FIND YOUR FLOW</p><h2>Explore by category<span>.</span></h2><p>Choose a lane, or follow your curiosity.</p></div></div>
             <div className="light-category-grid mt-5">
               {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} aria-pressed={activeCategory === category.name} className={`light-category-card cat-${category.tint} ${activeCategory === category.name ? "light-category-active" : ""}`}>
-                <span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true">{categoryVisuals[category.name] ?? category.icon}</span><span className="light-category-name">{category.name}</span><span className="light-category-description">{category.subtitle}</span><span className="light-category-count">Explore <span aria-hidden="true">↗</span></span>
+                <span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true">{category.imageUrl ? <img src={category.imageUrl} alt="" className="light-category-image" /> : (categoryVisuals[category.name] ?? category.icon)}</span><span className="light-category-name">{category.name}</span><span className="light-category-description">{category.subtitle}</span><span className="light-category-count">Explore <span aria-hidden="true">↗</span></span>
               </button>)}
             </div>
 
