@@ -56,7 +56,8 @@ export default function PublicSidebar({
     let active = true;
     fetch("/api/categories").then((response) => response.ok ? response.json() : null).then((data) => {
       if (!active || !Array.isArray(data?.items)) return;
-      const items = data.items.filter((item: unknown): item is { name: string; image_url?: string | null; image_alt?: string | null } => !!item && typeof item === "object" && typeof (item as { name?: unknown }).name === "string" && catalogCategories.includes((item as { name: string }).name));
+      const rawItems: unknown[] = data.items as unknown[];
+      const items = rawItems.filter((item: unknown): item is { name: string; image_url?: string | null; image_alt?: string | null } => !!item && typeof item === "object" && typeof (item as { name?: unknown }).name === "string" && catalogCategories.includes((item as { name: string }).name));
       if (items.length) setRemoteCategories(items.map((item) => ({ name: item.name, icon: categoryIcons[item.name] ?? item.name.slice(0, 1), imageUrl: item.image_url ?? "", imageAlt: item.image_alt ?? "" })));
     }).catch(() => undefined);
     return () => { active = false; };
