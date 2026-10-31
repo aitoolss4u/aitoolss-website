@@ -82,7 +82,8 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
       if (slug === "dictionary") {
         const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");\n        setOutput(data.output);
+        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");
+        setOutput(data.output);
       } else if (usesAI) {
         const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
         const data = await response.json();
