@@ -1,0 +1,20 @@
+"use client";
+import Link from "next/link";
+import {useMemo,useState,type ReactNode} from "react";
+import {tools as catalogTools,type ToolDefinition} from "@/lib/tools";
+import type {ToolSeoContent} from "@/lib/tool-seo";
+export default function ToolDetailSections({tool,seo,children}:{tool:ToolDefinition;seo:ToolSeoContent;children:ReactNode}){
+ const [openFaq,setOpenFaq]=useState<number|null>(null);
+ const relatedTools=useMemo(()=>{const tags=new Set(tool.tags.map(tag=>tag.toLowerCase()));return catalogTools.filter(candidate=>candidate.slug!==tool.slug).map(candidate=>({candidate,score:(candidate.category===tool.category?100:0)+candidate.tags.reduce((sum,tag)=>sum+(tags.has(tag.toLowerCase())?12:0),0)+(candidate.mode===tool.mode?5:0)})).filter(item=>item.score>0).sort((a,b)=>b.score-a.score||a.candidate.name.localeCompare(b.candidate.name)).slice(0,6).map(item=>item.candidate);},[tool]);
+ return <main className="tool-page-shell" data-tool-detail-page="true"><div className="tool-page-content">
+ <nav className="tool-breadcrumbs" aria-label="Breadcrumb" data-section="breadcrumb"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/#tools">Tools</Link><span aria-hidden="true">/</span><span aria-current="page">{tool.name}</span></nav>
+ <header className="tool-detail-heading" data-section="heading"><p className="tool-eyebrow">{tool.category} · Online tool</p><h1 className="tool-page-title">{tool.name}<span className="heading-period">.</span></h1><p className="tool-page-description">{tool.description}</p></header>
+ <section className="tool-interface-section" aria-label={tool.name+" working interface"} data-section="tool-interface">{children}</section>
+ <section className="related-tools-section" aria-labelledby="related-tools-heading" data-section="related-tools"><div className="section-topline"><div><p className="light-kicker">KEEP EXPLORING</p><h2 id="related-tools-heading">Related tools<span>.</span></h2><p>Six relevant tools selected from the AIToolss catalogue.</p></div></div><div className="related-tools-grid mt-5">{relatedTools.map(item=><Link key={item.slug} href={"/tools/"+item.slug} className="related-tool-card" data-related-tool-card="true"><span className="related-tool-icon" aria-hidden="true">{item.icon}</span><span className="related-tool-copy"><strong>{item.name}</strong><span>{item.description}</span></span><span className="related-tool-arrow" aria-hidden="true">↗</span></Link>)}</div></section>
+ <section className="tool-seo-content" aria-labelledby="tool-seo-heading" data-section="seo-content">
+ <section className="tool-seo-block" data-seo-block="introduction"><h2 id="tool-seo-heading">Introduction to {tool.name}</h2><p>{seo.introduction}</p></section>
+ <section className="tool-seo-block" data-seo-block="what-is"><h2>What Is {tool.name}?</h2><p>{seo.whatIs}</p></section>
+ <section className="tool-seo-block" data-seo-block="how-to-use"><h2>How to Use {tool.name}</h2><ol>{seo.howToUse.map((s,i)=><li key={i}>{s}</li>)}</ol></section>
+ <section className="tool-seo-block tool-faq-section" data-seo-block="faqs" aria-labelledby="tool-faq-heading"><h2 id="tool-faq-heading">Frequently Asked Questions About {tool.name}</h2><div className="tool-faq-list">{seo.faqs.map((faq,i)=>{const opened=openFaq===i,answerId="tool-faq-"+tool.slug+"-"+i;return <article className={"tool-faq-item"+(opened?" is-open":"")} key={faq.question} data-faq-item="true"><h3><button type="button" className="tool-faq-trigger" aria-expanded={opened} aria-controls={answerId} onClick={()=>setOpenFaq(opened?null:i)}><span>{faq.question}</span><span className="tool-faq-toggle" aria-hidden="true">{opened?"−":"+"}</span></button></h3><div id={answerId} className="tool-faq-answer" hidden={!opened}><div className="tool-faq-answer-inner"><p>{faq.answer}</p></div></div></article>})}</div></section>
+ </section></div></main>;
+}
