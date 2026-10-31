@@ -127,7 +127,7 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
             <button disabled={runDisabled || isProcessing || isExternalImageTool || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isExternalImageTool ? "Provider not configured" : isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
             <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
           </div>
-        </div>
+        </div>}
         {output && <section className="tool-result">
           <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
           {output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download="aitoolss-compressed.jpg" className="tool-download-link">Download compressed image</a></> : <pre className="tool-output-text">{output}</pre>}
