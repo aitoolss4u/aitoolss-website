@@ -288,3 +288,26 @@ test("related tool cards render three columns on desktop and stack on mobile", a
   expect(mobileColumns).toBe(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
 });
+
+
+test("tool FAQ answers are completely hidden while collapsed", async ({ page }) => {
+  for (const path of ["/tools/word-counter", "/tools/image-compressor", "/tools/grammar-checker"]) {
+    await page.goto(path);
+    const items = page.locator("[data-faq-item]");
+    await expect(items).toHaveCount(6);
+    for (const item of await items.all()) {
+      await expect(item.getByRole("button")).toHaveAttribute("aria-expanded", "false");
+      await expect(item.getByRole("button")).toContainText("+");
+      await expect(item.locator(".tool-faq-answer")).toHaveAttribute("aria-hidden", "true");
+      await expect(item.locator(".tool-faq-answer")).toBeHidden();
+    }
+    const first = items.first();
+    await first.getByRole("button").click();
+    await expect(first.locator(".tool-faq-answer")).toBeVisible();
+    await expect(first.getByRole("button")).toHaveAttribute("aria-expanded", "true");
+    await expect(first.getByRole("button")).toContainText("−");
+    await first.getByRole("button").click();
+    await expect(first.locator(".tool-faq-answer")).toBeHidden();
+    await expect(first.getByRole("button")).toContainText("+");
+  }
+});

@@ -20,8 +20,7 @@ const defaultSettings: AdminSettings = {
   defaultMetaDescription: "Explore useful AI tools for writing, images, productivity, coding, marketing, education, business and career.",
   primaryColor: "#7657FF", accentColor: "#35D9FF", backgroundColor: "#FAF9FF", font: "Arial",
   maintenanceMode: false, showRoadmapTools: true, enableAnalytics: false, enableAds: false,
-  socialFacebook: "https://www.facebook.com/", socialInstagram: "https://www.instagram.com/",
-  socialYouTube: "https://www.youtube.com/", socialLinkedIn: "https://www.linkedin.com/", socialX: "https://x.com/",
+  socialFacebook: "", socialInstagram: "", socialYouTube: "", socialLinkedIn: "", socialX: "",
 };
 const defaultCategories: Category[] = [
   { id: "writing", name: "Writing", slug: "writing", description: "Words, ideas and clarity.", metaTitle: "AI Writing Tools", metaDescription: "Discover useful AI writing tools and text utilities.", tags: "writing, text, summarizer, words", imageUrl: "", visible: true },

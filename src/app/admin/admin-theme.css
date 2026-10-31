@@ -1,0 +1,42 @@
+/* Admin-only light theme; scoped wrapper keeps public theme independent. */
+.admin-theme{min-height:100vh;background:#f6f7fb;color:#24283a;color-scheme:light;font-family:Arial,Helvetica,sans-serif}
+.admin-theme,.admin-theme *{color-scheme:light}
+.admin-theme .admin-shell{background:#f6f7fb!important;color:#24283a!important}
+.admin-theme .admin-sidebar{background:#fff!important;color:#29263a!important;border-color:#e4e6ef!important;box-shadow:5px 0 24px rgb(25 30 55 / 4%)}
+.admin-theme .admin-brand{color:#25243a!important}
+.admin-theme .admin-nav-label,.admin-theme .admin-eyebrow{color:#77728f!important}
+.admin-theme .admin-sidebar nav button{color:#625d74!important;background:transparent}
+.admin-theme .admin-sidebar nav button>span{color:#7862d7!important}
+.admin-theme .admin-sidebar nav button:hover{color:#45358e!important;background:#f4f1ff!important}
+.admin-theme .admin-sidebar nav button.active{color:#493b97!important;background:#eeeaff!important;border-color:#d9d0ff!important}
+.admin-theme .admin-sidebar nav button.active>span,.admin-theme .admin-sidebar nav button b{color:#7258dc!important}
+.admin-theme .admin-gallery-link{display:block;margin:.15rem 0;padding:.65rem .8rem;border:1px solid #e7e3f0;border-radius:.75rem;background:#faf9fd;color:#544a79!important;font-size:.78rem;font-weight:700}
+.admin-theme .admin-sidebar-bottom{border-color:#e3e3ed;color:#57546a;background:#fafaff}
+.admin-theme .admin-sidebar-bottom small{color:#878398}.admin-theme .admin-sidebar-bottom a{border-color:#e3e3ed;color:#604bcc!important}
+.admin-theme .admin-status-dot{background:#16a36a}.admin-theme .admin-main{background:#f6f7fb}.admin-theme .admin-topbar{border-color:#e5e5ee}.admin-theme .admin-topbar h1{color:#29263a}.admin-theme .admin-draft-state{color:#716b83}
+.admin-theme .admin-card,.admin-theme .admin-stats article,.admin-theme .admin-welcome,.admin-theme .admin-quick-grid button{background:#fff!important;color:#29263a!important;border-color:#e6e5ee!important;box-shadow:0 8px 25px rgb(28 25 55 / 4%)}
+.admin-theme .admin-card p,.admin-theme .admin-stats small,.admin-theme .admin-welcome p,.admin-theme .admin-quick-grid small{color:#777286!important}
+.admin-theme .admin-card h3,.admin-theme .admin-section-intro h2,.admin-theme .admin-welcome h2{color:#29263a!important}
+.admin-theme .admin-stats article>span,.admin-theme .admin-stats article strong{color:#29263a!important}
+.admin-theme .admin-checklist{color:#4f4b61}.admin-theme .admin-checklist li{border-color:#eeedf3}
+.admin-theme .admin-field,.admin-theme .admin-toggle{color:#333046}.admin-theme .admin-field>span,.admin-theme .admin-toggle strong{color:#36324a}.admin-theme .admin-field small,.admin-theme .admin-toggle small,.admin-theme .admin-help-text{color:#817c90}
+.admin-theme input:not([type=checkbox]):not([type=color]):not([type=file]),.admin-theme textarea,.admin-theme select{background:#fff!important;color:#28263b!important;border:1px solid #dcd9e8!important;box-shadow:none}
+.admin-theme input::placeholder,.admin-theme textarea::placeholder{color:#9993a7!important}
+.admin-theme .admin-category-list button{background:#fff;color:#3f3a53;border-color:#e9e6f0}.admin-theme .admin-category-list button.selected{background:#f1edff;color:#503fa5;border-color:#cfc4fa}
+.admin-theme .admin-table{color:#343047}.admin-theme .admin-table th{background:#f4f2fa;color:#625c75}.admin-theme .admin-table td,.admin-theme .admin-table th{border-color:#e8e6ef}
+.admin-theme .admin-footer{color:#817b90;border-color:#e6e4ed}.admin-theme .admin-footer button,.admin-theme .admin-secondary{background:#fff;color:#554a78;border:1px solid #ded9eb}
+.admin-theme .admin-danger{background:#fff5f5;color:#a23642;border:1px solid #f0c9cd}.admin-theme .admin-save,.admin-theme .admin-primary{color:#fff;background:#6d56d9}
+.admin-theme .admin-notice{background:#f0edff;color:#514487;border-color:#ded7fb}.admin-theme .admin-notice p{color:#514d66}
+.admin-theme .admin-live-preview{background:#fff!important;border:1px solid #e3e0ed}.admin-theme .admin-live-preview h3{color:#29263a!important}.admin-theme .admin-live-preview p{color:#706b80!important}.admin-theme .admin-live-preview .admin-eyebrow{color:#7364bb!important}
+.admin-theme .admin-seo-preview{background:#f8f7fc;border-color:#e9e5f0}.admin-theme .admin-seo-preview strong{color:#4f3ba1}
+.admin-theme .admin-session-actions{border-color:#dedbe9;color:#615b73;background:#fff;box-shadow:0 6px 22px rgb(27 23 54 / 12%)}.admin-theme .admin-session-actions span{color:#168251}.admin-theme .admin-session-actions button{color:#fff;background:#6d56d9}
+.admin-theme .admin-gallery-link:focus-visible,.admin-theme button:focus-visible,.admin-theme a:focus-visible,.admin-theme input:focus-visible,.admin-theme select:focus-visible,.admin-theme textarea:focus-visible{outline:3px solid #8069eb;outline-offset:2px}
+.admin-theme .admin-upload-control{display:grid;gap:.5rem;padding:.9rem;border:1px dashed #bdb5d8;border-radius:.8rem;background:#faf9fd;color:#473e68;font-weight:750}
+.admin-theme .admin-upload-control input{max-width:100%;background:#fff;color:#343047}
+.admin-theme .admin-inline-status{padding:.65rem .8rem;border:1px solid #e2dcf7;border-radius:.7rem;background:#f6f3ff;color:#514487;font-size:.82rem;line-height:1.5}
+.category-image-manager{display:grid;grid-template-columns:minmax(160px,240px) minmax(0,1fr);gap:1.2rem;align-items:start;margin-top:1rem}
+.category-image-preview{display:grid;min-height:180px;place-items:center;border:1px dashed #c9c3d8;border-radius:1rem;background:#faf9fd;color:#958da8}
+.category-image-preview img{width:100%;max-height:220px;object-fit:contain;border-radius:.8rem}.category-image-controls{display:grid;gap:.75rem;min-width:0}
+.admin-r2-uploader{display:grid;gap:.65rem;min-width:0}.admin-media-preview{max-width:340px;padding:.5rem;border:1px solid #e8e5ef;border-radius:.8rem;background:#f9f8fc}
+.admin-media-preview img,.admin-media-preview video{display:block;max-width:100%;max-height:240px;object-fit:contain}
+@media(max-width:820px){.admin-theme .admin-shell{display:flex;flex-direction:column}.admin-theme .admin-sidebar{position:relative;height:auto;min-height:0}.admin-theme .admin-main{padding-inline:1rem}.admin-theme .admin-topbar{padding-block:1rem}.category-image-manager{grid-template-columns:1fr}}
