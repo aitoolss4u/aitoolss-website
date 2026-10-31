@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isAllowedR2Key } from "@/lib/r2";
+import { getR2PublicUrl, verifyR2ObjectContent, isAllowedR2Key } from "@/lib/r2";
 
 type CategoryInput = {
   id: string; name: string; slug: string; description: string;
@@ -86,6 +86,21 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
     return { ok: false as const, message: "The submitted configuration is invalid." };
   }
   if (!payload.categories.every(validCategory)) return { ok: false as const, message: "Check category names, slugs, tags and metadata lengths." };
+  try {
+    for (const item of payload.categories) {
+      if (item.imageR2Key) {
+        if (getR2PublicUrl(item.imageR2Key) !== item.imageUrl) return { ok: false as const, message: "Category image URL does not match its verified R2 object key." };
+        const optimized = await verifyR2ObjectContent(item.imageR2Key);
+        if (optimized.contentType !== "image/webp" || optimized.size <= 0 || optimized.size > 10 * 1024 * 1024) return { ok: false as const, message: "Optimized category image is not a valid WebP object." };
+      }
+      if (item.imageOriginalR2Key) {
+        const original = await verifyR2ObjectContent(item.imageOriginalR2Key);
+        if (!["image/jpeg", "image/png", "image/webp"].includes(original.contentType) || original.size <= 0 || original.size > 50 * 1024 * 1024) return { ok: false as const, message: "Original category image is not a valid JPG, PNG or WebP object." };
+      }
+    }
+  } catch {
+    return { ok: false as const, message: "One or more category R2 images could not be verified. The category changes were not saved." };
+  }
   const slugs = payload.categories.map((item) => item.slug);
   if (new Set(slugs).size !== slugs.length) return { ok: false as const, message: "Category slugs must be unique." };
   const allowedSettings = ["siteName","siteDescription","defaultMetaTitle","defaultMetaDescription","primaryColor","accentColor","backgroundColor","font","maintenanceMode","showRoadmapTools","enableAnalytics","enableAds","socialFacebook","socialInstagram","socialYouTube","socialLinkedIn","socialX"];
