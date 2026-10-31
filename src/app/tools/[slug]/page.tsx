@@ -78,7 +78,8 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
     if (isProcessing) return;
     setIsProcessing(true); setOutput("");
     try {
-      if (slug === "dictionary") {\n        const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));\n        const data = await response.json();\n        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");\n        setOutput(data.output);\n      } else if (usesAI) {
+      if (slug === "dictionary") {
+        const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));\n        const data = await response.json();\n        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");\n        setOutput(data.output);\n      } else if (usesAI) {
         const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "AI generation failed.");
@@ -115,7 +116,8 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
             : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="tool-input" />}
           {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
           {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
-          {imageInfo && <p className="tool-image-info">{imageInfo}</p>}\n          {isExternalImageTool && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This tool needs a verified external provider integration before it can analyse or edit files. File upload is available, but no result will be fabricated. It will become runnable once the provider credentials are configured.</p>}
+          {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
+          {isExternalImageTool && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This tool needs a verified external provider integration before it can analyse or edit files. File upload is available, but no result will be fabricated. It will become runnable once the provider credentials are configured.</p>}
           <div className="tool-actions">
             <button disabled={runDisabled || isProcessing || isExternalImageTool || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isExternalImageTool ? "Provider not configured" : isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
             <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
