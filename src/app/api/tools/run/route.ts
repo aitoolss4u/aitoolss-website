@@ -7,7 +7,7 @@ const aiSlugs = new Set([
  "image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer",
  "youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder",
  "business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer",
- "flashcard-maker","meeting-agenda-maker","meeting-notes-formatter"
+ "flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"
 ]);
 const requests = new Map<string,number[]>();
 
