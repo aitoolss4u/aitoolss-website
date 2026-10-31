@@ -9,7 +9,7 @@ const entries = [...catalog.matchAll(/^\["([^"]+)","([^"]+)","([^"]+)"/gm)].map(
   category: match[3],
 }));
 
-assert.equal(entries.length, 74, "catalog must contain exactly 60 tools");
+assert.equal(entries.length, 74, "catalog must contain exactly 74 tools");
 assert.equal(new Set(entries.map((entry) => entry.slug)).size, 74, "tool slugs must be unique");
 assert.equal(new Set(entries.map((entry) => entry.name)).size, 74, "tool names must be unique");
 assert.ok(entries.every((entry) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.slug)), "all slugs must be URL-safe");
