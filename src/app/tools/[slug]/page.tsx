@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
 import { getTool, tools as catalogTools } from "@/lib/tools";
+import PomodoroTimer from "@/components/pomodoro-timer";
 
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -16,6 +17,7 @@ function run(slug: string, input: string, option: string): string {
   const text = input.trim();
   if (!text) return "Add some input above, then select Run tool.";
   switch (slug) {
+    case "citation-generator": { const fields = Object.fromEntries(text.split("\\n").map((line) => { const i = line.indexOf(":"); return i > 0 ? [line.slice(0,i).trim().toLowerCase(),line.slice(i+1).trim()] : ["", ""]; }).filter(([key]) => key)); const author=fields.author||"Author"; const title=fields.title||"Title"; const year=fields.year||"n.d."; const source=fields.source||fields.publisher||"Publisher"; const url=fields.url||""; if(option==="mla") return `${author}. "${title}." ${source}, ${year}.${url ? " "+url : ""}`; if(option==="chicago") return `${author}. "${title}." ${source}. ${year}.${url ? " "+url : ""}`; return `${author} (${year}). ${title}. ${source}.${url ? " "+url : ""}`; }
     case "word-counter": return JSON.stringify({ words: words(text), characters: text.length, charactersWithoutSpaces: text.replace(/\s/g, "").length, sentences: (text.match(/[.!?]+(?=\s|$)/g) || []).length || (text ? 1 : 0), paragraphs: text.split(/\n\s*\n/).filter(Boolean).length, estimatedReadingTime: Math.max(1, Math.ceil(words(text) / 225)) + " min" }, null, 2);
     case "text-summarizer": { const sentences = text.match(/[^.!?]+[.!?]*/g) || [text]; const count = Math.max(1, Math.min(sentences.length, Number(option) || Math.ceil(sentences.length / 3))); return sentences.slice(0, count).map((s) => s.trim()).filter(Boolean).join(" "); }
     case "slug-generator": case "filename-cleaner": return slugify(text).slice(0, 120);
@@ -71,12 +73,12 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
       .map(({ candidate }) => candidate);
   }, [tool]);
   const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
-  const usesAI = aiToolSlugs.includes(slug);
+  const usesAI = aiToolSlugs.includes(slug);\n  const isExternalImageTool = ["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover"].includes(slug);
   const process = async () => {
     if (isProcessing) return;
     setIsProcessing(true); setOutput("");
     try {
-      if (usesAI) {
+      if (slug === "dictionary") {\n        const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));\n        const data = await response.json();\n        if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");\n        setOutput(data.output);\n      } else if (usesAI) {
         const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "AI generation failed.");
@@ -106,16 +108,16 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
           <span className="tool-heading-icon" aria-hidden="true">{tool.icon}</span>
           <div className="tool-heading-copy"><h1 className="tool-page-title">{tool.name}</h1><p className="tool-page-description">{tool.description}</p></div>
         </div>
-        <div className="tool-workspace">
+        {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
           <label htmlFor="tool-input" className="tool-field-label">{isImage ? "Choose an image" : "Your input"}</label>
           {isImage
             ? <input id="tool-input" type="file" accept="image/*" onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
             : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="tool-input" />}
           {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
-          {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option></select></label>}
-          {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
+          {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
+          {imageInfo && <p className="tool-image-info">{imageInfo}</p>}\n          {isExternalImageTool && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This tool needs a verified external provider integration before it can analyse or edit files. File upload is available, but no result will be fabricated. It will become runnable once the provider credentials are configured.</p>}
           <div className="tool-actions">
-            <button disabled={runDisabled || isProcessing} onClick={process} className="tool-primary-button">{isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
+            <button disabled={runDisabled || isProcessing || isExternalImageTool || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isExternalImageTool ? "Provider not configured" : isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
             <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
           </div>
         </div>
