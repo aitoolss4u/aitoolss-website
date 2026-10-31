@@ -86,6 +86,7 @@ function scoreToolMatch(tool: (typeof tools)[number], normalizedQuery: string) {
 export default function Home() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [dynamicTools, setDynamicTools] = useState(tools);
   const [activeCategory, setActiveCategory] = useState("");
   const [categoryNames, setCategoryNames] = useState<string[]>(toolCategories);
   const [showTop, setShowTop] = useState(false);
@@ -106,7 +107,7 @@ export default function Home() {
   }), [categoryNames]);
   const searchSuggestions = useMemo(() => {
     const normalized = normalizeSearchText(query);
-    const categoryTools = activeCategory ? tools.filter((tool) => tool.category === activeCategory) : tools;
+    const categoryTools = activeCategory ? dynamicTools.filter((tool) => tool.category === activeCategory) : dynamicTools;
     if (!normalized) return activeCategory ? categoryTools.slice(0, 8) : [];
     return categoryTools
       .map((tool) => ({ tool, score: scoreToolMatch(tool, normalized) }))
@@ -114,9 +115,9 @@ export default function Home() {
       .sort((a, b) => b.score - a.score || a.tool.name.localeCompare(b.tool.name))
       .slice(0, 8)
       .map((result) => result.tool);
-  }, [query, activeCategory]);
+  }, [query, activeCategory, dynamicTools]);
   const isSuggestionsVisible = suggestionsOpen && Boolean(query.trim());
-  const featured = useMemo(() => featuredSlugs.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
+  const featured = useMemo(() => featuredSlugs.map((slug) => dynamicTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), []);
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
@@ -211,7 +212,7 @@ export default function Home() {
     }
   }
   function recordToolSelection(slug: string) { fetch("/api/popular-tools", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug }) }).catch(() => undefined); }
-  const popularTools = useMemo(() => { const ranked = popular.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)); return [...ranked, ...tools.filter((tool) => !ranked.some((item) => item.slug === tool.slug))].slice(0, 8); }, [popular]);
+  const popularTools = useMemo(() => { const ranked = popular.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)); return [...ranked, ...dynamicTools.filter((tool) => !ranked.some((item) => item.slug === tool.slug))].slice(0, 8); }, [popular]);
 
 
   return (
