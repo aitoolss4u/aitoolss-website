@@ -56,5 +56,5 @@ export default function ImageCompressorInterface() {
       </div>
       {result && file && <div className="ds-panel mt-5 p-5"><h2 className="text-lg font-bold">Your compressed image</h2><div className="mt-4 grid gap-5 sm:grid-cols-2"><div className="rounded-xl bg-black/20 p-3"><img src={result.url} alt="Compressed image preview" className="max-h-80 w-full object-contain"/></div><div className="flex flex-col items-start justify-center gap-3"><p className="text-sm text-muted">Original: <strong className="text-foreground">{formatBytes(file.size)}</strong></p><p className="text-sm text-muted">Compressed: <strong className="text-foreground">{formatBytes(result.size)}</strong></p><p className="text-sm text-muted">Dimensions: <strong className="text-foreground">{result.width} × {result.height}</strong></p>{result.size < file.size ? <p className="text-sm text-emerald-300">Reduced by {Math.round((1 - result.size / file.size) * 100)}%</p> : <p className="text-sm text-amber-300">This output is not smaller. Try a different format or quality.</p>}<a href={result.url} download={result.name} className="search-button rounded-xl px-5 py-3 text-sm font-bold">Download image ↓</a></div></div></div>}
     </section>
-  ;
+  );
 }
