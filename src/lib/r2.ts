@@ -1,0 +1,14 @@
+import "server-only";
+import {DeleteObjectCommand,HeadObjectCommand,PutObjectCommand,S3Client} from "@aws-sdk/client-s3";
+import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
+export type R2ObjectInfo={key:string;size:number;contentType:string;etag:string|null};
+export function isR2Configured(){return Boolean(process.env.R2_ACCESS_KEY_ID&&process.env.R2_SECRET_ACCESS_KEY&&process.env.R2_BUCKET_NAME&&(process.env.R2_S3_ENDPOINT||process.env.R2_ACCOUNT_ID)&&process.env.R2_PUBLIC_BASE_URL);}
+function required(name:string){const value=process.env[name]?.trim();if(!value)throw new Error("Missing server environment variable: "+name);return value;}
+export function getR2Bucket(){return required("R2_BUCKET_NAME");}
+export function getR2PublicUrl(key:string){const base=required("R2_PUBLIC_BASE_URL").replace(/\/+$/u,"");if(!/^https:\/\//iu.test(base))throw new Error("R2_PUBLIC_BASE_URL must use HTTPS.");return base+"/"+key.split("/").map(encodeURIComponent).join("/");}
+let client:S3Client|null=null;
+export function getR2Client(){if(client)return client;const id=process.env.R2_ACCOUNT_ID?.trim();const endpoint=process.env.R2_S3_ENDPOINT?.trim()||(id?"https://"+id+".r2.cloudflarestorage.com":"");if(!endpoint||!/^https:\/\//iu.test(endpoint))throw new Error("R2_S3_ENDPOINT must be a valid HTTPS URL.");client=new S3Client({region:"auto",endpoint,credentials:{accessKeyId:required("R2_ACCESS_KEY_ID"),secretAccessKey:required("R2_SECRET_ACCESS_KEY")}});return client;}
+export async function createR2UploadUrl(key:string,contentType:string){const command=new PutObjectCommand({Bucket:getR2Bucket(),Key:key,ContentType:contentType,CacheControl:"public, max-age=31536000, immutable"});return {url:await getSignedUrl(getR2Client(),command,{expiresIn:300}),publicUrl:getR2PublicUrl(key),expiresIn:300};}
+export async function headR2Object(key:string):Promise<R2ObjectInfo>{const result=await getR2Client().send(new HeadObjectCommand({Bucket:getR2Bucket(),Key:key}));return {key,size:Number(result.ContentLength??0),contentType:result.ContentType??"application/octet-stream",etag:result.ETag??null};}
+export async function deleteR2Objects(keys:string[]){const unique=[...new Set(keys.filter(Boolean))];if(!unique.length||!isR2Configured())return;await Promise.all(unique.map(Key=>getR2Client().send(new DeleteObjectCommand({Bucket:getR2Bucket(),Key}))));}
+export function isAllowedR2Key(key:string,purpose:"gallery"|"category"){if(key.length>512||key.startsWith("/")||key.includes("..")||key.includes("\\"))return false;if(purpose==="category")return /^categories\/[0-9a-f-]{36}\/(?:original|optimized)\/[a-f0-9-]+\.(?:jpe?g|png|webp)$/iu.test(key);return /^gallery\/(?:images\/(?:original|optimized|thumbnails)|videos\/(?:original|posters))\/[a-f0-9-]+\.(?:jpe?g|png|webp|gif|mp4|webm)$/iu.test(key);}
