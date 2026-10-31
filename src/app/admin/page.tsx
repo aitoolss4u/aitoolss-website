@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import BrandLogo from "@/components/brand-logo";
+import CategoryImageManager from "./category-image-manager";
 import { loadAdminData, saveAdminData } from "./actions";
 
-type Category = { id: string; name: string; slug: string; description: string; metaTitle: string; metaDescription: string; tags: string; imageUrl: string; visible: boolean };
+type Category = { id: string; name: string; slug: string; description: string; metaTitle: string; metaDescription: string; tags: string; imageUrl: string; imageAlt?: string; imageR2Key?: string; imageOriginalR2Key?: string; imageOriginalSizeBytes?: number; visible: boolean };
 type AdminSettings = {
   siteName: string; siteDescription: string; defaultMetaTitle: string; defaultMetaDescription: string;
   primaryColor: string; accentColor: string; backgroundColor: string; font: string;
@@ -35,7 +36,7 @@ const defaultCategories: Category[] = [
 const defaults: AdminData = { settings: defaultSettings, categories: defaultCategories };
 
 const menu = [
-  { id: "overview", label: "Overview", icon: "◫" }, { id: "categories", label: "Categories & tags", icon: "▦" },
+  { id: "overview", label: "Overview", icon: "◫" }, { id: "categories", label: "Categories & tags", icon: "▦" }, { id: "category-images", label: "Manage Category Images", icon: "▧" },
   { id: "seo", label: "SEO controls", icon: "⌕" }, { id: "design", label: "Design studio", icon: "◈" },
   { id: "settings", label: "Site settings", icon: "⚙" }, { id: "social", label: "Social links", icon: "↗" },
 ] as const;
@@ -134,7 +135,7 @@ export default function AdminPage() {
     <main className="admin-shell" style={{ "--admin-primary": data.settings.primaryColor, "--admin-accent": data.settings.accentColor, "--admin-bg": data.settings.backgroundColor, fontFamily: data.settings.font } as React.CSSProperties}>
       <aside className="admin-sidebar">
         <div className="admin-brand"><BrandLogo size={48} /><span>CONTROL CENTER</span></div>
-        <p className="admin-nav-label">WORKSPACE</p><Link href="/admin/gallery" className="admin-gallery-link">AI Creations Gallery ↗</Link><Link href="/admin/pages" className="admin-gallery-link">Company &amp; Legal pages ↗</Link><Link href="/admin/messages" className="admin-gallery-link">Contact inbox ↗</Link>
+        <p className="admin-nav-label">WORKSPACE</p><Link href="/admin/gallery" className="admin-gallery-link">AI Creations Gallery ↗</Link><Link href="/admin/gallery#storage" className="admin-gallery-link">R2 &amp; Drive backups ↗</Link><Link href="/admin/pages" className="admin-gallery-link">Company &amp; Legal pages ↗</Link><Link href="/admin/messages" className="admin-gallery-link">Contact inbox ↗</Link>
         <nav aria-label="Admin sections">{menu.map((item) => <button key={item.id} onClick={() => setSection(item.id)} className={section === item.id ? "active" : ""}><span>{item.icon}</span>{item.label}{section === item.id && <b>•</b>}</button>)}</nav>
         <div className="admin-sidebar-bottom"><span className="admin-status-dot" /> Supabase connected <small>Database connection depends on your project setup</small><Link href="/">← Back to website</Link></div>
       </aside>
@@ -161,9 +162,16 @@ export default function AdminPage() {
             <Field label="Meta title" value={activeCategory.metaTitle} onChange={(value) => updateCategory(activeCategory.id, { metaTitle: value })} hint={activeCategory.metaTitle.length + " characters · aim for around 50–60."} />
             <Field label="Meta description" value={activeCategory.metaDescription} onChange={(value) => updateCategory(activeCategory.id, { metaDescription: value })} multiline hint={activeCategory.metaDescription.length + " characters · aim for around 140–160."} />
             <Field label="Tags (comma-separated)" value={activeCategory.tags} onChange={(value) => updateCategory(activeCategory.id, { tags: value })} />
-            <Field label="Category image URL (HTTPS)" value={activeCategory.imageUrl} onChange={(value) => updateCategory(activeCategory.id, { imageUrl: value })} hint="Optional public image URL. For secure uploads, use the gallery storage uploader." />
+            <CategoryImageManager categoryId={activeCategory.id} imageUrl={activeCategory.imageUrl} imageAlt={activeCategory.imageAlt ?? ""} imageR2Key={activeCategory.imageR2Key ?? ""} imageOriginalR2Key={activeCategory.imageOriginalR2Key ?? ""} imageOriginalSizeBytes={activeCategory.imageOriginalSizeBytes ?? 0} onChange={(value) => updateCategory(activeCategory.id, value)} />
             <Toggle label="Show category" description="Controls whether the category is visible to public visitors through the category API." checked={activeCategory.visible} onChange={(value) => updateCategory(activeCategory.id, { visible: value })} />
           </> : <p>No categories yet. Add one to get started.</p>}</div>
+        </div>}
+
+        {section === "category-images" && <div className="admin-content">
+          <div className="admin-section-intro"><span className="admin-eyebrow">CATEGORY ARTWORK</span><h2>Manage Category Images<span>.</span></h2><p>Select a category, preview its current image, upload or replace the artwork, edit alt text, or restore the default category mark. Uploads use short-lived R2 URLs and are verified before you save the category.</p></div>
+          <div className="admin-card"><div className="admin-card-heading"><div><h3>All categories</h3><p>Each image is stored in one authoritative category record and automatically reused across public category cards.</p></div><span className="admin-pill">{data.categories.length} categories</span></div>
+            <div className="admin-category-image-list">{data.categories.map((category) => <article key={category.id} className="admin-category-image-row"><div className="admin-category-image-heading"><strong>{category.name}</strong><small>/{category.slug}</small></div><CategoryImageManager categoryId={category.id} imageUrl={category.imageUrl} imageAlt={category.imageAlt ?? ""} imageR2Key={category.imageR2Key ?? ""} imageOriginalR2Key={category.imageOriginalR2Key ?? ""} imageOriginalSizeBytes={category.imageOriginalSizeBytes ?? 0} onChange={(value) => updateCategory(category.id, value)} /></article>)}</div>
+          </div>
         </div>}
 
         {section === "seo" && <div className="admin-content">

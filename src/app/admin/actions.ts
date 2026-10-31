@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isAllowedR2Key } from "@/lib/r2";
 
 type CategoryInput = {
   id: string; name: string; slug: string; description: string;
-  metaTitle: string; metaDescription: string; tags: string; imageUrl: string; visible: boolean;
+  metaTitle: string; metaDescription: string; tags: string; imageUrl: string; imageAlt?: string; imageR2Key?: string; imageOriginalR2Key?: string; imageOriginalSizeBytes?: number; visible: boolean;
 };
 type SettingsInput = Record<string, unknown>;
 
@@ -42,7 +43,7 @@ export async function signOutAdmin() {
 export async function loadAdminData() {
   const { supabase } = await requireAdmin();
   const [categoriesResult, settingsResult] = await Promise.all([
-    supabase.from("categories").select("id,name,slug,description,tags,meta_title,meta_description,image_url,is_visible,sort_order").order("sort_order").order("name"),
+    supabase.from("categories").select("id,name,slug,description,tags,meta_title,meta_description,image_url,image_alt,image_r2_key,image_original_r2_key,image_original_size_bytes,is_visible,sort_order").order("sort_order").order("name"),
     supabase.from("site_settings").select("value").eq("key", "global").maybeSingle(),
   ]);
   if (categoriesResult.error) return { ok: false as const, message: "Could not load categories. Confirm the Phase 8 SQL migration has been applied." };
@@ -56,6 +57,10 @@ export async function loadAdminData() {
     metaTitle: item.meta_title,
     metaDescription: item.meta_description,
     imageUrl: item.image_url ?? "",
+    imageAlt: item.image_alt ?? "",
+    imageR2Key: item.image_r2_key ?? "",
+    imageOriginalR2Key: item.image_original_r2_key ?? "",
+    imageOriginalSizeBytes: item.image_original_size_bytes ?? 0,
     visible: item.is_visible,
   }));
   return { ok: true as const, categories, settings: (settingsResult.data?.value ?? {}) as SettingsInput };
@@ -67,7 +72,12 @@ function validCategory(item: CategoryInput) {
     && typeof item.description === "string" && item.description.length <= 1000
     && typeof item.metaTitle === "string" && item.metaTitle.length <= 120
     && typeof item.metaDescription === "string" && item.metaDescription.length <= 320
-    && typeof item.tags === "string" && item.tags.length <= 1000 && typeof item.imageUrl === "string" && item.imageUrl.length <= 2048 && (!item.imageUrl || (() => { try { return new URL(item.imageUrl).protocol === "https:"; } catch { return false; } })()) && typeof item.visible === "boolean";
+    && typeof item.tags === "string" && item.tags.length <= 1000 && typeof item.imageUrl === "string" && item.imageUrl.length <= 2048 && (!item.imageUrl || (() => { try { return new URL(item.imageUrl).protocol === "https:"; } catch { return false; } })())
+    && (item.imageAlt === undefined || typeof item.imageAlt === "string" && item.imageAlt.length <= 240)
+    && (item.imageR2Key === undefined || item.imageR2Key === "" || typeof item.imageR2Key === "string" && isAllowedR2Key(item.imageR2Key, "category") && item.imageR2Key.startsWith("categories/" + item.id + "/optimized/"))
+    && (item.imageOriginalR2Key === undefined || item.imageOriginalR2Key === "" || typeof item.imageOriginalR2Key === "string" && isAllowedR2Key(item.imageOriginalR2Key, "category") && item.imageOriginalR2Key.startsWith("categories/" + item.id + "/original/"))
+    && (item.imageOriginalSizeBytes === undefined || Number.isSafeInteger(item.imageOriginalSizeBytes) && item.imageOriginalSizeBytes >= 0 && item.imageOriginalSizeBytes <= 50 * 1024 * 1024)
+    && typeof item.visible === "boolean";
 }
 
 export async function saveAdminData(payload: { categories: CategoryInput[]; settings: SettingsInput }) {
@@ -96,6 +106,8 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
     name: item.name.trim(), slug: item.slug, description: item.description,
     tags: item.tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 30),
     meta_title: item.metaTitle, meta_description: item.metaDescription, image_url: item.imageUrl || null,
+    image_alt: item.imageAlt ?? "", image_r2_key: item.imageR2Key || null,
+    image_original_r2_key: item.imageOriginalR2Key || null, image_original_size_bytes: item.imageOriginalSizeBytes ?? 0,
     is_visible: item.visible, sort_order: (index + 1) * 10, updated_by: user.id,
   }));
   if (rows.length) {
