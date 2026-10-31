@@ -70,7 +70,7 @@ export default function ToolPage({ params }: { params: Promise<{ slug: string }>
       .slice(0, 8)
       .map(({ candidate }) => candidate);
   }, [tool]);
-  const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter"];
+  const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
   const usesAI = aiToolSlugs.includes(slug);
   const process = async () => {
     if (isProcessing) return;
