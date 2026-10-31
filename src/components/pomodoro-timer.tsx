@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Mode = "focus" | "short" | "long";
 const durations: Record<Mode, number> = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
@@ -14,21 +14,24 @@ export default function PomodoroTimer() {
   const [remaining, setRemaining] = useState(durations.focus);
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = useState(0);
+  const remainingRef = useRef(remaining);
+  remainingRef.current = remaining;
 
   useEffect(() => {
     if (!running) return;
+    let elapsed = 0;
+    const durationAtStart = remainingRef.current;
     const timer = window.setInterval(() => {
+      elapsed += 1;
       setRemaining((current) => Math.max(0, current - 1));
+      if (elapsed >= durationAtStart) {
+        window.clearInterval(timer);
+        setRunning(false);
+        if (mode === "focus") setSessions((count) => count + 1);
+      }
     }, 1000);
     return () => window.clearInterval(timer);
   }, [running, mode]);
-
-  useEffect(() => {
-    if (remaining === 0 && running) {
-      setRunning(false);
-      if (mode === "focus") setSessions((count) => count + 1);
-    }
-  }, [remaining, running, mode]);
 
   const chooseMode = (next: Mode) => {
     setRunning(false);
