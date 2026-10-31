@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { getTool, tools as catalogTools } from "@/lib/tools";
+import { getTool } from "@/lib/tools";
 import PomodoroTimer from "@/components/pomodoro-timer";
 import ToolDetailSections from "@/components/tool-detail-sections";
 import type { ToolSeoContent } from "@/lib/tool-seo";
