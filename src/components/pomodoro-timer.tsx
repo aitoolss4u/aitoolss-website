@@ -14,17 +14,15 @@ export default function PomodoroTimer() {
   const [remaining, setRemaining] = useState(durations.focus);
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = useState(0);
-  const remainingRef = useRef(remaining);
-  remainingRef.current = remaining;
+  const remainingRef = useRef(durations.focus);
 
   useEffect(() => {
     if (!running) return;
-    let elapsed = 0;
-    const durationAtStart = remainingRef.current;
     const timer = window.setInterval(() => {
-      elapsed += 1;
-      setRemaining((current) => Math.max(0, current - 1));
-      if (elapsed >= durationAtStart) {
+      const nextRemaining = Math.max(0, remainingRef.current - 1);
+      remainingRef.current = nextRemaining;
+      setRemaining(nextRemaining);
+      if (nextRemaining === 0) {
         window.clearInterval(timer);
         setRunning(false);
         if (mode === "focus") setSessions((count) => count + 1);
@@ -36,6 +34,7 @@ export default function PomodoroTimer() {
   const chooseMode = (next: Mode) => {
     setRunning(false);
     setMode(next);
+    remainingRef.current = durations[next];
     setRemaining(durations[next]);
   };
   const progress = ((durations[mode] - remaining) / durations[mode]) * 100;
@@ -62,7 +61,7 @@ export default function PomodoroTimer() {
           className="rounded-xl bg-violet-600 px-7 py-3 font-semibold text-white hover:bg-violet-700">
           {running ? "Pause" : remaining === 0 ? "Start again" : "Start"}
         </button>
-        <button type="button" onClick={() => { setRunning(false); setRemaining(durations[mode]); }}
+        <button type="button" onClick={() => { setRunning(false); remainingRef.current = durations[mode]; setRemaining(durations[mode]); }}
           className="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Reset</button>
       </div>
       <p className="mt-5 text-center text-sm text-slate-600">Completed focus sessions: <strong>{sessions}</strong></p>
