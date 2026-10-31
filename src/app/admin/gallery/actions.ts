@@ -34,20 +34,20 @@ async function resolveMedia(formData:FormData,mediaType:"image"|"video",submitte
  return {media_url:submittedUrl,thumbnail_url:submittedThumbnail||null,storage_provider:"external",r2_object_key:null,r2_original_object_key:null,r2_thumbnail_key:null,original_file_name:"",original_size_bytes:0};
 }
 
-function backupInput(formData:FormData,old?:{backup_google_drive_url:string|null;backup_status:string;backup_confirmed_at:string|null}){
+function backupInput(formData:FormData,old?:{backup_google_drive_url:string|null;backup_status:string;backup_confirmed_at:string|null;backup_saved_at?:string|null}){
  const url=clean(formData.get("backup_google_drive_url"),2048);
  if(url&&!validDriveUrl(url))return null;
  const requested=clean(formData.get("backup_status"),32);
- if(requested==="backup_missing"&&!url)return {backup_google_drive_url:null,backup_status:"backup_missing",backup_confirmed_at:null};
+ if(requested==="backup_missing"&&!url)return {backup_google_drive_url:null,backup_status:"backup_missing",backup_confirmed_at:null,backup_saved_at:null};
  if(formData.get("backup_confirmed_now")==="on"){
   if(!url)return null;
-  return {backup_google_drive_url:url,backup_status:"backup_confirmed",backup_confirmed_at:new Date().toISOString()};
+  const now=new Date().toISOString();return {backup_google_drive_url:url,backup_status:"backup_confirmed",backup_confirmed_at:now,backup_saved_at:now};
  }
  if(old&&old.backup_status==="backup_confirmed"&&old.backup_google_drive_url===url&&url){
-  return {backup_google_drive_url:url,backup_status:"backup_confirmed",backup_confirmed_at:old.backup_confirmed_at};
+  return {backup_google_drive_url:url,backup_status:"backup_confirmed",backup_confirmed_at:old.backup_confirmed_at,backup_saved_at:old.backup_saved_at??old.backup_confirmed_at};
  }
- if(url)return {backup_google_drive_url:url,backup_status:"backup_link_saved",backup_confirmed_at:null};
- return {backup_google_drive_url:null,backup_status:"backup_pending",backup_confirmed_at:null};
+ if(url)return {backup_google_drive_url:url,backup_status:"backup_link_saved",backup_confirmed_at:null,backup_saved_at:new Date().toISOString()};
+ return {backup_google_drive_url:null,backup_status:"backup_pending",backup_confirmed_at:null,backup_saved_at:null};
 }
 
 export async function saveGalleryLayout(formData:FormData){
@@ -81,7 +81,7 @@ export async function updateGalleryItem(formData:FormData){
  const title=clean(formData.get("title"),160),description=clean(formData.get("description"),500),creator=clean(formData.get("creator"),100);
  const sortOrder=Number(formData.get("sort_order"));
  if(!/^[0-9a-f-]{36}$/i.test(id)||!["image","video"].includes(mediaType)||(thumbnailUrl&&!validHttpsUrl(thumbnailUrl))||!Number.isInteger(sortOrder)||sortOrder<0||sortOrder>100000)redirect("/admin/gallery?error=invalid-media");
- const {data:old}=await supabase.from("gallery_items").select("backup_google_drive_url,backup_status,backup_confirmed_at").eq("id",id).maybeSingle();
+ const {data:old}=await supabase.from("gallery_items").select("backup_google_drive_url,backup_status,backup_confirmed_at,backup_saved_at").eq("id",id).maybeSingle();
  if(!old)redirect("/admin/gallery?error=invalid-id");
  let media;try{media=await resolveMedia(formData,mediaType,submittedUrl,thumbnailUrl);}catch{media=null;}
  if(!media)redirect("/admin/gallery?error=invalid-media");

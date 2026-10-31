@@ -13,6 +13,7 @@ alter table public.gallery_items add column if not exists original_size_bytes bi
 alter table public.gallery_items add column if not exists backup_google_drive_url text;
 alter table public.gallery_items add column if not exists backup_status text not null default 'backup_pending';
 alter table public.gallery_items add column if not exists backup_confirmed_at timestamptz;
+alter table public.gallery_items add column if not exists backup_saved_at timestamptz;
 update public.gallery_items set storage_provider=case when media_url like '%/storage/v1/object/public/aitoolss-gallery/%' then 'supabase' else 'external' end where storage_provider='external' and r2_object_key is null;
 alter table public.gallery_items drop constraint if exists gallery_items_storage_provider_check;
 alter table public.gallery_items add constraint gallery_items_storage_provider_check check(storage_provider in ('r2','supabase','external'));

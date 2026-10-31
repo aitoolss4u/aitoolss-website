@@ -23,6 +23,6 @@ export async function POST(request:Request){
   else{if(!["original","poster"].includes(variant))return NextResponse.json({error:"Invalid video variant."},{status:400});ext=variant==="original"?(videoTypes[mime]??""):(mime==="image/webp"?"webp":"");prefix=variant==="poster"?"gallery/videos/posters/":"gallery/videos/original/";}
   if(!ext)return NextResponse.json({error:"Unsupported MIME type for this upload variant."},{status:415});
   const key=prefix+crypto.randomUUID()+"."+ext;
-  return NextResponse.json({...await createR2UploadUrl(key,mime),key,contentType:mime,maxBytes:limit});
+  return NextResponse.json({...await createR2UploadUrl(key,mime,size),key,contentType:mime,maxBytes:limit});
  }catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Could not prepare the R2 upload."},{status:500});}
 }
