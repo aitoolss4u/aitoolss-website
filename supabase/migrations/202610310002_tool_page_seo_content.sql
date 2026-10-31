@@ -33,7 +33,7 @@ update public.tools t set
   jsonb_build_object('question','Can I adjust the result from '||t.name||'?','answer',case when t.slug='image-compressor' then 'Yes. The Quality slider and output-format selector control the compression settings.' when t.slug in ('text-summarizer','tone-changer','paragraph-rewriter','url-encoder-decoder','base64-encoder-decoder','html-entity-encoder','citation-generator') then 'Use the mode or format selector shown in the working interface; the available choices are specific to this tool.' else 'There is no separate settings panel for this tool; its result is determined by the input and the operation described on the page.' end),
   jsonb_build_object('question','Should I review the result from '||t.name||'?','answer','Yes. Check the output against your original input, intended use, and relevant source material. Generated text, extracted summaries, calculations, and formatted data can need human review; this tool does not guarantee factual correctness or professional suitability.')
  ),
- meta_title=t.name||' Online Tool | AIToolss',
+ meta_title=t.name||' Online Tool',
  meta_description=t.name||': '||rtrim(t.description,'.')||'. Use the focused '||lower(t.category)||' interface on AIToolss and review the result before using it.',
  og_title=t.name||' Online Tool | AIToolss',
  og_description=t.name||': '||rtrim(t.description,'.')||'. Use the focused '||lower(t.category)||' interface on AIToolss and review the result before using it.',
