@@ -120,6 +120,7 @@ export default function Home() {
   const featured = useMemo(() => featuredSlugs.map((slug) => dynamicTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)), [dynamicTools]);
 
   useEffect(() => {
+    fetch("/api/catalog/tools").then((response) => response.ok ? response.json() : null).then((data) => { if (Array.isArray(data?.tools) && data.tools.length) setDynamicTools(data.tools.map((tool: typeof tools[number]) => ({ ...tool, href: "/tools/" + tool.slug }))); }).catch(() => setDynamicTools(tools));
     fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
     fetch("/api/gallery").then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([4,5,6].includes(data.columns) ? data.columns : 4); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
@@ -212,7 +213,7 @@ export default function Home() {
     }
   }
   function recordToolSelection(slug: string) { fetch("/api/popular-tools", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug }) }).catch(() => undefined); }
-  const popularTools = useMemo(() => { const ranked = popular.map((slug) => tools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)); return [...ranked, ...dynamicTools.filter((tool) => !ranked.some((item) => item.slug === tool.slug))].slice(0, 8); }, [popular]);
+  const popularTools = useMemo(() => { const ranked = popular.map((slug) => dynamicTools.find((tool) => tool.slug === slug)).filter((tool): tool is (typeof tools)[number] => Boolean(tool)); return [...ranked, ...dynamicTools.filter((tool) => !ranked.some((item) => item.slug === tool.slug))].slice(0, 8); }, [popular, dynamicTools]);
 
 
   return (
