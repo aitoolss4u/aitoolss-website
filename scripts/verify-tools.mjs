@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const catalog = await readFile(new URL("../src/lib/tools.ts", import.meta.url), "utf8");
-const route = await readFile(new URL("../src/app/tools/[slug]/page.tsx", import.meta.url), "utf8");
+const route = await readFile(new URL("../src/app/tools/[slug]/tool-page-client.tsx", import.meta.url), "utf8");
+const detailSections = await readFile(new URL("../src/components/tool-detail-sections.tsx", import.meta.url), "utf8");
+const seoContent = await readFile(new URL("../src/lib/tool-seo.ts", import.meta.url), "utf8");
 const entries = [...catalog.matchAll(/^\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
   name: match[1],
   slug: match[2],
@@ -24,6 +26,16 @@ assert.equal(new Set(cases).size, cases.length, "tool runner must not contain du
 for (const slug of ["word-counter", "text-summarizer", "pomodoro-timer", "ai-image-detector", "ai-video-detector", "grammar-checker", "plagiarism-checker", "ai-humanizer", "paraphrasing-tool", "summarizer", "translator", "background-remover", "ai-chatbot", "dictionary", "ai-email-helper", "citation-generator", "image-compressor", "image-dimension-checker", "color-palette-builder", "decision-matrix", "json-formatter", "random-password-generator"]) {
   assert.ok(entries.some((entry) => entry.slug === slug), `expected tool missing from catalog: ${slug}`);
   assert.ok(route.includes(`"${slug}"`), `expected representative tool handler missing: ${slug}`);
+}
+
+assert.ok(detailSections.includes('data-section="related-tools"'), "shared tool layout must place Related Tools in its section");
+assert.ok(detailSections.includes('data-section="seo-content"'), "shared tool layout must render visible SEO content after Related Tools");
+assert.ok(detailSections.includes('data-faq-item="true"'), "shared tool layout must render interactive FAQs");
+assert.ok(seoContent.includes("howToUse") && seoContent.includes("faqs"), "tool-specific SEO copy must include usage steps and FAQs");
+
+for (const slug of ["word-counter", "text-summarizer", "image-compressor"]) {
+  const page = await readFile(new URL(`../src/app/tools/${slug}/page.tsx`, import.meta.url), "utf8");
+  assert.ok(page.includes("ToolDetailSections"), `${slug} must use the shared detail layout`);
 }
 
 console.log(`Tool verification passed: ${entries.length} unique tools across 8 categories; no duplicate handlers.`);
