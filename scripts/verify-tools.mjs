@@ -8,7 +8,7 @@ const seoContent = await readFile(new URL("../src/lib/tool-seo.ts", import.meta.
 const seoDataSource = await readFile(new URL("../src/lib/tool-seo-data.ts", import.meta.url), "utf8");
 const seoDataMarker = seoDataSource.indexOf("=");
 assert.ok(seoDataMarker > 0, "persisted SEO data export must be present");
-const seoRecords = JSON.parse(seoDataSource.slice(seoDataMarker + 1).trim().replace(/;\\s*$/, ""));
+const seoRecords = JSON.parse(seoDataSource.slice(seoDataMarker + 1).trim().replace(/;\s*$/, ""));
 const entries = [...catalog.matchAll(/^\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
   name: match[1],
   slug: match[2],
