@@ -9,7 +9,7 @@ export default function BrandLogo({ className = "", size = 44 }: { className?: s
       aria-label="AIToolss home"
     >
       <Image
-        src="/brand/aitoolss-logo.png"
+        src="/brand/aitoolss-logo.webp"
         alt="AIToolss logo"
         width={size}
         height={size}
