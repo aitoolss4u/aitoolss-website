@@ -105,7 +105,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   const [isProcessing, setIsProcessing] = useState(false);
   const tool = useMemo(() => getTool(slug), [slug]);
   const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
-  const usesAI = aiToolSlugs.includes(slug);
+  const usesAI = aiToolSlugs.includes(slug) || slug === "ai-image-detector" || slug === "ai-video-detector";
   const isMediaTool = slug === "ai-image-detector" || slug === "ai-video-detector";
   const process = async () => {
     if (isProcessing) return;
@@ -161,7 +161,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
     <section className="tool-panel">
       <div className="tool-eyebrow">{tool.category} · Browser tool</div>
       {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
-        <label htmlFor="tool-input" className="tool-field-label">{isImage ? "Choose an image" : "Your input"}</label>
+        <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : "Your input"}</label>
         {isImage
           ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
           : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="tool-input" />}
@@ -175,10 +175,10 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         </div>
       </div>}
       {output && <section className="tool-result">
-        <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
+        <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && !output.startsWith("data:image/") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
         {output.startsWith("blob:") || output.startsWith("data:image/") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download={slug === "background-remover" ? "aitoolss-background-removed.png" : "aitoolss-compressed.jpg"} className="tool-download-link">Download processed image</a></> : <pre className="tool-output-text">{output}</pre>}
       </section>}
-      <p className="tool-privacy-note">{usesAI ? "AI-powered generation: your input is sent securely from the server to the configured model provider. Do not submit passwords, personal secrets or confidential information. AI output may contain errors and should be reviewed." : "This utility runs locally in your browser and does not send your input to an AI service. Outputs are general-purpose helpers, not professional advice."}</p>
+      <p className="tool-privacy-note">{usesAI ? "AI-powered analysis: your media is sent securely from the server to Vercel AI Gateway. Results are indicative, not forensic proof. Do not submit confidential files." : slug === "background-remover" ? "Your image is sent securely to the configured remove.bg provider for processing. Do not upload confidential images." : slug === "plagiarism-checker" ? "The text and comparison sources are processed by this site’s server using phrase matching; no external plagiarism database is queried." : "This utility runs locally in your browser and does not send your input to an AI service. Outputs are general-purpose helpers, not professional advice."}</p>
     </section>
   </ToolDetailSections>;
 }
