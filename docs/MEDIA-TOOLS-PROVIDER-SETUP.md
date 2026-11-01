@@ -1,26 +1,27 @@
-# Media tools provider setup
+# Free, local-first tools
 
-The media tools now use real server-side provider calls. Keep all credentials server-only; never add a `NEXT_PUBLIC_` prefix.
+The tool pages are designed to run without paid AI-provider credentials or per-request API charges.
 
-## AI image and video assessment
+## Text generation tools
 
-- Configure `AI_GATEWAY_API_KEY`, or deploy on Vercel with AI Gateway OIDC available.
-- `AI_VISION_MODEL` defaults to `alibaba/qwen3-vl-235b-a22b-instruct`, a vision-capable model ID listed by the AI Gateway model catalog. Override it only with a currently listed model that accepts image input.
-- Video analysis samples four frames in the browser and asks the vision model to assess those frames. It does not upload the original video file.
-- These are AI-assisted visual assessments, not forensic authenticity detectors. They cannot establish provenance or guarantee detection.
+Text utilities and writing helpers run in the browser using deterministic templates and transformations. They do not call Vercel AI Gateway and should not be described as responses from an AI model. Results are useful starting points and may need editing.
+
+## Image and video inspection
+
+The AI image/video detector pages provide local file and pixel/frame inspection only. They do not run an AI-authenticity classifier. Basic metadata, brightness and sampled frames cannot establish whether media was AI-generated or manipulated.
 
 ## Background removal
 
-- Create a remove.bg API key and set `REMOVE_BG_API_KEY` in the Vercel project environment variables for Preview and Production.
-- The integration calls `https://api.remove.bg/v1.0/removebg` and returns a transparent PNG.
-- The provider's free allowance is limited and subject to its current account terms. Requests fail clearly when the key is missing or credits are exhausted.
+Background removal uses a browser canvas colour-similarity/flood-fill method. It works best with a plain, evenly coloured background. It is not semantic subject segmentation and may leave artefacts on complex scenes. Files remain in the browser.
 
 ## Plagiarism checker
 
-- This is a local five-word phrase-overlap checker against comparison text supplied by the user.
-- Paste the text to check, then add each source after a line containing `--- SOURCE ---`.
-- It does not crawl the web or query academic/student-paper databases and must not be marketed as a comprehensive plagiarism scan.
+This is a local five-word phrase-overlap checker against comparison text supplied by the user. Paste the text to check, then add each source after a line containing `--- SOURCE ---`. It does not crawl the web or query academic/student-paper databases; paraphrased copying may not be detected.
 
-## Verification
+## Dictionary
 
-Run `npm run typecheck`, `npm run lint`, `npm run test:tools`, and `npm run build`. Then configure the environment variables and test each provider from a deployed Preview URL. No provider credentials are stored in this repository.
+The English dictionary lookup uses the public dictionaryapi.dev endpoint without an API key. It is a third-party public service, so availability and rate limits are outside this site's control.
+
+## Cost and privacy
+
+No paid AI Gateway, remove.bg, or other paid per-run provider is required for these tools. Browser-local tools do not upload the selected file. The plagiarism checker processes only the pasted text on this site's own server.
