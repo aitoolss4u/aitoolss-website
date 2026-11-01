@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     }
     if (!Array.isArray(frames) || frames.length < 1 || frames.length > 4 ||
       frames.some((frame) => typeof frame !== "string" || frame.length > MAX_FRAME_CHARS ||
-        !/^data:image\/(jpeg|png|webp);base64,/.test(frame))) {
+        !/^data:image\/(jpeg|png|webp);base64,/.test(frame)) ||
+      frames.reduce((total, frame) => total + (typeof frame === "string" ? frame.length : 0), 0) > 4_000_000) {
       return NextResponse.json({ error: "Upload a supported image or a video that can be sampled into up to four frames. Each frame must be under 5 MB." }, { status: 400 });
     }
     const credential = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
