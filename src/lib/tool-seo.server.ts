@@ -3,6 +3,7 @@ import {siteConfig} from "@/lib/site";
 import {getTool} from "@/lib/tools";
 import {buildToolSeoContent,type ToolSeoContent} from "@/lib/tool-seo";
 import {createClient} from "@/lib/supabase/server";
+const localOnlySeo=new Set(["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover","text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"]);
 function normalize(slug:string,data:Record<string,unknown>,fallback:ToolSeoContent):ToolSeoContent{
  const steps=Array.isArray(data.seo_how_to)?data.seo_how_to.filter((v):v is string=>typeof v==="string"):fallback.howToUse;
  const faqs=Array.isArray(data.seo_faqs)?data.seo_faqs.filter((v):v is {question:string;answer:string}=>!!v&&typeof v==="object"&&typeof (v as {question?:unknown}).question==="string"&&typeof (v as {answer?:unknown}).answer==="string"):fallback.faqs;
@@ -10,7 +11,7 @@ function normalize(slug:string,data:Record<string,unknown>,fallback:ToolSeoConte
 }
 export async function getToolSeoContent(slug:string):Promise<ToolSeoContent|null>{
  const tool=getTool(slug);if(!tool)return null;const fallback=buildToolSeoContent(tool);
- try{const supabase=await createClient();const {data,error}=await supabase.from("tools").select("seo_introduction,seo_what_is,seo_how_to,seo_faqs,meta_title,meta_description,og_title,og_description").eq("slug",slug).eq("is_active",true).maybeSingle();if(!error&&data)return normalize(slug,data as Record<string,unknown>,fallback);}catch{/* Unique fallback keeps tool routes available before the SEO migration is applied. */}
+ try{const supabase=await createClient();const {data,error}=await supabase.from("tools").select("seo_introduction,seo_what_is,seo_how_to,seo_faqs,meta_title,meta_description,og_title,og_description").eq("slug",slug).eq("is_active",true).maybeSingle();if(!error&&data&&!localOnlySeo.has(slug))return normalize(slug,data as Record<string,unknown>,fallback);}catch{/* Unique fallback keeps tool routes available before the SEO migration is applied. */}
  return fallback;
 }
 export function createToolMetadata(slug:string,seo:ToolSeoContent):Metadata{
