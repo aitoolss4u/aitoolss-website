@@ -52,21 +52,84 @@ function run(slug: string, input: string, option: string): string {
 }
 function rgbToHsl(r:number,g:number,b:number) { const rr=r/255,gg=g/255,bb=b/255,max=Math.max(rr,gg,bb),min=Math.min(rr,gg,bb); let h=0,s=0; const l=(max+min)/2; if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case rr:h=(gg-bb)/d+(gg<bb?6:0);break;case gg:h=(bb-rr)/d+2;break;default:h=(rr-gg)/d+4;}h/=6;}return "hsl("+Math.round(h*360)+", "+Math.round(s*100)+"%, "+Math.round(l*100)+"%)"; }
 
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read the selected file."));
+    reader.onerror = () => reject(new Error("Could not read the selected file."));
+    reader.readAsDataURL(file);
+  });
+}
+async function extractVideoFrames(file: File): Promise<string[]> {
+  if (file.size > 40 * 1024 * 1024) throw new Error("Please choose a video smaller than 40 MB.");
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.preload = "metadata";
+  video.muted = true;
+  video.src = url;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error("This video could not be opened by your browser."));
+    });
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1, 768 / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Video frame extraction is not supported in this browser.");
+    const frames: string[] = [];
+    for (const fraction of [0.1, 0.35, 0.6, 0.85]) {
+      video.currentTime = Math.min(Math.max(0, video.duration * fraction), Math.max(0, video.duration - 0.1));
+      await new Promise<void>((resolve, reject) => {
+        video.onseeked = () => resolve();
+        video.onerror = () => reject(new Error("Could not sample this video."));
+      });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      frames.push(canvas.toDataURL("image/jpeg", 0.72));
+    }
+    return frames;
+  } finally {
+    URL.revokeObjectURL(url);
+    video.removeAttribute("src");
+    video.load();
+  }
+}
+
 export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolSeoContent }) {
   const [input, setInput] = useState("");
   const [option, setOption] = useState("default");
   const [output, setOutput] = useState("");
   const [imageInfo, setImageInfo] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const tool = useMemo(() => getTool(slug), [slug]);
   const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
   const usesAI = aiToolSlugs.includes(slug);
-  const isExternalImageTool = ["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover"].includes(slug);
+  const isMediaTool = slug === "ai-image-detector" || slug === "ai-video-detector";
   const process = async () => {
     if (isProcessing) return;
     setIsProcessing(true); setOutput("");
     try {
-      if (slug === "dictionary") {
+      if (isMediaTool) {
+        if (!selectedFile) throw new Error("Please choose a media file first.");
+        const frames = slug === "ai-image-detector" ? [await fileToDataUrl(selectedFile)] : await extractVideoFrames(selectedFile);
+        const response = await fetch("/api/tools/analyze-media", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, frames }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Media analysis failed.");
+        setOutput(data.output);
+      } else if (slug === "background-remover") {
+        if (!selectedFile) throw new Error("Please choose an image first.");
+        const response = await fetch("/api/tools/background-remover", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: await fileToDataUrl(selectedFile) }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Background removal failed.");
+        setOutput(data.image);
+      } else if (slug === "plagiarism-checker") {
+        const response = await fetch("/api/tools/plagiarism", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ input }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Similarity check failed.");
+        setOutput(data.output);
+      } else if (slug === "dictionary") {
         const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");
@@ -91,7 +154,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   };
   if (!tool) return <main className="tool-page-shell"><div className="tool-page-content"><p className="tool-eyebrow">AIToolss / Tool not found</p><h1 className="tool-page-title">We couldn’t find that tool.</h1><Link href="/" className="tool-primary-button">Back to all tools</Link></div></main>;
   const isImage = tool.mode === "image";
-  const runDisabled = !isImage && !input.trim();
+  const runDisabled = isImage ? !selectedFile : !input.trim();
   return <ToolDetailSections tool={tool} seo={seo}>
     <section className="tool-panel">
       <div className="tool-eyebrow">{tool.category} · Browser tool</div>
@@ -103,15 +166,15 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
         {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
         {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
-        {isExternalImageTool && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This tool needs a verified external provider integration before it can analyse or edit files. File upload is available, but no result will be fabricated. It will become runnable once the provider credentials are configured.</p>}
+        {slug === "plagiarism-checker" && <p className="rounded-xl border border-slate-200 p-3 text-sm">Paste the text to check, then add comparison material under a separate <strong>--- SOURCE ---</strong> line. This checks similarity only against the sources you provide; it does not search the whole web or academic databases.</p>}
         <div className="tool-actions">
-          <button disabled={runDisabled || isProcessing || isExternalImageTool || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isExternalImageTool ? "Provider not configured" : isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
-          <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
+          <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? "Processing…" : isImage ? "Process file" : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
+          <button onClick={()=>{setInput("");setOutput("");setImageInfo("");setSelectedFile(null);}} className="tool-secondary-button">Clear</button>
         </div>
       </div>}
       {output && <section className="tool-result">
         <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
-        {output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download="aitoolss-compressed.jpg" className="tool-download-link">Download compressed image</a></> : <pre className="tool-output-text">{output}</pre>}
+        {output.startsWith("blob:") || output.startsWith("data:image/") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download={slug === "background-remover" ? "aitoolss-background-removed.png" : "aitoolss-compressed.jpg"} className="tool-download-link">Download processed image</a></> : <pre className="tool-output-text">{output}</pre>}
       </section>}
       <p className="tool-privacy-note">{usesAI ? "AI-powered generation: your input is sent securely from the server to the configured model provider. Do not submit passwords, personal secrets or confidential information. AI output may contain errors and should be reviewed." : "This utility runs locally in your browser and does not send your input to an AI service. Outputs are general-purpose helpers, not professional advice."}</p>
     </section>
