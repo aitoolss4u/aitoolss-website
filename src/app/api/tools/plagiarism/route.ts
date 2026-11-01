@@ -4,7 +4,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function shingles(value: string, size = 5) {
-  const tokens = value.toLowerCase().normalize("NFKC").match(/[\\p{L}\\p{N}]+/gu) ?? [];
+  const tokens = value.toLowerCase().normalize("NFKC").match(/[\p{L}\p{N}]+/gu) ?? [];
   const result = new Set<string>();
   for (let i = 0; i <= tokens.length - size; i++) result.add(tokens.slice(i, i + size).join(" "));
   return result;
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const input = typeof body?.input === "string" ? body.input.slice(0, 30000) : "";
-    const sections = input.split(/^---\\s*SOURCE\\s*---$/gim);
+    const sections = input.split(/^---\s*SOURCE\s*---$/gim);
     const checkedText = sections.shift()?.trim() ?? "";
     const sources = sections.map((source: string) => source.trim()).filter(Boolean);
     if (checkedText.length < 30 || sources.length === 0) {
