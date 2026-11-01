@@ -166,7 +166,8 @@ async function inspectMediaLocally(file: File, slug: string): Promise<string> {
     return "Local image inspection complete\n\nFile: " + file.name + "\nDimensions: " + image.width + " × " + image.height + " px\nSize: " + (file.size / 1024).toFixed(1) + " KB\nFormat: " + (file.type || "unknown") + "\nAverage brightness: " + mean.toFixed(1) + " / 255\nBrightness variation: " + deviation.toFixed(1) + " / 255\n\nThese are basic file and pixel statistics, not AI-image detection. They cannot determine whether an image was generated or edited by AI. No file was uploaded.";
   } finally { URL.revokeObjectURL(url); }
 }
-\nexport default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolSeoContent }) {
+
+export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolSeoContent }) {
   const [input, setInput] = useState("");
   const [option, setOption] = useState("default");
   const [output, setOutput] = useState("");
