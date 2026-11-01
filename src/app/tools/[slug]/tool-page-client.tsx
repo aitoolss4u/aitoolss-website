@@ -52,29 +52,150 @@ function run(slug: string, input: string, option: string): string {
 }
 function rgbToHsl(r:number,g:number,b:number) { const rr=r/255,gg=g/255,bb=b/255,max=Math.max(rr,gg,bb),min=Math.min(rr,gg,bb); let h=0,s=0; const l=(max+min)/2; if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case rr:h=(gg-bb)/d+(gg<bb?6:0);break;case gg:h=(bb-rr)/d+2;break;default:h=(rr-gg)/d+4;}h/=6;}return "hsl("+Math.round(h*360)+", "+Math.round(s*100)+"%, "+Math.round(l*100)+"%)"; }
 
+async function extractVideoFrames(file: File): Promise<string[]> {
+  if (file.size > 40 * 1024 * 1024) throw new Error("Please choose a video smaller than 40 MB.");
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.preload = "metadata";
+  video.muted = true;
+  video.src = url;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error("This video could not be opened by your browser."));
+    });
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1, 768 / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Video frame extraction is not supported in this browser.");
+    const frames: string[] = [];
+    for (const fraction of [0.1, 0.35, 0.6, 0.85]) {
+      video.currentTime = Math.min(Math.max(0, video.duration * fraction), Math.max(0, video.duration - 0.1));
+      await new Promise<void>((resolve, reject) => {
+        video.onseeked = () => resolve();
+        video.onerror = () => reject(new Error("Could not sample this video."));
+      });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      frames.push(canvas.toDataURL("image/jpeg", 0.72));
+    }
+    return frames;
+  } finally {
+    URL.revokeObjectURL(url);
+    video.removeAttribute("src");
+    video.load();
+  }
+}
+
+
+async function removeFlatBackgroundLocally(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("Choose an image file.");
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error("Could not read this image."));
+      element.src = url;
+    });
+    const scale = Math.min(1, 1200 / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Canvas processing is not supported in this browser.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height);
+    const edge: number[][] = [];
+    const step = Math.max(1, Math.floor(Math.max(width, height) / 80));
+    for (let x = 0; x < width; x += step) {
+      edge.push([data[x * 4], data[x * 4 + 1], data[x * 4 + 2]]);
+      const bottom = ((height - 1) * width + x) * 4;
+      edge.push([data[bottom], data[bottom + 1], data[bottom + 2]]);
+    }
+    for (let y = 0; y < height; y += step) {
+      const left = y * width * 4, right = (y * width + width - 1) * 4;
+      edge.push([data[left], data[left + 1], data[left + 2]], [data[right], data[right + 1], data[right + 2]]);
+    }
+    const background = [0, 1, 2].map((channel) => edge.map((pixel) => pixel[channel]).sort((a, b) => a - b)[Math.floor(edge.length / 2)]);
+    const total = width * height, visited = new Uint8Array(total), queue = new Int32Array(total);
+    let head = 0, tail = 0;
+    const add = (index: number) => { if (!visited[index]) { visited[index] = 1; queue[tail++] = index; } };
+    for (let x = 0; x < width; x++) { add(x); add((height - 1) * width + x); }
+    for (let y = 1; y < height - 1; y++) { add(y * width); add(y * width + width - 1); }
+    const threshold = 58;
+    while (head < tail) {
+      const index = queue[head++], p = index * 4;
+      const distance = Math.hypot(data[p] - background[0], data[p + 1] - background[1], data[p + 2] - background[2]);
+      if (distance > threshold) continue;
+      data[p + 3] = distance < threshold * 0.72 ? 0 : Math.round(255 * (distance - threshold * 0.72) / (threshold * 0.28));
+      const x = index % width, y = Math.floor(index / width);
+      if (x > 0) add(index - 1);
+      if (x < width - 1) add(index + 1);
+      if (y > 0) add(index - width);
+      if (y < height - 1) add(index + width);
+    }
+    context.putImageData(new ImageData(data, width, height), 0, 0);
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not create the transparent PNG.")), "image/png"));
+    return URL.createObjectURL(blob);
+  } finally { URL.revokeObjectURL(url); }
+}
+async function inspectMediaLocally(file: File, slug: string): Promise<string> {
+  if (slug === "ai-video-detector") {
+    const frames = await extractVideoFrames(file);
+    return "Local video inspection complete\n\nFile: " + file.name + "\nSize: " + (file.size / 1024 / 1024).toFixed(2) + " MB\nType: " + (file.type || "unknown") + "\nFrames sampled: " + frames.length + "\n\nNo AI-generated-video classification is performed because that requires a trained detection model. This free local tool does not upload the video or claim an authenticity verdict.";
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error("Could not read this image."));
+      element.src = url;
+    });
+    const canvas = document.createElement("canvas"), scale = Math.min(1, 512 / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Canvas inspection is not supported.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let sum = 0, sumSquares = 0;
+    for (let i = 0; i < pixels.length; i += 4) { const l = 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]; sum += l; sumSquares += l * l; }
+    const count = pixels.length / 4, mean = sum / count, deviation = Math.sqrt(Math.max(0, sumSquares / count - mean * mean));
+    return "Local image inspection complete\n\nFile: " + file.name + "\nDimensions: " + image.width + " × " + image.height + " px\nSize: " + (file.size / 1024).toFixed(1) + " KB\nFormat: " + (file.type || "unknown") + "\nAverage brightness: " + mean.toFixed(1) + " / 255\nBrightness variation: " + deviation.toFixed(1) + " / 255\n\nThese are basic file and pixel statistics, not AI-image detection. They cannot determine whether an image was generated or edited by AI. No file was uploaded.";
+  } finally { URL.revokeObjectURL(url); }
+}
+
 export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolSeoContent }) {
   const [input, setInput] = useState("");
   const [option, setOption] = useState("default");
   const [output, setOutput] = useState("");
   const [imageInfo, setImageInfo] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const tool = useMemo(() => getTool(slug), [slug]);
-  const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
-  const usesAI = aiToolSlugs.includes(slug);
-  const isExternalImageTool = ["ai-image-detector","ai-video-detector","plagiarism-checker","background-remover"].includes(slug);
+  const usesAI = false; // All text tools use deterministic browser-local fallbacks; no paid AI provider is called.
+  const isMediaTool = slug === "ai-image-detector" || slug === "ai-video-detector";
   const process = async () => {
     if (isProcessing) return;
     setIsProcessing(true); setOutput("");
     try {
-      if (slug === "dictionary") {
+      if (isMediaTool) {
+        if (!selectedFile) throw new Error("Please choose a media file first.");
+        setOutput(await inspectMediaLocally(selectedFile, slug));
+      } else if (slug === "background-remover") {
+        if (!selectedFile) throw new Error("Please choose an image first.");
+        setOutput(await removeFlatBackgroundLocally(selectedFile));
+      } else if (slug === "plagiarism-checker") {
+        const response = await fetch("/api/tools/plagiarism", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ input }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Similarity check failed.");
+        setOutput(data.output);
+      } else if (slug === "dictionary") {
         const response = await fetch("/api/dictionary?word=" + encodeURIComponent(input.trim()));
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Dictionary lookup failed.");
-        setOutput(data.output);
-      } else if (usesAI) {
-        const response = await fetch("/api/tools/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, input, option }) });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "AI generation failed.");
         setOutput(data.output);
       } else setOutput(run(slug, input, option));
     } catch (error) { setOutput(error instanceof Error ? error.message : "The tool could not complete this request."); }
@@ -82,7 +203,9 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   };
   const onImage = (picked: File | null) => {
     setOutput("");
+    setSelectedFile(picked);
     if (!picked) { setImageInfo(""); return; }
+    if (slug === "ai-video-detector") { setImageInfo(picked.name + " · " + (picked.size / 1024 / 1024).toFixed(1) + " MB"); return; }
     const url = URL.createObjectURL(picked);
     const image = new Image();
     image.onload = () => { URL.revokeObjectURL(url); setImageInfo(image.width+" × "+image.height+" px · "+(picked.size/1024).toFixed(1)+" KB"); if (slug === "image-dimension-checker") { setOutput("Image dimensions: "+image.width+" × "+image.height+" px\nFile size: "+(picked.size/1024).toFixed(1)+" KB\nFile type: "+(picked.type || "unknown")); } if (slug === "image-compressor") { const canvas = document.createElement("canvas"); canvas.width=image.width; canvas.height=image.height; const ctx=canvas.getContext("2d"); if (!ctx) return; ctx.drawImage(image,0,0); canvas.toBlob((blob)=>{ if (!blob) return; const resultUrl=URL.createObjectURL(blob); setOutput("Compressed image ready · "+(blob.size/1024).toFixed(1)+" KB · "+Math.round((1-blob.size/picked.size)*100)+"% size change. Use the download button below."); setImageInfo(image.width+" × "+image.height+" px · "+(picked.size/1024).toFixed(1)+" KB → "+(blob.size/1024).toFixed(1)+" KB"); setOutput(resultUrl); }, "image/jpeg", .78); } };
@@ -91,29 +214,29 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   };
   if (!tool) return <main className="tool-page-shell"><div className="tool-page-content"><p className="tool-eyebrow">AIToolss / Tool not found</p><h1 className="tool-page-title">We couldn’t find that tool.</h1><Link href="/" className="tool-primary-button">Back to all tools</Link></div></main>;
   const isImage = tool.mode === "image";
-  const runDisabled = !isImage && !input.trim();
+  const runDisabled = isImage ? !selectedFile : !input.trim();
   return <ToolDetailSections tool={tool} seo={seo}>
     <section className="tool-panel">
       <div className="tool-eyebrow">{tool.category} · Browser tool</div>
       {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
-        <label htmlFor="tool-input" className="tool-field-label">{isImage ? "Choose an image" : "Your input"}</label>
+        <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : "Your input"}</label>
         {isImage
-          ? <input id="tool-input" type="file" accept="image/*" onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
+          ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : slug === "background-remover" ? "image/png,image/jpeg" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
           : <textarea id="tool-input" value={input} onChange={(e)=>setInput(e.target.value)} rows={8} placeholder="Paste text, enter a topic, or add values…" className="tool-input" />}
         {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
         {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
         {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
-        {isExternalImageTool && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This tool needs a verified external provider integration before it can analyse or edit files. File upload is available, but no result will be fabricated. It will become runnable once the provider credentials are configured.</p>}
+        {slug === "plagiarism-checker" && <p className="rounded-xl border border-slate-200 p-3 text-sm">Paste the text to check, then add comparison material under a separate <strong>--- SOURCE ---</strong> line. This checks similarity only against the sources you provide; it does not search the whole web or academic databases.</p>}
         <div className="tool-actions">
-          <button disabled={runDisabled || isProcessing || isExternalImageTool || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isExternalImageTool ? "Provider not configured" : isImage ? "Image selected" : isProcessing ? (usesAI ? "Generating…" : "Running…") : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
-          <button onClick={()=>{setInput("");setOutput("");setImageInfo("");}} className="tool-secondary-button">Clear</button>
+          <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? "Processing…" : isImage ? "Process file" : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
+          <button onClick={()=>{setInput("");setOutput("");setImageInfo("");setSelectedFile(null);}} className="tool-secondary-button">Clear</button>
         </div>
       </div>}
       {output && <section className="tool-result">
-        <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
-        {output.startsWith("blob:") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download="aitoolss-compressed.jpg" className="tool-download-link">Download compressed image</a></> : <pre className="tool-output-text">{output}</pre>}
+        <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && !output.startsWith("data:image/") && <button onClick={()=>navigator.clipboard.writeText(output)} className="tool-copy-button">Copy result</button>}</div>
+        {output.startsWith("blob:") || output.startsWith("data:image/") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download={slug === "background-remover" ? "aitoolss-background-removed.png" : "aitoolss-compressed.jpg"} className="tool-download-link">Download processed image</a></> : <pre className="tool-output-text">{output}</pre>}
       </section>}
-      <p className="tool-privacy-note">{usesAI ? "AI-powered generation: your input is sent securely from the server to the configured model provider. Do not submit passwords, personal secrets or confidential information. AI output may contain errors and should be reviewed." : "This utility runs locally in your browser and does not send your input to an AI service. Outputs are general-purpose helpers, not professional advice."}</p>
+      <p className="tool-privacy-note">{isMediaTool ? "Free local inspection only: no AI authenticity model runs, and no file is uploaded. Metadata and frame patterns cannot prove whether media is AI-generated." : slug === "background-remover" ? "Runs locally in your browser. Best results are with a plain, evenly coloured background; complex scenes may leave artefacts. No image is uploaded." : slug === "plagiarism-checker" ? "Phrase matching runs on this site's server against only the sources you paste. No paid API or external plagiarism database is used." : "This utility runs locally in your browser and does not call a paid AI service. Generated text uses deterministic templates and is not an AI model response."}</p>
     </section>
   </ToolDetailSections>;
 }
