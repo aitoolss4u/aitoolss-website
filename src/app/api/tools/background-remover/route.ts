@@ -11,9 +11,9 @@ export async function POST(request: Request) {
     }
     const body = await request.json();
     const image = body?.image;
-    const match = typeof image === "string" ? image.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/) : null;
-    if (!match || match[2].length > 12_000_000) {
-      return NextResponse.json({ error: "Upload a PNG, JPEG or WebP image under 9 MB." }, { status: 400 });
+    const match = typeof image === "string" ? image.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/) : null;
+    if (!match || match[2].length > 4_000_000) {
+      return NextResponse.json({ error: "Upload a PNG or JPEG image under 3 MB." }, { status: 400 });
     }
     const bytes = Buffer.from(match[2], "base64");
     const form = new FormData();
