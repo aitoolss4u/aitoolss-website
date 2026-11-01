@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     if (target.size === 0) return NextResponse.json({ error: "Not enough text to compare." }, { status: 400 });
     const sourceSets = sources.map(shingles);
     const matched = new Set<string>();
-    const perSource = sourceSets.map((source, index) => {
+    const perSource = sourceSets.map((source: Set<string>, index: number) => {
       let overlap = 0;
       for (const phrase of source) if (target.has(phrase)) { overlap++; matched.add(phrase); }
       return { source: index + 1, matchedPhrases: overlap, sourcePhrases: source.size, overlapPercent: Math.round((overlap / Math.max(1, target.size)) * 1000) / 10 };
