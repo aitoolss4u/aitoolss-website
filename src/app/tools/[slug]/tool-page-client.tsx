@@ -52,14 +52,6 @@ function run(slug: string, input: string, option: string): string {
 }
 function rgbToHsl(r:number,g:number,b:number) { const rr=r/255,gg=g/255,bb=b/255,max=Math.max(rr,gg,bb),min=Math.min(rr,gg,bb); let h=0,s=0; const l=(max+min)/2; if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case rr:h=(gg-bb)/d+(gg<bb?6:0);break;case gg:h=(bb-rr)/d+2;break;default:h=(rr-gg)/d+4;}h/=6;}return "hsl("+Math.round(h*360)+", "+Math.round(s*100)+"%, "+Math.round(l*100)+"%)"; }
 
-async function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read the selected file."));
-    reader.onerror = () => reject(new Error("Could not read the selected file."));
-    reader.readAsDataURL(file);
-  });
-}
 async function extractVideoFrames(file: File): Promise<string[]> {
   if (file.size > 40 * 1024 * 1024) throw new Error("Please choose a video smaller than 40 MB.");
   const url = URL.createObjectURL(file);
@@ -182,7 +174,6 @@ async function inspectMediaLocally(file: File, slug: string): Promise<string> {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const tool = useMemo(() => getTool(slug), [slug]);
-  const aiToolSlugs = ["text-summarizer","paragraph-rewriter","headline-generator","blog-outline-builder","email-draft-helper","tone-changer","image-alt-text-helper","prompt-generator","code-explainer","social-caption-writer","hashtag-ideas","meta-description-writer","youtube-description-builder","video-script-outline","product-description-writer","quiz-question-builder","essay-outline-builder","business-name-ideas","interview-practice-questions","achievement-bullet-rewriter","cover-letter-builder","study-notes-organizer","flashcard-maker","meeting-agenda-maker","meeting-notes-formatter","grammar-checker","ai-humanizer","paraphrasing-tool","summarizer","translator","ai-chatbot","ai-email-helper"];
   const usesAI = false; // All text tools use deterministic browser-local fallbacks; no paid AI provider is called.
   const isMediaTool = slug === "ai-image-detector" || slug === "ai-video-detector";
   const process = async () => {
