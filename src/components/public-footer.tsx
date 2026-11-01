@@ -7,14 +7,13 @@ import type { PublicCategory } from "./public-sidebar";
 import BrandLogo from "@/components/brand-logo";
 
 type SocialLinks = Record<string, string>;
-type SocialProfile = readonly [key: string, label: string, kind: "facebook" | "instagram" | "youtube" | "x" | "linkedin"];
+type SocialProfile = readonly [key: string, label: string, kind: "facebook" | "instagram" | "x" | "linkedin", fallbackUrl: string];
 
 const socialProfiles: SocialProfile[] = [
-  ["socialFacebook", "Facebook", "facebook"],
-  ["socialInstagram", "Instagram", "instagram"],
-  ["socialYouTube", "YouTube", "youtube"],
-  ["socialX", "X", "x"],
-  ["socialLinkedIn", "LinkedIn", "linkedin"],
+  ["socialFacebook", "Facebook", "facebook", "https://www.facebook.com/"],
+  ["socialInstagram", "Instagram", "instagram", "https://www.instagram.com/"],
+  ["socialX", "X", "x", "https://x.com/"],
+  ["socialLinkedIn", "LinkedIn", "linkedin", "https://www.linkedin.com/"],
 ];
 function SocialIcon({ kind }: { kind: SocialProfile[2] }) {
   if (kind === "facebook") return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.7 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5H17V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.6V13h2.7v8h3.4Z" /></svg>;
@@ -75,11 +74,11 @@ export default function PublicFooter({ categories }: { categories?: PublicCatego
           <BrandLogo className="footer-brand" size={52} />
           <p>A thoughtful collection of practical tools for creativity, productivity, coding and everyday work.</p>
           <div className="footer-socials" aria-label="Configured social media accounts">
-            {socialProfiles.map(([key, label, kind]) => socialLinks[key] ? (
-              <a key={key} href={socialLinks[key]} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className={"footer-social-" + kind}>
+            {socialProfiles.map(([key, label, kind, fallbackUrl]) => (
+              <a key={key} href={socialLinks[key]?.trim() || fallbackUrl} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className={"footer-social-" + kind}>
                 <SocialIcon kind={kind} />
               </a>
-            ) : null)}
+            ))}
           </div>
         </section>
 
