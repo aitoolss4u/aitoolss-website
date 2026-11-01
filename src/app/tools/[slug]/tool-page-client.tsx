@@ -144,7 +144,7 @@ async function removeFlatBackgroundLocally(file: File): Promise<string> {
 async function inspectMediaLocally(file: File, slug: string): Promise<string> {
   if (slug === "ai-video-detector") {
     const frames = await extractVideoFrames(file);
-    return "Local video inspection complete\\n\\nFile: " + file.name + "\\nSize: " + (file.size / 1024 / 1024).toFixed(2) + " MB\\nType: " + (file.type || "unknown") + "\\nFrames sampled: " + frames.length + "\\n\\nNo AI-generated-video classification is performed because that requires a trained detection model. This free local tool does not upload the video or claim an authenticity verdict.";
+    return "Local video inspection complete\n\nFile: " + file.name + "\nSize: " + (file.size / 1024 / 1024).toFixed(2) + " MB\nType: " + (file.type || "unknown") + "\nFrames sampled: " + frames.length + "\n\nNo AI-generated-video classification is performed because that requires a trained detection model. This free local tool does not upload the video or claim an authenticity verdict.";
   }
   const url = URL.createObjectURL(file);
   try {
@@ -163,7 +163,7 @@ async function inspectMediaLocally(file: File, slug: string): Promise<string> {
     let sum = 0, sumSquares = 0;
     for (let i = 0; i < pixels.length; i += 4) { const l = 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]; sum += l; sumSquares += l * l; }
     const count = pixels.length / 4, mean = sum / count, deviation = Math.sqrt(Math.max(0, sumSquares / count - mean * mean));
-    return "Local image inspection complete\\n\\nFile: " + file.name + "\\nDimensions: " + image.width + " × " + image.height + " px\\nSize: " + (file.size / 1024).toFixed(1) + " KB\\nFormat: " + (file.type || "unknown") + "\\nAverage brightness: " + mean.toFixed(1) + " / 255\\nBrightness variation: " + deviation.toFixed(1) + " / 255\\n\\nThese are basic file and pixel statistics, not AI-image detection. They cannot determine whether an image was generated or edited by AI. No file was uploaded.";
+    return "Local image inspection complete\n\nFile: " + file.name + "\nDimensions: " + image.width + " × " + image.height + " px\nSize: " + (file.size / 1024).toFixed(1) + " KB\nFormat: " + (file.type || "unknown") + "\nAverage brightness: " + mean.toFixed(1) + " / 255\nBrightness variation: " + deviation.toFixed(1) + " / 255\n\nThese are basic file and pixel statistics, not AI-image detection. They cannot determine whether an image was generated or edited by AI. No file was uploaded.";
   } finally { URL.revokeObjectURL(url); }
 }
 \nexport default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolSeoContent }) {
