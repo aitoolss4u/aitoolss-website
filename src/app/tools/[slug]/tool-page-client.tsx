@@ -68,6 +68,23 @@ function humanizeLocally(value: string): string {
 }
 
 
+function checkGrammarLocally(value: string): string {
+  const issues: string[] = [];
+  if (/\s{2,}/.test(value)) issues.push("There are repeated spaces; use a single space between words.");
+  if (/\s+([,.;!?])/g.test(value)) issues.push("Remove spaces that appear before punctuation marks.");
+  if (/([.!?])(?=[A-Za-z])/.test(value)) issues.push("Add a space after a full stop, question mark or exclamation mark.");
+  if (/\b(i)\b/.test(value)) issues.push('Capitalize the pronoun "I".');
+  if (/\b(?:he|she|it)\s+are\b/i.test(value)) issues.push('Check subject–verb agreement for "he", "she" or "it".');
+  if (/\b(?:they|we|you|I)\s+is\b/i.test(value)) issues.push('Check subject–verb agreement; "they", "we", "you" and "I" usually pair with "are" or "am".');
+  const repeatedWord = value.match(/\b([A-Za-z]{2,})\s+\1\b/i);
+  if (repeatedWord) issues.push('The word "' + repeatedWord[1] + '" appears twice in a row.');
+  if (/(?:^|[.!?]\s+)[a-z]/.test(value)) issues.push("Start each sentence with a capital letter.");
+  if (!/[.!?)]$/.test(value.trim())) issues.push("Consider adding a suitable ending punctuation mark.");
+  return issues.length
+    ? "Basic writing checks found these points to review:\n\n" + issues.map((issue, index) => (index + 1) + ". " + issue).join("\n") + "\n\nThese are simple rule-based suggestions, not a full grammar or proofreading review."
+    : "No obvious issues were found by the basic checks. This is a lightweight rule-based review, so please proofread the text before using it.";
+}
+
 function run(slug: string, input: string, option: string): string {
   const text = input.trim();
   if (!text) return "Add some input above, then select Run tool.";
@@ -89,6 +106,7 @@ function run(slug: string, input: string, option: string): string {
     case "rgb-to-hex-converter": { const vals = text.match(/\d+(?:\.\d+)?/g)?.map(Number); if (!vals || vals.length < 3 || vals.slice(0,3).some((n) => n < 0 || n > 255)) return "Enter three RGB values between 0 and 255, e.g. 118, 87, 255."; return "#" + vals.slice(0,3).map((n) => Math.round(n).toString(16).padStart(2,"0")).join("").toUpperCase(); }
     case "timestamp-converter": { const date = /^\d{9,13}$/.test(text) ? new Date(Number(text) * (text.length <= 10 ? 1000 : 1)) : new Date(text); return Number.isNaN(date.getTime()) ? "Enter a Unix timestamp or a date string." : JSON.stringify({ iso: date.toISOString(), local: date.toString(), unixSeconds: Math.floor(date.getTime()/1000), unixMilliseconds: date.getTime() }, null, 2); }
     case "reading-time-estimator": return words(text) + " words · about " + Math.max(1, Math.ceil(words(text) / 225)) + " minute(s) at 225 words per minute.";
+    case "grammar-checker": return checkGrammarLocally(text);
     case "ai-humanizer": return humanizeLocally(text);
     case "business-name-ideas": return generateBusinessNames(text, Number(option) || 10);
     case "paragraph-rewriter": case "tone-changer": case "achievement-bullet-rewriter": return (option === "formal" ? sentenceCase(text) : option === "friendly" ? sentenceCase(text).replace(/\butilize\b/gi, "use").replace(/\btherefore\b/gi, "so") : sentenceCase(text)).replace(/\s+/g, " ");
