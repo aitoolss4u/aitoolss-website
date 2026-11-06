@@ -107,6 +107,11 @@ function run(slug: string, input: string, option: string): string {
     case "timestamp-converter": { const date = /^\d{9,13}$/.test(text) ? new Date(Number(text) * (text.length <= 10 ? 1000 : 1)) : new Date(text); return Number.isNaN(date.getTime()) ? "Enter a Unix timestamp or a date string." : JSON.stringify({ iso: date.toISOString(), local: date.toString(), unixSeconds: Math.floor(date.getTime()/1000), unixMilliseconds: date.getTime() }, null, 2); }
     case "reading-time-estimator": return words(text) + " words · about " + Math.max(1, Math.ceil(words(text) / 225)) + " minute(s) at 225 words per minute.";
     case "grammar-checker": return checkGrammarLocally(text);
+    case "paraphrasing-tool": return humanizeLocally(text);
+    case "summarizer": { const sentences = text.match(/[^.!?]+[.!?]*/g) || [text]; const count = Math.max(1, Math.min(sentences.length, Math.ceil(sentences.length / 3))); return sentences.slice(0, count).map((sentence) => sentence.trim()).filter(Boolean).join(" "); }
+    case "translator": return "Translation is not available in this free version because no language provider is connected. No translation has been performed. Please use a translation service that supports your language pair.";
+    case "ai-chatbot": return ["Local template response (no trained AI model is connected):", "", "You asked: " + text, "", "A useful way to approach this:", "1. Define the outcome you want.", "2. Break the task into clear, manageable steps.", "3. Check important facts and assumptions.", "4. Review the result and adapt it to your situation."].join("\n");
+    case "ai-email-helper": return ["Subject: [Add a clear subject]", "", "Hello [Name],", "", text, "", "Please let me know if you need any further details.", "", "Best regards,", "[Your name]"].join("\n");
     case "ai-humanizer": return humanizeLocally(text);
     case "business-name-ideas": return generateBusinessNames(text, Number(option) || 10);
     case "paragraph-rewriter": case "tone-changer": case "achievement-bullet-rewriter": return (option === "formal" ? sentenceCase(text) : option === "friendly" ? sentenceCase(text).replace(/\butilize\b/gi, "use").replace(/\btherefore\b/gi, "so") : sentenceCase(text)).replace(/\s+/g, " ");
