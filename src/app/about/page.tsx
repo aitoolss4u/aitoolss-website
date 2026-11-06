@@ -6,7 +6,7 @@ import CmsPageContent from "@/components/cms-page-content";
 import LegalPageLinks from "@/components/legal-page-links";
 
 const fallbackMetadata: Metadata = {
-  title: "About AIToolss",
+  title: "About",
   description: "Learn what AIToolss offers, how to discover online tools, how browser-based utilities work and how we approach transparency, privacy and useful tool information.",
   alternates: { canonical: "/about" },
 };
