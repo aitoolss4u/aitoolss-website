@@ -8,7 +8,7 @@ export async function getCmsMetadata(slug:string, fallback:Metadata):Promise<Met
   if(!data||!data.is_published)return fallback;
   return {
    ...fallback,
-   title: data.meta_title?.trim() || fallback.title,
+   title: data.meta_title?.trim().replace(/\\s*\\|\\s*AIToolss$/i, "") || fallback.title,
    description: data.meta_description?.trim() || fallback.description,
   };
  }catch{return fallback;}
