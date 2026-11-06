@@ -1,4 +1,5 @@
-import type {Metadata} from "next";\nimport {cache} from "react";
+import type {Metadata} from "next";
+import {cache} from "react";
 import {siteConfig} from "@/lib/site";
 import {getTool} from "@/lib/tools";
 import {buildToolSeoContent,type ToolSeoContent} from "@/lib/tool-seo";
