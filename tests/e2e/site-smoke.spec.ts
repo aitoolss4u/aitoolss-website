@@ -224,7 +224,8 @@ test("resource directory and cookie preferences lead to useful, functional pages
   await expect(page.getByRole("status")).toContainText("saved in this browser");
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("aitoolss-cookie-preferences-v2") || "{}"));
   expect(stored.essential).toBe(true);
-  expect(stored.analytics).toBe(true);\n  expect(stored.advertising).toBe(false);
+  expect(stored.analytics).toBe(true);
+  expect(stored.advertising).toBe(false);
 });
 
 
