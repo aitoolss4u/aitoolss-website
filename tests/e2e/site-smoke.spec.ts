@@ -334,7 +334,7 @@ test("Business Name Ideas generates the exact selected number of names", async (
   for (const count of [10, 20, 50, 100]) {
     await page.getByRole("button", { name: /Show Result/ }).click();
     await page.getByRole("menuitem", { name: `${count} names` }).click();
-    const lines = (await page.locator(".tool-output-text").innerText()).trim().split("\\n");
+    const lines = (await page.locator(".tool-output-text").innerText()).trim().split(/\\r?\\n/);
     expect(lines).toHaveLength(count);
   }
 });
