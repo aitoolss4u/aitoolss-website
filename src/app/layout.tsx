@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { siteConfig } from "@/lib/site";
-import { getSiteMetadata } from "@/lib/content-pages";
 import "./globals.css";
 import SiteThemeProvider from "@/components/site-theme-provider";
 import ConsentManager from "@/components/consent-manager";
