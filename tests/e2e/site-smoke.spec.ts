@@ -217,14 +217,14 @@ test("resource directory and cookie preferences lead to useful, functional pages
   await expect(page.getByText("All tools", { exact: true })).toHaveCount(0);
 
   await page.goto("/cookie-consent");
-  await expect(page.getByRole("heading", { level: 1, name: "Cookie & consent preferences." })).toBeVisible();
-  const analyticsPreference = page.getByRole("checkbox", { name: /Optional analytics preference/ });
+  await expect(page.getByRole("heading", { level: 1, name: "Cookie Policy & Consent Preferences" })).toBeVisible();
+  const analyticsPreference = page.getByRole("checkbox", { name: /Analytics consent/ });
   await analyticsPreference.check();
   await page.getByRole("button", { name: "Save preferences" }).click();
   await expect(page.getByRole("status")).toContainText("saved in this browser");
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("aitoolss-cookie-preferences-v1") || "{}"));
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("aitoolss-cookie-preferences-v2") || "{}"));
   expect(stored.essential).toBe(true);
-  expect(stored.optionalAnalytics).toBe(true);
+  expect(stored.analytics).toBe(true);\n  expect(stored.advertising).toBe(false);
 });
 
 
@@ -334,7 +334,7 @@ test("Business Name Ideas generates the exact selected number of names", async (
   for (const count of [10, 20, 50, 100]) {
     await page.getByRole("button", { name: /Show Result/ }).click();
     await page.getByRole("menuitem", { name: `${count} names` }).click();
-    const lines = (await page.locator(".tool-output-text").innerText()).trim().split(/\\r?\\n/);
+    const lines = (await page.locator(".tool-output-text").innerText()).trim().split(String.fromCharCode(10));
     expect(lines).toHaveLength(count);
   }
 });
