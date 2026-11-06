@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getCmsMetadata } from "@/lib/content-pages";
 
 const fallbackMetadata: Metadata = {
   title: "Contact AIToolss | Support, Feedback & Tool Suggestions",
@@ -11,5 +12,5 @@ const fallbackMetadata: Metadata = {
     type: "website",
   },
 };
-export const metadata = fallbackMetadata;
+export async function generateMetadata(): Promise<Metadata> { return getCmsMetadata("contact-us", fallbackMetadata); }
 export default function ContactLayout({ children }: { children: React.ReactNode }) { return children; }
