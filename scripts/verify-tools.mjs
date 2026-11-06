@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 
 const catalog = await readFile(new URL("../src/lib/tools.ts", import.meta.url), "utf8");
 const route = await readFile(new URL("../src/app/tools/[slug]/tool-page-client.tsx", import.meta.url), "utf8");
+const aiRoute = await readFile(new URL("../src/app/api/tools/ai-chat/route.ts", import.meta.url), "utf8");
 const detailSections = await readFile(new URL("../src/components/tool-detail-sections.tsx", import.meta.url), "utf8");
 const seoContent = await readFile(new URL("../src/lib/tool-seo.ts", import.meta.url), "utf8");
 const seoDataSource = await readFile(new URL("../src/lib/tool-seo-data.ts", import.meta.url), "utf8");
@@ -27,6 +28,11 @@ assert.deepEqual(
 
 const cases = [...route.matchAll(/case\s+"([^"]+)"/g)].map((match) => match[1]);
 assert.equal(new Set(cases).size, cases.length, "tool runner must not contain duplicate switch cases");
+assert.ok(route.includes('const usesAI = slug === "ai-chatbot";'), "AI chatbot must use the server-backed AI route");
+assert.ok(route.includes('fetch("/api/tools/ai-chat"'), "AI chatbot must call its server endpoint");
+assert.ok(!route.includes("Local template response (no trained AI model is connected)"), "AI chatbot must not return a template in place of a model response");
+assert.ok(aiRoute.includes("AI_GATEWAY_API_KEY") && aiRoute.includes("AI_MODEL"), "AI endpoint must require explicit server-side Gateway configuration");
+assert.ok(aiRoute.includes("https://ai-gateway.vercel.sh/v1/chat/completions"), "AI endpoint must call the configured AI Gateway");
 for (const slug of ["word-counter", "text-summarizer", "pomodoro-timer", "ai-image-detector", "ai-video-detector", "grammar-checker", "plagiarism-checker", "ai-humanizer", "paraphrasing-tool", "summarizer", "translator", "background-remover", "ai-chatbot", "dictionary", "ai-email-helper", "citation-generator", "image-compressor", "image-dimension-checker", "color-palette-builder", "decision-matrix", "json-formatter", "random-password-generator"]) {
   assert.ok(entries.some((entry) => entry.slug === slug), `expected tool missing from catalog: ${slug}`);
   assert.ok(route.includes(`"${slug}"`), `expected representative tool handler missing: ${slug}`);
