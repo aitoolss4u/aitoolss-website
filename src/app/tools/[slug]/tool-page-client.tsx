@@ -55,7 +55,7 @@ function humanizeLocally(value: string): string {
     .replace(/([.!?])([A-Za-z])/g, "$1 $2")
     .replace(/\n{3,}/g, "\n\n");
   const sentences = rewritten.match(/[^.!?]+[.!?]*/g)?.map((part) => part.trim()).filter(Boolean) ?? [rewritten];
-  if (sentences.length && sentences[0] && sentences[0] === value.trim()) {
+  if (rewritten === value.trim() && sentences.length && sentences[0]) {
     const first = sentences[0];
     const comma = first.indexOf(",");
     if (comma > 8 && comma < first.length - 8) {
@@ -324,7 +324,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
         {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
         {slug === "business-name-ideas" && <div className="tool-business-count" onMouseEnter={() => setShowBusinessCount(true)} onMouseLeave={() => setShowBusinessCount(false)}>
-          <button type="button" className="tool-secondary-button" aria-haspopup="menu" aria-expanded={showBusinessCount} onClick={() => setShowBusinessCount((open) => !open)}>Show Result ▾</button>
+          <button type="button" className="tool-secondary-button" aria-haspopup="menu" aria-expanded={showBusinessCount} onClick={() => setShowBusinessCount(true)}>Show Result ▾</button>
           {showBusinessCount && <div className="tool-business-count-menu" role="menu" aria-label="Number of business names">
             {[10, 20, 50, 100].map((count) => <button key={count} type="button" role="menuitem" onClick={() => { setBusinessCount(count); setShowBusinessCount(false); setCopyStatus(""); setOutput(input.trim() ? run(slug, input, String(count)) : "Enter your business niche or keywords, then choose how many names to generate."); }}>{count} names</button>)}
           </div>}
