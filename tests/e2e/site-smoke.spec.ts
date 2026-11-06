@@ -339,3 +339,31 @@ test("Business Name Ideas generates the exact selected number of names", async (
     expect(lines).toHaveLength(count);
   }
 });
+
+
+test("all 74 catalogue entries render their matching tool page and interface", async ({ request }) => {
+  const source = await readFile(new URL("../../src/lib/tools.ts", import.meta.url), "utf8");
+  const entries = [...source.matchAll(/^\\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
+    name: match[1],
+    slug: match[2],
+  }));
+  expect(entries).toHaveLength(74);
+  expect(new Set(entries.map((entry) => entry.slug)).size).toBe(74);
+
+  // Check every catalogue destination against the running Next.js application.
+  // Bounded batches avoid flooding the local test server with 74 simultaneous requests.
+  for (let start = 0; start < entries.length; start += 10) {
+    const batch = entries.slice(start, start + 10);
+    const results = await Promise.all(batch.map(async (entry) => {
+      const response = await request.get("/tools/" + entry.slug);
+      return { entry, response, html: await response.text() };
+    }));
+    for (const { entry, response, html } of results) {
+      expect(response.status(), entry.slug).toBe(200);
+      expect(html, entry.slug).toContain('data-tool-detail-page="true"');
+      expect(html, entry.slug).toContain('data-section="tool-interface"');
+      expect(html, entry.slug).toContain(entry.name);
+      expect(html, entry.slug).toContain('data-section="seo-content"');
+    }
+  }
+});
