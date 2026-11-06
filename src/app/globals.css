@@ -1612,3 +1612,15 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 @media (prefers-reduced-motion: reduce) {
   .site-consent-button, .site-consent-button:hover { transition: none; transform: none; }
 }
+
+
+/* Readability: keep tool copy comfortably separated from the persistent sidebar. */
+@media (min-width: 761px) {
+  .public-site-main { min-width: 0; }
+  .tool-page-shell { padding-inline: clamp(1.5rem, 3.5vw, 3.25rem); }
+  .tool-page-content { width: 100%; max-width: 86rem; padding-inline: clamp(.5rem, 1.2vw, 1.25rem); }
+}
+@media (max-width: 760px) {
+  .tool-page-shell { padding-inline: 1rem; }
+  .tool-page-content { width: 100%; max-width: none; padding-inline: .15rem; }
+}
