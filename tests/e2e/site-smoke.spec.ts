@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 
 test("homepage reflects discovery UI, moving border and looping featured row", async ({ page }) => {
