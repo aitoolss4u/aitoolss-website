@@ -47,6 +47,7 @@ export default function ConsentManager() {
   useEffect(() => {
     const saved = readConsentPreferences();
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate saved consent from browser storage after mount.
       setPreferences(saved);
       setAnalyticsChoice(saved.analytics);
       setAdvertisingChoice(saved.advertising);
