@@ -17,6 +17,7 @@ export default function CookieConsentPage() {
     try {
       const preferences = readConsentPreferences();
       if (preferences) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate the saved browser preference after mount.
         setAnalytics(preferences.analytics);
         setAdvertising(preferences.advertising);
       }
