@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { getCmsMetadata } from "@/lib/content-pages";
 
-export const metadata: Metadata = {
+const fallbackMetadata: Metadata = {
   title: "Cookie Policy & Consent Preferences",
   description: "Understand AIToolss browser storage, essential cookies, optional analytics preferences and how to manage your consent choices.",
   alternates: { canonical: "/cookie-consent" },
@@ -11,4 +12,5 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+export async function generateMetadata(): Promise<Metadata> { return getCmsMetadata("cookie-consent", fallbackMetadata); }
 export default function CookieConsentLayout({ children }: { children: React.ReactNode }) { return children; }
