@@ -24,6 +24,6 @@ export async function GET() {
     return NextResponse.json({ tools, source: "supabase" }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
   } catch (error) {
     console.error("Tool catalogue fallback:", error);
-    return NextResponse.json({ tools: fallbackTools, source: "fallback" }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ tools: fallbackTools, source: "fallback" }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
   }
 }
