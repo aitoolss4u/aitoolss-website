@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTool } from "@/lib/tools";
+import { getTool, tools } from "@/lib/tools";
 import { createToolMetadata, getToolSeoContent } from "@/lib/tool-seo.server";
 import ToolPageClient from "./tool-page-client";
 
 type PageProps = { params: Promise<{ slug: string }> };
+
+export const dynamicParams = false;
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return tools.map((tool) => ({ slug: tool.slug }));
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
