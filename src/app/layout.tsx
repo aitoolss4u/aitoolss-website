@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { siteConfig } from "@/lib/site";
-import { getSiteMetadata } from "@/lib/content-pages";
 import "./globals.css";
 import SiteThemeProvider from "@/components/site-theme-provider";
 import ConsentManager from "@/components/consent-manager";
@@ -26,11 +25,11 @@ const fallbackMetadata: Metadata = {
     title: "AIToolss — Discover AI Tools That Help You Do More",
     description: siteConfig.description,
   },
-  icons: { icon: [{ url: "/favicon.png", type: "image/png", sizes: "48x48" }], apple: [{ url: "/brand/aitoolss-logo.png", sizes: "180x180", type: "image/png" }] },
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml", sizes: "any" }, { url: "/favicon.png", type: "image/png", sizes: "48x48" }], shortcut: ["/favicon.svg"], apple: [{ url: "/brand/aitoolss-logo.png", sizes: "180x180", type: "image/png" }] },
   robots: { index: true, follow: true },
 };
 
-export async function generateMetadata(): Promise<Metadata> { return getSiteMetadata(fallbackMetadata); }
+export const metadata: Metadata = fallbackMetadata;
 
 export const viewport: Viewport = {
   themeColor: "#faf9ff",

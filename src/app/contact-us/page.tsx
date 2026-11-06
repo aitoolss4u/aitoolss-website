@@ -38,8 +38,16 @@ export default function ContactPage() {
   return <PublicSiteChrome><main className="info-page"><article className="info-article">
     <CmsPageContent slug="contact-us" fallbackTitle="Contact AIToolss" fallbackIntro="Contact our team about a tool listing, website issue, privacy request, partnership enquiry or general feedback. We welcome clear details that help us understand and respond to your request." preserveChildren>
       <div className="mt-5 max-w-2xl space-y-3 text-sm leading-7 text-[#6e657d]">
-        <p>Use the form below to send a message to the AIToolss team. The contact destination is <a href="mailto:aitoolss4u@gmail.com" className="font-semibold text-violet-700 underline">aitoolss4u@gmail.com</a>. If email delivery is not configured, the website may save your message in its protected admin inbox and clearly tell you that forwarding is not active.</p>
-        <p>Please do not send passwords, payment details, identity documents or confidential information. For details about form submissions, read our <a href="/privacy" className="font-semibold text-violet-700 underline">Privacy Policy</a>.</p>
+        <p>Use this form to contact the AIToolss team about a website issue, an incorrect tool listing, a feature suggestion, a privacy request, a partnership enquiry or general feedback. Messages are forwarded to <a href="mailto:aitoolss4u@gmail.com" className="font-semibold text-violet-700 underline">aitoolss4u@gmail.com</a> through our email service. If forwarding is temporarily unavailable, the website may retain the submission in its protected admin inbox so it can be reviewed.</p>
+        <h2 className="mt-5 text-base font-extrabold text-[#413753]">How to write a useful support request</h2>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Give a short, specific subject that describes the request.</li>
+          <li>For a broken tool, include the tool page URL, the steps you followed and the exact error message.</li>
+          <li>For a listing correction, include the current page and the detail that should be reviewed.</li>
+          <li>For a partnership or tool suggestion, explain the service and why it may be useful to AIToolss visitors.</li>
+        </ul>
+        <p>We review messages as resources allow. Sending a request does not create an account, guarantee acceptance of a suggestion or establish a response deadline.</p>
+        <p>Please do not send passwords, payment details, identity documents, private keys or confidential files. Contact form submissions are handled as described in our <a href="/privacy" className="font-semibold text-violet-700 underline">Privacy Policy</a>. You can also review our <a href="/terms" className="font-semibold text-violet-700 underline">Terms &amp; Conditions</a> and <a href="/disclaimer" className="font-semibold text-violet-700 underline">Disclaimer</a> before using site tools.</p>
       </div>
       <form onSubmit={submit} className="mt-8 grid max-w-2xl gap-4 rounded-2xl border border-[#e8e2f2] bg-white p-5 sm:p-7">
         <label className="grid gap-2 text-sm font-semibold text-[#413753]">Full name<input name="name" required maxLength={120} autoComplete="name" className="rounded-xl border border-[#ded7eb] p-3 font-normal" /></label>

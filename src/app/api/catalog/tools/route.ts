@@ -13,7 +13,7 @@ export async function GET() {
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
     if (error) throw error;
-    if (!data?.length) return NextResponse.json({ tools: fallbackTools, source: "fallback" });
+    if (!data?.length) return NextResponse.json({ tools: fallbackTools, source: "fallback" }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
     const tools = data.map((tool) => ({
       ...tool,
       label: "READY TO USE" as const,
@@ -21,9 +21,9 @@ export async function GET() {
       tone: tool.category === "Writing" || tool.category === "Business" ? "violet" : tool.category === "Images" || tool.category === "Coding" || tool.category === "Career" ? "cyan" : tool.category === "Marketing" || tool.category === "Education" ? "pink" : "orange",
       href: "/tools/" + tool.slug,
     }));
-    return NextResponse.json({ tools, source: "supabase" }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ tools, source: "supabase" }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
   } catch (error) {
     console.error("Tool catalogue fallback:", error);
-    return NextResponse.json({ tools: fallbackTools, source: "fallback" }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ tools: fallbackTools, source: "fallback" }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
   }
 }

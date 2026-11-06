@@ -9,10 +9,10 @@ export async function GET() {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("get_popular_tool_slugs");
-    if (error || !data) return NextResponse.json({ slugs: [] });
-    return NextResponse.json({ slugs: data.map((row: { slug: string }) => row.slug).filter((slug: string) => knownSlugs.has(slug)) });
+    if (error || !data) return NextResponse.json({ slugs: [] }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
+    return NextResponse.json({ slugs: data.map((row: { slug: string }) => row.slug).filter((slug: string) => knownSlugs.has(slug)) }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
   } catch {
-    return NextResponse.json({ slugs: [] });
+    return NextResponse.json({ slugs: [] }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
   }
 }
 
