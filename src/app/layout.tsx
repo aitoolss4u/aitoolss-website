@@ -3,6 +3,7 @@ import { siteConfig } from "@/lib/site";
 import { getSiteMetadata } from "@/lib/content-pages";
 import "./globals.css";
 import SiteThemeProvider from "@/components/site-theme-provider";
+import ConsentManager from "@/components/consent-manager";
 
 const fallbackMetadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -41,7 +42,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang={siteConfig.language} suppressHydrationWarning>
-      <body><SiteThemeProvider>{children}</SiteThemeProvider></body>
+      <body><SiteThemeProvider>{children}<ConsentManager /></SiteThemeProvider></body>
     </html>
   );
 }
