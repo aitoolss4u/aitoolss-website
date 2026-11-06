@@ -344,7 +344,7 @@ test("Business Name Ideas generates the exact selected number of names", async (
 
 test("all 74 catalogue entries render their matching tool page and interface", async ({ request }) => {
   const source = await readFile(new URL("../../src/lib/tools.ts", import.meta.url), "utf8");
-  const entries = [...source.matchAll(/^\\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
+  const entries = [...source.matchAll(/^\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
     name: match[1],
     slug: match[2],
   }));
