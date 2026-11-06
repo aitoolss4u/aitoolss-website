@@ -311,3 +311,30 @@ test("tool FAQ answers are completely hidden while collapsed", async ({ page }) 
     await expect(first.getByRole("button")).toContainText("+");
   }
 });
+
+
+test("AI Humanizer rewrites input and confirms clipboard copy", async ({ page }) => {
+  const response = await page.goto("/tools/ai-humanizer");
+  expect(response?.status()).toBe(200);
+  const original = "Furthermore, it is important to utilize a large number of tools in order to demonstrate the process.";
+  await page.getByLabel("Your input").fill(original);
+  await page.getByRole("button", { name: /Run tool/ }).click();
+  const result = page.locator(".tool-output-text");
+  await expect(result).toBeVisible();
+  await expect(result).not.toHaveText(original);
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.getByRole("button", { name: "Copy result" }).click();
+  await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
+});
+
+test("Business Name Ideas generates the exact selected number of names", async ({ page }) => {
+  const response = await page.goto("/tools/business-name-ideas");
+  expect(response?.status()).toBe(200);
+  await page.getByLabel("Your input").fill("coffee shop");
+  for (const count of [10, 20, 50, 100]) {
+    await page.getByRole("button", { name: /Show Result/ }).click();
+    await page.getByRole("menuitem", { name: `${count} names` }).click();
+    const lines = (await page.locator(".tool-output-text").innerText()).trim().split("\\n");
+    expect(lines).toHaveLength(count);
+  }
+});
