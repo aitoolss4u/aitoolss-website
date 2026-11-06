@@ -12,7 +12,7 @@ export async function GET() {
     if (error || !data) return NextResponse.json({ slugs: [] }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
     return NextResponse.json({ slugs: data.map((row: { slug: string }) => row.slug).filter((slug: string) => knownSlugs.has(slug)) }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
   } catch {
-    return NextResponse.json({ slugs: [] });
+    return NextResponse.json({ slugs: [] }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
   }
 }
 
