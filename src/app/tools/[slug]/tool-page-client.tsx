@@ -364,7 +364,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   const runDisabled = isImage ? !selectedFile : !input.trim();
   return <ToolDetailSections tool={tool} seo={seo}>
     <section className="tool-panel">
-      <div className="tool-eyebrow">{tool.category} · Browser tool</div>
+      <div className="tool-eyebrow">{slug === "ai-humanizer" ? "Writing · AI-powered rewrite" : tool.category + " · Browser tool"}</div>
       {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
         <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : "Your input"}</label>
         {isImage
@@ -408,7 +408,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         {slug === "plagiarism-checker" && <p className="rounded-xl border border-slate-200 p-3 text-sm">Paste the text to check, then add comparison material under a separate <strong>--- SOURCE ---</strong> line. This checks similarity only against the sources you provide; it does not search the whole web or academic databases.</p>}
         <div className="tool-actions">
           <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? (usesHumanizer ? "Humanizing…" : "Processing…") : isImage ? "Process file" : usesHumanizer ? "Humanize text" : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
-          <button onClick={()=>{setInput("");setOutput("");setImageInfo("");setSelectedFile(null);}} className="tool-secondary-button">Clear</button>
+          <button onClick={()=>{setInput("");setOutput("");setToolError("");setImageInfo("");setSelectedFile(null);setHumanizerSettings({modelLevel:"lite",style:"general",readingLevel:"general",strength:"balanced"});}} className="tool-secondary-button">Clear</button>
         </div>
       </div>}
       {toolError && <p className="humanizer-error" role="alert">{toolError}</p>}
