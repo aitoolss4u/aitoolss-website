@@ -26,3 +26,12 @@ The rate limiter is process-local and is only a basic abuse barrier. Add a share
 The public tool catalogue route reads `public.tools`. If production logs report that this table is missing, apply the ordered SQL migrations in `supabase/migrations` to the connected Supabase project. In particular, apply the Phase 15 persistent catalogue migration and then the new idempotent catalogue repair migration. Applying repository migrations to Supabase is a separate database action; a GitHub push alone does not execute SQL against the database.
 
 Vercel AI Gateway documentation: https://vercel.com/docs/ai-gateway
+
+
+## AI Humanizer
+
+The AI Humanizer is a separate server-side route at `/api/tools/humanizer`. It uses the same approved `AI_GATEWAY_API_KEY` and the Lite model falls back to `AI_MODEL`. Optional model routing can be configured with `AI_HUMANIZER_LITE_MODEL`, `AI_HUMANIZER_PRO_MODEL`, and `AI_HUMANIZER_ULTRA_MODEL`. Pro and Ultra are unavailable until their model identifiers are explicitly configured by the project owner.
+
+The interface offers writing styles (General, Essay, Article, Report, Story, Cover letter, Marketing, Business, Legal), reading levels (General, High school, University, Doctorate, Journalist, Marketing), and rewrite strength (Quality, Balanced, Strong). The current request limit is 12,000 characters and six requests per minute per runtime instance. No model call is made when the key or selected model is absent. Configure an approved model and review its token pricing/limits before enabling it.
+
+The tool is for readability and editorial improvement. It preserves meaning and supplied facts where possible, but users must review the rewrite. It does not generate an AI-detector score, guarantee detector results, or claim to bypass AI-detection systems.
