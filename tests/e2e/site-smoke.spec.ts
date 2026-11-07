@@ -315,18 +315,52 @@ test("tool FAQ answers are completely hidden while collapsed", async ({ page }) 
 });
 
 
-test("AI Humanizer rewrites input and confirms clipboard copy", async ({ page }) => {
+test("AI Humanizer sends selected editorial controls and shows an original/rewrite comparison", async ({ page }) => {
+  let submitted: Record<string, unknown> | null = null;
+  await page.route("**/api/tools/humanizer", async (route) => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ output: "AI has changed how businesses make decisions, making analysis faster and easier to review." }),
+    });
+  });
   const response = await page.goto("/tools/ai-humanizer");
   expect(response?.status()).toBe(200);
-  const original = "Furthermore, it is important to utilize a large number of tools in order to demonstrate the process.";
+  const original = "The implementation of artificial intelligence in modern business operations has fundamentally transformed how organizations approach decision-making processes.";
   await page.getByLabel("Your input").fill(original);
-  await page.getByRole("button", { name: /Run tool/ }).click();
-  const result = page.locator(".tool-output-text");
-  await expect(result).toBeVisible();
-  await expect(result).not.toHaveText(original);
+  await page.getByLabel("Model level").selectOption("lite");
+  await page.getByLabel("Writing style").selectOption("business");
+  await page.getByLabel("Reading level").selectOption("university");
+  await page.getByLabel("Rewrite strength").selectOption("balanced");
+  await expect(page.getByText(/\d+ words/).first()).toBeVisible();
+  await page.getByRole("button", { name: /Humanize text/ }).click();
+
+  await expect(page.getByRole("heading", { name: "Original text" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Humanized rewrite" })).toBeVisible();
+  await expect(page.locator(".humanizer-result-card").first().locator("pre")).toHaveText(original);
+  await expect(page.locator(".humanizer-output-card").locator("pre")).toHaveText("AI has changed how businesses make decisions, making analysis faster and easier to review.");
+  expect(submitted).toEqual({
+    text: original,
+    settings: { modelLevel: "lite", style: "business", readingLevel: "university", strength: "balanced" },
+  });
+
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.getByRole("button", { name: "Copy result" }).click();
+  await page.getByRole("button", { name: "Copy rewrite" }).click();
   await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
+});
+
+test("AI Humanizer reports missing configuration instead of showing a fake rewrite", async ({ page }) => {
+  await page.route("**/api/tools/humanizer", (route) => route.fulfill({
+    status: 503,
+    contentType: "application/json",
+    body: JSON.stringify({ error: "AI Humanizer is not configured yet." }),
+  }));
+  await page.goto("/tools/ai-humanizer");
+  await page.getByLabel("Your input").fill("A draft that needs a careful editorial rewrite.");
+  await page.getByRole("button", { name: /Humanize text/ }).click();
+  await expect(page.getByRole("alert")).toContainText("AI Humanizer is not configured yet");
+  await expect(page.locator(".humanizer-comparison")).toHaveCount(0);
 });
 
 test("Business Name Ideas generates the exact selected number of names", async ({ page }) => {
