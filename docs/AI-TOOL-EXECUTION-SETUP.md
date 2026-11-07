@@ -35,3 +35,19 @@ The AI Humanizer is a separate server-side route at `/api/tools/humanizer`. It u
 The interface offers writing styles (General, Essay, Article, Report, Story, Cover letter, Marketing, Business, Legal), reading levels (General, High school, University, Doctorate, Journalist, Marketing), and rewrite strength (Quality, Balanced, Strong). The current request limit is 12,000 characters and six requests per minute per runtime instance. No model call is made when the key or selected model is absent. Configure an approved model and review its token pricing/limits before enabling it.
 
 The tool is for readability and editorial improvement. It preserves meaning and supplied facts where possible, but users must review the rewrite. It does not generate an AI-detector score, guarantee detector results, or claim to bypass AI-detection systems.
+
+
+## Free option: Google Gemini API Free Tier (preferred when configured)
+
+The app supports direct server-to-server Gemini API calls, which do not require Vercel AI Gateway credits. Create a key in Google AI Studio and add it to Vercel as the encrypted/server-only variable `GEMINI_API_KEY`. Set `GEMINI_MODEL=gemini-3.7-flash` (the default) and `GEMINI_HUMANIZER_LITE_MODEL=gemini-3.7-flash`. The direct Gemini key takes precedence over the Gateway key for both AI chat and Humanizer.
+
+Gemini's free tier is limited to supported models and rate limits; check the current Google AI Studio quota for the project. Google says free-tier content may be used to improve its products, so do not submit confidential, personal, or sensitive text through the free tier. If privacy requirements are stricter, use a provider/tier with suitable data protections after reviewing its terms.
+
+The Humanizer Lite setting uses the free model configuration. Pro and Ultra require their own explicitly configured model identifiers and may not be available on the free tier. The app will report a clear setup/quota error rather than silently returning a template.
+
+Setup links:
+- Google AI Studio API keys: https://aistudio.google.com/apikey
+- Gemini API pricing and free-tier details: https://ai.google.dev/gemini-api/docs/pricing
+- Gemini API rate limits: https://ai.google.dev/gemini-api/docs/rate-limits
+
+When both Gemini and Vercel AI Gateway keys are configured, Gemini is preferred. Remove `GEMINI_API_KEY` to return to the Gateway-only route.
