@@ -25,8 +25,8 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   const estimatedPercent = estimatedBytes / (10 * 1024 * 1024 * 1024) * 100;
   const backupCount = (status: string) => (items ?? []).filter((item) => (item.backup_status ?? "backup_pending") === status).length;
   const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? (bytes / 1024).toFixed(1) + " KB" : (bytes / (1024 * 1024 * 1024) >= 1 ? (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB" : (bytes / (1024 * 1024)).toFixed(1) + " MB");
-  return <main style={{minHeight:"100vh",background:"#faf9ff",color:"#28233f",padding:"clamp(1rem,4vw,3rem)"}}>
-    <div style={{maxWidth:1100,margin:"0 auto"}}>
+  return <main className="admin-gallery-page" style={{minHeight:"100vh",background:"#faf9ff",color:"#28233f",padding:"clamp(1rem,2.5vw,2.5rem)"}}>
+    <div className="admin-gallery-container" style={{width:"100%",maxWidth:"none",margin:0}}>
       <Link href="/admin" style={{color:"#654ed0",fontWeight:700}}>← Back to Admin Studio</Link>
       <header style={{margin:"1.5rem 0 2rem"}}><p style={{fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#7657ff"}}>AIToolss / CONTENT</p><h1 style={{fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,letterSpacing:"-.04em"}}>AI Creations Gallery</h1><p style={{color:"#77718e",marginTop:8}}>Manage persistent R2 uploads, publication, order, CDN media and Google Drive backup references. New file uploads go directly from the browser to R2 after admin authorization; legacy Supabase Storage and external HTTPS media remain available.</p></header>
       <section id="storage" style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
@@ -58,7 +58,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
         <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>Upload supported files directly to the configured Cloudflare R2 bucket using a short-lived admin-authorized URL. You may also retain a public HTTPS media URL for external or legacy media. Google Drive links belong only in the backup field, never as the public delivery URL. R2 requires the Supabase metadata migration, Cloudflare bucket/domain, and Vercel environment variables.</p>
-        <form action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
+        <form className="admin-gallery-form" action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:16}}>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media type<select name="media_type" required style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="image">Image</option><option value="video">Video</option></select></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media URL (HTTPS, optional if uploading)<input name="media_url" type="url" placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
           <GalleryMediaInput label="Upload image or video (optional if using a URL)" />
@@ -74,7 +74,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
         {itemsError ? <p role="alert">Could not load gallery items. Confirm the Phase 13 migration and admin permissions.</p> : !items?.length ? <div style={{padding:24,border:"1px dashed #cfc5f5",borderRadius:16,color:"#77718e"}}>No media entries yet. Add a relevant AI-generated image or video URL above. Nothing is published until you choose Publish.</div> :
         <div style={{display:"grid",gap:14}}>{items.map((item) => <article key={item.id} style={{padding:16,border:"1px solid #e8e2f6",borderRadius:16,background:"#fff"}}>
           <div style={{marginBottom:12}}>{item.media_type === "image" ? <img src={item.thumbnail_url || item.media_url} alt={item.title || "Gallery media"} style={{maxWidth:260,maxHeight:160,objectFit:"contain",borderRadius:10}} /> : <video src={item.media_url} controls playsInline preload="none" poster={item.thumbnail_url ?? undefined} style={{maxWidth:320,maxHeight:180,borderRadius:10}} />}</div>
-          <form action={updateGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}}>
+          <form className="admin-gallery-item-form" action={updateGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:14}}>
             <input type="hidden" name="id" value={item.id} />
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Type<select name="media_type" defaultValue={item.media_type} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}}><option value="image">Image</option><option value="video">Video</option></select></label>
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Media URL<input name="media_url" type="url" defaultValue={item.media_url} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>

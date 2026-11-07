@@ -14,7 +14,7 @@ function posterBlob(file:File):Promise<Blob|null>{return new Promise(resolve=>{c
 const empty:UploadState={mediaUrl:"",objectKey:"",originalObjectKey:"",thumbnailUrl:"",thumbnailKey:"",fileName:"",fileSize:0,storageProvider:"external"};
 export default function GalleryMediaInput({label="Upload image or video",current}:{label?:string;current?:Partial<UploadState>}){
  const [preview,setPreview]=useState("");const [kind,setKind]=useState<"image"|"video"|null>(null);const [busy,setBusy]=useState(false);const [message,setMessage]=useState("");
- const [values,setValues]=useState<UploadState>({...empty,...current});
+ const [values,setValues]=useState<UploadState>({...empty,...current});const [copied,setCopied]=useState(false);
  useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview);},[preview]);
  async function selectFile(file:File|undefined){
   if(!file)return;const type=file.type.startsWith("video/")?"video":file.type.startsWith("image/")?"image":null;
@@ -40,6 +40,8 @@ export default function GalleryMediaInput({label="Upload image or video",current
  return <div className="admin-r2-uploader">
   <label className="admin-upload-control">{label}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" disabled={busy} onChange={event=>void selectFile(event.target.files?.[0])}/></label>
   {preview&&<div className="admin-media-preview">{kind==="video"?<video src={preview} controls muted playsInline preload="metadata"/>:<img src={preview} alt="Selected gallery media preview"/>}</div>}
+  {values.mediaUrl&&!busy&&<div className="admin-generated-url"><label>Public media URL<input type="url" readOnly value={values.mediaUrl} aria-label="Public media URL"/></label><button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(values.mediaUrl);setCopied(true);setMessage("Public media URL copied. Save the gallery entry to publish it.");}catch{setMessage("Could not copy automatically. Select and copy the public media URL above.");}}}>{copied?"Copied":"Copy media URL"}</button></div>}
+  {values.thumbnailUrl&&!busy&&<div className="admin-generated-url"><label>Thumbnail / poster URL<input type="url" readOnly value={values.thumbnailUrl} aria-label="Thumbnail or poster URL"/></label><button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(values.thumbnailUrl);setMessage("Thumbnail URL copied.");}catch{setMessage("Select and copy the thumbnail URL above.");}}}>Copy thumbnail URL</button></div>}
   <p className="admin-help-text">Images: max 50 MB. Videos: max 500 MB. MP4/WebM are stored as supplied; no serverless upload proxy or paid transcoding.</p>
   {message&&<p role="status" className="admin-inline-status">{busy?"Uploading… ":""}{message}</p>}
   <input type="hidden" name="r2_media_url" value={values.mediaUrl}/><input type="hidden" name="r2_object_key" value={values.objectKey}/><input type="hidden" name="r2_original_object_key" value={values.originalObjectKey}/><input type="hidden" name="r2_thumbnail_url" value={values.thumbnailUrl}/><input type="hidden" name="r2_thumbnail_key" value={values.thumbnailKey}/><input type="hidden" name="original_file_name" value={values.fileName}/><input type="hidden" name="original_size_bytes" value={values.fileSize}/><input type="hidden" name="storage_provider" value={values.storageProvider}/>
