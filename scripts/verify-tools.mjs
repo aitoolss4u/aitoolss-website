@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 const catalog = await readFile(new URL("../src/lib/tools.ts", import.meta.url), "utf8");
 const route = await readFile(new URL("../src/app/tools/[slug]/tool-page-client.tsx", import.meta.url), "utf8");
 const aiRoute = await readFile(new URL("../src/app/api/tools/ai-chat/route.ts", import.meta.url), "utf8");
+const humanizerRoute = await readFile(new URL("../src/app/api/tools/humanizer/route.ts", import.meta.url), "utf8");
 const detailSections = await readFile(new URL("../src/components/tool-detail-sections.tsx", import.meta.url), "utf8");
 const seoContent = await readFile(new URL("../src/lib/tool-seo.ts", import.meta.url), "utf8");
 const seoDataSource = await readFile(new URL("../src/lib/tool-seo-data.ts", import.meta.url), "utf8");
@@ -33,6 +34,14 @@ assert.ok(route.includes('fetch("/api/tools/ai-chat"'), "AI chatbot must call it
 assert.ok(!route.includes("Local template response (no trained AI model is connected)"), "AI chatbot must not return a template in place of a model response");
 assert.ok(aiRoute.includes("AI_GATEWAY_API_KEY") && aiRoute.includes("AI_MODEL"), "AI endpoint must require explicit server-side Gateway configuration");
 assert.ok(aiRoute.includes("https://ai-gateway.vercel.sh/v1/chat/completions"), "AI endpoint must call the configured AI Gateway");
+assert.ok(route.includes('fetch("/api/tools/humanizer"'), "AI Humanizer must call its real server endpoint");
+assert.ok(humanizerRoute.includes("AI_GATEWAY_API_KEY"), "AI Humanizer must require an approved server-side AI key");
+assert.ok(humanizerRoute.includes("AI_HUMANIZER_PRO_MODEL") && humanizerRoute.includes("AI_HUMANIZER_ULTRA_MODEL"), "Humanizer model tiers must be explicitly configured");
+assert.ok(humanizerRoute.includes("MAX_TEXT_LENGTH = 12_000"), "AI Humanizer must enforce a bounded input size");
+assert.ok(humanizerRoute.includes("Preserve the author's meaning"), "AI Humanizer must preserve supplied meaning and facts");
+assert.ok(humanizerRoute.includes("not an AI-detection evasion task"), "AI Humanizer must not claim detector evasion");
+assert.ok(route.includes('className="humanizer-comparison"'), "AI Humanizer must compare original and rewritten text");
+assert.ok(route.includes("Rewrite strength"), "AI Humanizer must expose rewrite-strength control");
 for (const slug of ["word-counter", "text-summarizer", "pomodoro-timer", "ai-image-detector", "ai-video-detector", "grammar-checker", "plagiarism-checker", "ai-humanizer", "paraphrasing-tool", "summarizer", "translator", "background-remover", "ai-chatbot", "dictionary", "ai-email-helper", "citation-generator", "image-compressor", "image-dimension-checker", "color-palette-builder", "decision-matrix", "json-formatter", "random-password-generator"]) {
   assert.ok(entries.some((entry) => entry.slug === slug), `expected tool missing from catalog: ${slug}`);
   assert.ok(route.includes(`"${slug}"`), `expected representative tool handler missing: ${slug}`);
