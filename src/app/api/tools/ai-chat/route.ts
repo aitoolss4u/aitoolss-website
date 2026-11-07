@@ -33,14 +33,24 @@ function allowRequest(key: string) {
   return true;
 }
 
-export async function POST(request: Request) {
-  const key = process.env.AI_GATEWAY_API_KEY?.trim();
-  const model = process.env.AI_MODEL?.trim();
+function extractGeminiText(data: unknown): string {
+  if (!data || typeof data !== "object") return "";
+  const candidates = (data as { candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }> }).candidates;
+  return candidates?.[0]?.content?.parts?.map((part) => typeof part.text === "string" ? part.text : "").join("").trim() ?? "";
+}
 
-  // Fail closed: never replace a missing model/key with a template or a fake answer.
-  if (!key || !model) {
+export async function POST(request: Request) {
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY?.trim();
+  const useGemini = Boolean(geminiKey);
+  const model = useGemini
+    ? process.env.GEMINI_MODEL?.trim() || "gemini-3.7-flash"
+    : process.env.AI_MODEL?.trim() || "";
+
+  // Prefer the owner's free-tier Gemini key when configured. No template answer is ever returned.
+  if (!geminiKey && (!gatewayKey || !model)) {
     return NextResponse.json(
-      { error: "AI chat is not configured yet. Add AI_GATEWAY_API_KEY and AI_MODEL to the Vercel environment, then redeploy." },
+      { error: "AI chat is not configured yet. Add GEMINI_API_KEY for the free Gemini option, or configure AI_GATEWAY_API_KEY and AI_MODEL." },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -69,39 +79,62 @@ export async function POST(request: Request) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25_000);
   try {
-    const response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + key,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.7,
-        max_tokens: 800,
-        messages: [
-          {
-            role: "system",
-            content: "You are the AIToolss assistant. Answer the user's question directly, clearly, and helpfully. Do not claim to have performed actions you cannot perform. State uncertainty when needed, and do not invent facts, sources, or tool results.",
-          },
-          { role: "user", content: message },
-        ],
-      }),
-      signal: controller.signal,
-      cache: "no-store",
-    });
+    let response: Response;
+    if (useGemini) {
+      response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent",
+        {
+          method: "POST",
+          headers: { "x-goog-api-key": geminiKey!, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: "You are the AIToolss assistant. Answer the user's question directly, clearly, and helpfully. Do not claim to have performed actions you cannot perform. State uncertainty when needed, and do not invent facts, sources, or tool results." }],
+            },
+            contents: [{ role: "user", parts: [{ text: message }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 800 },
+          }),
+          signal: controller.signal,
+          cache: "no-store",
+        },
+      );
+    } else {
+      response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + gatewayKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          temperature: 0.7,
+          max_tokens: 800,
+          messages: [
+            {
+              role: "system",
+              content: "You are the AIToolss assistant. Answer the user's question directly, clearly, and helpfully. Do not claim to have performed actions you cannot perform. State uncertainty when needed, and do not invent facts, sources, or tool results.",
+            },
+            { role: "user", content: message },
+          ],
+        }),
+        signal: controller.signal,
+        cache: "no-store",
+      });
+    }
 
     if (!response.ok) {
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: "The free AI model quota is temporarily exhausted. Please wait a little and try again." },
+          { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": "60" } },
+        );
+      }
       return NextResponse.json(
-        { error: "The AI provider could not complete this request. Check the AI Gateway model access and account configuration." },
+        { error: "The AI provider could not complete this request. Check the API key and model configuration." },
         { status: 502, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const data = await response.json() as {
-      choices?: Array<{ message?: { content?: unknown } }>;
-    };
-    const output = data.choices?.[0]?.message?.content;
+    const data: unknown = await response.json();
+    const output = useGemini
+      ? extractGeminiText(data)
+      : (data as { choices?: Array<{ message?: { content?: unknown } }> }).choices?.[0]?.message?.content;
     if (typeof output !== "string" || !output.trim()) {
       return NextResponse.json(
         { error: "The AI provider returned an empty response. Please try again." },
@@ -110,7 +143,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { output: output.trim(), model },
+      { output: output.trim(), model, provider: useGemini ? "gemini" : "vercel-ai-gateway" },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
