@@ -359,7 +359,7 @@ test("AI Humanizer reports missing configuration instead of showing a fake rewri
   await page.goto("/tools/ai-humanizer");
   await page.getByLabel("Your input").fill("A draft that needs a careful editorial rewrite.");
   await page.getByRole("button", { name: /Humanize text/ }).click();
-  await expect(page.getByRole("alert")).toContainText("AI Humanizer is not configured yet");
+  await expect(page.locator(".humanizer-error")).toContainText("AI Humanizer is not configured yet");
   await expect(page.locator(".humanizer-comparison")).toHaveCount(0);
 });
 
