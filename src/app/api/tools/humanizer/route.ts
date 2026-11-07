@@ -44,17 +44,32 @@ function allowRequest(key: string) {
   return true;
 }
 
-function configuredModel(level: typeof modelLevels[number]) {
+function gatewayModel(level: typeof modelLevels[number]) {
   if (level === "pro") return process.env.AI_HUMANIZER_PRO_MODEL?.trim() || "";
   if (level === "ultra") return process.env.AI_HUMANIZER_ULTRA_MODEL?.trim() || "";
   return process.env.AI_HUMANIZER_LITE_MODEL?.trim() || process.env.AI_MODEL?.trim() || "";
 }
 
+function geminiModel(level: typeof modelLevels[number]) {
+  if (level === "pro") return process.env.GEMINI_HUMANIZER_PRO_MODEL?.trim() || "";
+  if (level === "ultra") return process.env.GEMINI_HUMANIZER_ULTRA_MODEL?.trim() || "";
+  return process.env.GEMINI_HUMANIZER_LITE_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.7-flash";
+}
+
+function extractGeminiText(data: unknown): string {
+  if (!data || typeof data !== "object") return "";
+  const candidates = (data as { candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }> }).candidates;
+  return candidates?.[0]?.content?.parts?.map((part) => typeof part.text === "string" ? part.text : "").join("").trim() ?? "";
+}
+
 export async function POST(request: Request) {
-  const key = process.env.AI_GATEWAY_API_KEY?.trim();
-  if (!key) {
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY?.trim();
+  const useGemini = Boolean(geminiKey);
+
+  if (!geminiKey && !gatewayKey) {
     return NextResponse.json(
-      { error: "AI Humanizer is not configured yet. The site owner must add an approved AI_GATEWAY_API_KEY in the server environment." },
+      { error: "AI Humanizer is not configured yet. Add GEMINI_API_KEY for the free Gemini option, or configure an approved AI Gateway key." },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -84,12 +99,12 @@ export async function POST(request: Request) {
   const style = writingStyles.find((item) => item === settings.style) ?? "general";
   const readingLevel = readingLevels.find((item) => item === settings.readingLevel) ?? "general";
   const strength = strengths.find((item) => item === settings.strength) ?? "balanced";
-  const model = configuredModel(modelLevel);
+  const model = useGemini ? geminiModel(modelLevel) : gatewayModel(modelLevel);
 
   if (!model) {
     const label = modelLevel === "pro" ? "Pro" : modelLevel === "ultra" ? "Ultra" : "Lite";
     return NextResponse.json(
-      { error: label + " model is not configured. Select Lite or ask the site owner to configure the corresponding humanizer model." },
+      { error: label + " model is not configured. The free Gemini setup supports Lite by default; select Lite or ask the site owner to configure another model." },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -101,61 +116,78 @@ export async function POST(request: Request) {
     balanced: "Make a balanced rewrite. Improve sentence rhythm, transitions, clarity and word choice while retaining the original structure and all intended meaning.",
     strong: "Make a more substantial editorial rewrite. Rework sentence structures and paragraph flow where helpful, but preserve every factual claim, qualification, figure, name, citation and the author's intended meaning.",
   }[strength];
+  const systemPrompt = [
+    "You are an expert human editor. Improve the supplied text so it reads clearly, naturally and appropriately for its intended audience.",
+    "This is an editorial rewrite task, not an AI-detection evasion task. Never promise or optimize for bypassing AI detectors.",
+    "Preserve the author's meaning, point of view, factual claims, uncertainty, names, dates, numbers, quotations, citations and technical details. Never invent evidence, examples, sources or experiences.",
+    "Keep the same language as the source text. Do not translate unless the user explicitly asks within the source text.",
+    "Respect the selected writing style and reading level without changing the underlying facts.",
+    "Return only the rewritten text. Do not add an introduction, explanation, markdown fence, score or claim that the text is human-written.",
+  ].join(" ");
+  const userPrompt = [
+    "Writing style: " + styleLabel,
+    "Target reading level: " + levelLabel,
+    "Rewrite strength: " + strength + ". " + strengthInstructions,
+    "Rewrite the text below. Preserve paragraphs and lists where practical.",
+    "<source_text>",
+    text,
+    "</source_text>",
+  ].join("\n");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 40_000);
   try {
-    const response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + key,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: strength === "quality" ? 0.35 : strength === "strong" ? 0.75 : 0.55,
-        max_tokens: 5_000,
-        messages: [
-          {
-            role: "system",
-            content: [
-              "You are an expert human editor. Improve the supplied text so it reads clearly, naturally and appropriately for its intended audience.",
-              "This is an editorial rewrite task, not an AI-detection evasion task. Never promise or optimize for bypassing AI detectors.",
-              "Preserve the author's meaning, point of view, factual claims, uncertainty, names, dates, numbers, quotations, citations and technical details. Never invent evidence, examples, sources or experiences.",
-              "Keep the same language as the source text. Do not translate unless the user explicitly asks within the source text.",
-              "Respect the selected writing style and reading level without changing the underlying facts.",
-              "Return only the rewritten text. Do not add an introduction, explanation, markdown fence, score or claim that the text is human-written.",
-            ].join(" "),
-          },
-          {
-            role: "user",
-            content: [
-              "Writing style: " + styleLabel,
-              "Target reading level: " + levelLabel,
-              "Rewrite strength: " + strength + ". " + strengthInstructions,
-              "Rewrite the text below. Preserve paragraphs and lists where practical.",
-              "<source_text>",
-              text,
-              "</source_text>",
-            ].join("\n"),
-          },
-        ],
-      }),
-      signal: controller.signal,
-      cache: "no-store",
-    });
+    let response: Response;
+    if (useGemini) {
+      response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent",
+        {
+          method: "POST",
+          headers: { "x-goog-api-key": geminiKey!, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              temperature: strength === "quality" ? 0.35 : strength === "strong" ? 0.75 : 0.55,
+              maxOutputTokens: 5_000,
+            },
+          }),
+          signal: controller.signal,
+          cache: "no-store",
+        },
+      );
+    } else {
+      response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + gatewayKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          temperature: strength === "quality" ? 0.35 : strength === "strong" ? 0.75 : 0.55,
+          max_tokens: 5_000,
+          messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+        }),
+        signal: controller.signal,
+        cache: "no-store",
+      });
+    }
 
     if (!response.ok) {
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: "The free model quota is temporarily exhausted. Please wait and try again later." },
+          { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": "60" } },
+        );
+      }
       return NextResponse.json(
-        { error: "The configured AI model could not complete this rewrite. Check the model's access and account configuration." },
+        { error: "The configured AI model could not complete this rewrite. Check the API key, model access and free-tier availability." },
         { status: 502, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const data = await response.json() as {
-      choices?: Array<{ message?: { content?: unknown } }>;
-    };
-    const output = data.choices?.[0]?.message?.content;
+    const data: unknown = await response.json();
+    const output = useGemini
+      ? extractGeminiText(data)
+      : ((data as { choices?: Array<{ message?: { content?: unknown } }> }).choices?.[0]?.message?.content);
     if (typeof output !== "string" || !output.trim()) {
       return NextResponse.json(
         { error: "The AI provider returned an empty rewrite. Please try again." },
@@ -164,7 +196,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { output: output.trim(), modelLevel, style, readingLevel, strength, inputWords: text.split(/\s+/).length },
+      { output: output.trim(), modelLevel, model, provider: useGemini ? "gemini" : "vercel-ai-gateway", style, readingLevel, strength, inputWords: text.split(/\s+/).length },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
