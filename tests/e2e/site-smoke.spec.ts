@@ -350,6 +350,14 @@ test("AI Humanizer sends selected editorial controls and shows an original/rewri
   await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
 });
 
+test("AI Humanizer keeps the free Gemini Lite option available in the selector", async ({ page }) => {
+  await page.goto("/tools/ai-humanizer");
+  await expect(page.getByLabel("Model level")).toHaveValue("lite");
+  await expect(page.getByLabel("Model level").locator('option[value="lite"]')).toBeAttached();
+  await expect(page.getByLabel("Writing style")).toHaveValue("general");
+  await expect(page.getByLabel("Rewrite strength")).toHaveValue("balanced");
+});
+
 test("AI Humanizer reports missing configuration instead of showing a fake rewrite", async ({ page }) => {
   await page.route("**/api/tools/humanizer", (route) => route.fulfill({
     status: 503,
