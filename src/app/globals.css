@@ -1696,3 +1696,20 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
   .ai-gallery-grid { column-gap: .55rem; }
   .ai-gallery-grid > .ai-gallery-card { margin-bottom: .55rem; }
 }
+
+
+/* Natural-ratio gallery images: no fixed media frame, crop, or forced height. */
+.ai-gallery-grid .gallery-image-natural {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center;
+  transform: none !important;
+}
+.ai-gallery-grid > .ai-gallery-card {
+  width: 100%;
+}
