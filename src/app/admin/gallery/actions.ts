@@ -14,7 +14,7 @@ class MediaResolutionError extends Error{constructor(readonly code:string,messag
 async function resolveMedia(formData:FormData,mediaType:"image"|"video",submittedUrl:string,submittedThumbnail:string){
  const storageProvider=clean(formData.get("storage_provider"),20);
  const supabaseSubmittedUrl=clean(formData.get("supabase_media_url"),2048);
- if(storageProvider==="supabase"&&supabaseSubmittedUrl&&(!submittedUrl||submittedUrl===supabaseSubmittedUrl)){
+ if(storageProvider==="supabase"&&supabaseSubmittedUrl){
   const mediaUrl=clean(formData.get("supabase_media_url"),2048);
   const thumbnailUrl=clean(formData.get("supabase_thumbnail_url"),2048)||submittedThumbnail;
   const base=(process.env.NEXT_PUBLIC_SUPABASE_URL??"").replace(/\\/+$/u,"")+"/storage/v1/object/public/aitoolss-gallery/";
@@ -30,7 +30,7 @@ async function resolveMedia(formData:FormData,mediaType:"image"|"video",submitte
    if(!types.includes(contentType))throw new Error("Invalid public object type");
   };
   try{await verifyPublicObject(mediaUrl,allowed);}catch{throw new MediaResolutionError("supabase-object","The file uploaded to Supabase Storage could not be read publicly. Confirm the public bucket setup, then upload again.");}
-  if(thumbnailUrl){try{await verifyPublicObject(thumbnailUrl,["image/webp"]);}catch{throw new MediaResolutionError("supabase-thumbnail","The thumbnail could not be read from the public Supabase bucket. Upload the file again.");}}
+  if(thumbnailUrl){try{await verifyPublicObject(thumbnailUrl,["image/webp","image/png"]);}catch{throw new MediaResolutionError("supabase-thumbnail","The thumbnail could not be read from the public Supabase bucket. Upload the file again.");}}
   return {media_url:mediaUrl,thumbnail_url:thumbnailUrl||null,storage_provider:"supabase",r2_object_key:null,r2_original_object_key:null,r2_thumbnail_key:null,original_file_name:clean(formData.get("original_file_name"),200),original_size_bytes:originalSize};
  }
  const r2Url=clean(formData.get("r2_media_url"),2048);
