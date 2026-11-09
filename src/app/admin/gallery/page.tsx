@@ -22,6 +22,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   const rows = [3,4,5,6].includes(Number(settings.rows)) ? Number(settings.rows) : 4;
   const messages: Record<string,string> = {
     "invalid-layout":"Choose a supported column and row count.",
+    "invalid-media":"Select a valid image or video and enter valid HTTPS media and thumbnail URLs.",
     "save-layout":"Could not save gallery settings. Apply the Phase 13 gallery migration.",
     "r2-config":"Cloudflare R2 is not configured in this Vercel environment. Add the missing server-only variables listed in Storage readiness below, then redeploy.",
     "r2-details":"The upload did not include valid R2 details. Select the file and upload it again.",
