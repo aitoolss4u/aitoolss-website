@@ -45,6 +45,16 @@ assert.ok(humanizerRoute.includes("Preserve the author's meaning"), "AI Humanize
 assert.ok(humanizerRoute.includes("not an AI-detection evasion task"), "AI Humanizer must not claim detector evasion");
 assert.ok(route.includes('className="humanizer-comparison"'), "AI Humanizer must compare original and rewritten text");
 assert.ok(route.includes("Rewrite strength"), "AI Humanizer must expose rewrite-strength control");
+const galleryPage = await readFile(new URL("../src/app/admin/gallery/page.tsx", import.meta.url), "utf8");
+const backupPage = await readFile(new URL("../src/app/admin/backups/page.tsx", import.meta.url), "utf8");
+const adminTheme = await readFile(new URL("../src/app/admin/admin-theme.css", import.meta.url), "utf8");
+const r2Library = await readFile(new URL("../src/lib/r2.ts", import.meta.url), "utf8");
+const r2Migration = await readFile(new URL("../supabase/migrations/202610310003_r2_media_and_drive_backups.sql", import.meta.url), "utf8");
+assert.ok(galleryPage.includes('className="admin-gallery-form"') && galleryPage.includes('gridTemplateColumns:"repeat(2,minmax(0,1fr))"'), "Gallery upload form must use a stable two-column layout");
+assert.ok(adminTheme.includes(".admin-gallery-form > .admin-r2-uploader") && adminTheme.includes("grid-column: 1 / -1"), "R2 uploader must occupy its own full-width grid row");
+assert.ok(backupPage.includes("updateGalleryBackup") && backupPage.includes("Google Drive sharing URL"), "Drive backups must have a dedicated backup management page");
+assert.ok(r2Library.includes("getR2ConfigurationStatus"), "Admin pages must show which R2 configuration variables are missing");
+assert.ok(r2Migration.includes("add column if not exists r2_object_key") && r2Migration.includes("add column if not exists backup_google_drive_url"), "R2 metadata migration must add object and Drive backup fields");
 for (const slug of ["word-counter", "text-summarizer", "pomodoro-timer", "ai-image-detector", "ai-video-detector", "grammar-checker", "plagiarism-checker", "ai-humanizer", "paraphrasing-tool", "summarizer", "translator", "background-remover", "ai-chatbot", "dictionary", "ai-email-helper", "citation-generator", "image-compressor", "image-dimension-checker", "color-palette-builder", "decision-matrix", "json-formatter", "random-password-generator"]) {
   assert.ok(entries.some((entry) => entry.slug === slug), `expected tool missing from catalog: ${slug}`);
   assert.ok(route.includes(`"${slug}"`), `expected representative tool handler missing: ${slug}`);
