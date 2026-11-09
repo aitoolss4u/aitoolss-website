@@ -82,7 +82,7 @@ export default async function AdminBackupsPage({
         <header className="admin-backups-header">
           <p>AIToolss / STORAGE</p>
           <h1>R2 &amp; Google Drive backups</h1>
-          <p>R2 stores and delivers the website's public images/videos. Google Drive is an optional manual backup for original files. A saved link is not marked confirmed until you open and check the file.</p>
+          <p>R2 stores and delivers the website&apos;s public images/videos. Google Drive is an optional manual backup for original files. A saved link is not marked confirmed until you open and check the file.</p>
           <Link href="/admin/gallery" className="admin-backup-page-link">Open AI Creations Gallery ↗</Link>
         </header>
 
