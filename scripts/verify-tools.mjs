@@ -50,11 +50,17 @@ const backupPage = await readFile(new URL("../src/app/admin/backups/page.tsx", i
 const adminTheme = await readFile(new URL("../src/app/admin/admin-theme.css", import.meta.url), "utf8");
 const r2Library = await readFile(new URL("../src/lib/r2.ts", import.meta.url), "utf8");
 const r2Migration = await readFile(new URL("../supabase/migrations/202610310003_r2_media_and_drive_backups.sql", import.meta.url), "utf8");
+const easyStorageMigration = await readFile(new URL("../supabase/migrations/202611090001_easy_gallery_storage.sql", import.meta.url), "utf8");
+const galleryUploader = await readFile(new URL("../src/app/admin/gallery/media-input.tsx", import.meta.url), "utf8");
 assert.ok(galleryPage.includes('className="admin-gallery-form"') && galleryPage.includes('gridTemplateColumns:"repeat(2,minmax(0,1fr))"'), "Gallery upload form must use a stable two-column layout");
 assert.ok(adminTheme.includes(".admin-gallery-form > .admin-r2-uploader") && adminTheme.includes("grid-column: 1 / -1"), "R2 uploader must occupy its own full-width grid row");
 assert.ok(backupPage.includes("updateGalleryBackup") && backupPage.includes("Google Drive sharing URL"), "Drive backups must have a dedicated backup management page");
 assert.ok(r2Library.includes("getR2ConfigurationStatus"), "Admin pages must show which R2 configuration variables are missing");
 assert.ok(r2Migration.includes("add column if not exists r2_object_key") && r2Migration.includes("add column if not exists backup_google_drive_url"), "R2 metadata migration must add object and Drive backup fields");
+assert.ok(easyStorageMigration.includes("'aitoolss-gallery'") && easyStorageMigration.includes("52428800"), "Easy storage migration must create the 50 MB AITOOLSS public bucket");
+assert.ok(easyStorageMigration.includes("auth.jwt() -> 'app_metadata' ->> 'role'"), "Only admin users may upload gallery assets");
+assert.ok(galleryUploader.includes("createClient()") && galleryUploader.includes('.from("aitoolss-gallery").upload('), "Gallery uploader must support direct authenticated Supabase Storage uploads");
+assert.ok(galleryUploader.includes('current?.storageProvider === "r2" ? "r2" : "supabase"'), "Supabase Storage must be the default upload choice");
 for (const slug of ["word-counter", "text-summarizer", "pomodoro-timer", "ai-image-detector", "ai-video-detector", "grammar-checker", "plagiarism-checker", "ai-humanizer", "paraphrasing-tool", "summarizer", "translator", "background-remover", "ai-chatbot", "dictionary", "ai-email-helper", "citation-generator", "image-compressor", "image-dimension-checker", "color-palette-builder", "decision-matrix", "json-formatter", "random-password-generator"]) {
   assert.ok(entries.some((entry) => entry.slug === slug), `expected tool missing from catalog: ${slug}`);
   assert.ok(route.includes(`"${slug}"`), `expected representative tool handler missing: ${slug}`);
