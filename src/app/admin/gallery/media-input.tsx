@@ -93,7 +93,7 @@ export default function GalleryMediaInput({ label = "Upload image or video", cur
   const [message, setMessage] = useState("");
   const [values, setValues] = useState<UploadState>({ ...empty, ...current });
   const [copied, setCopied] = useState(false);
-  const [storageMode, setStorageMode] = useState<"supabase" | "r2">(current?.storageProvider === "r2" ? "r2" : "supabase");
+  const [storageMode, setStorageMode] = useState<"supabase" | "r2" | "external">(current?.storageProvider === "r2" ? "r2" : current?.storageProvider === "supabase" ? "supabase" : "external");
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -103,7 +103,9 @@ export default function GalleryMediaInput({ label = "Upload image or video", cur
     if (!type || !["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"].includes(file.type)) {
       setMessage("Supported: JPG, PNG, WebP, GIF, MP4 or WebM."); return;
     }
-    if (file.size > 50 * 1024 * 1024) { setMessage("Files must be 50 MB or smaller in the easy Supabase Storage setup."); return; }
+    const maxBytes = storageMode === "r2" && type === "video" ? 500 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxBytes) { setMessage("Files must be " + (maxBytes / 1024 / 1024) + " MB or smaller for this storage option."); return; }
+    if (storageMode === "external") { setMessage("Choose Supabase Storage or Cloudflare R2 to upload a file, or paste a public HTTPS URL in the Media URL field."); return; }
 
     setBusy(true); setKind(type); setMessage("Preparing secure upload…");
     if (preview) URL.revokeObjectURL(preview);
@@ -164,13 +166,19 @@ export default function GalleryMediaInput({ label = "Upload image or video", cur
   return (
     <div className="admin-r2-uploader">
       <label className="admin-option-control">Storage location
-        <select value={storageMode} disabled={busy} onChange={(event) => setStorageMode(event.target.value as "supabase" | "r2")} aria-label="Storage location">
+        <select value={storageMode} disabled={busy} onChange={(event) => {
+          const next = event.target.value as "supabase" | "r2" | "external";
+          setStorageMode(next);
+          if (next === "external") setValues({ ...empty, storageProvider: "external" });
+          else setValues((current) => ({ ...current, storageProvider: next }));
+        }} aria-label="Storage location">
           <option value="supabase">Supabase Storage (easy setup)</option>
           <option value="r2">Cloudflare R2 (advanced)</option>
+          <option value="external">Use an existing HTTPS media URL</option>
         </select>
       </label>
       <label className="admin-upload-control">{label}
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" disabled={busy} onChange={(event) => void selectFile(event.target.files?.[0])} />
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" disabled={busy || storageMode === "external"} onChange={(event) => void selectFile(event.target.files?.[0])} />
       </label>
       {preview && <div className="admin-media-preview">{kind === "video" ? <video src={preview} controls muted playsInline preload="metadata" /> : <img src={preview} alt="Selected gallery media preview" />}</div>}
       {values.mediaUrl && !busy && <div className="admin-generated-url">
