@@ -114,24 +114,35 @@ export default function GalleryMediaInput({ label = "Upload image or video", cur
     try {
       const originalName = file.name;
       if (storageMode === "supabase") {
-        setMessage("Uploading original to Supabase Storage…");
-        const original = await uploadSupabaseVariant(file, "original", originalName);
-        let display = original;
+        setMessage("Preparing optimized media…");
+        let original: { path: string; publicUrl: string };
+        let display: { path: string; publicUrl: string };
         let thumbnail: { path: string; publicUrl: string } | null = null;
         if (type === "image" && file.type !== "image/gif") {
-          setMessage("Creating optimized image and thumbnail…");
-          display = await uploadSupabaseVariant(await imageBlob(file, 1200), "optimized", originalName.replace(/\.[^.]+$/u, "") + ".webp");
-          thumbnail = await uploadSupabaseVariant(await imageBlob(file, 400), "thumbnail", originalName.replace(/\.[^.]+$/u, "") + "-thumb.webp");
+          const [optimizedBlob, thumbnailBlob] = await Promise.all([imageBlob(file, 1200), imageBlob(file, 400)]);
+          setMessage("Uploading image variants…");
+          [original, display, thumbnail] = await Promise.all([
+            uploadSupabaseVariant(file, "original", originalName),
+            uploadSupabaseVariant(optimizedBlob, "optimized", originalName.replace(/\.[^.]+$/u, "") + ".webp"),
+            uploadSupabaseVariant(thumbnailBlob, "thumbnail", originalName.replace(/\.[^.]+$/u, "") + "-thumb.webp"),
+          ]);
         } else if (type === "video") {
           const poster = await posterBlob(file);
+          setMessage("Uploading video…");
+          original = await uploadSupabaseVariant(file, "original", originalName);
+          display = original;
           if (poster) thumbnail = await uploadSupabaseVariant(poster, "poster", originalName.replace(/\.[^.]+$/u, "") + "-poster.webp");
+        } else {
+          setMessage("Uploading image…");
+          original = await uploadSupabaseVariant(file, "original", originalName);
+          display = original;
         }
         setValues({
           ...empty, mediaUrl: display.publicUrl, thumbnailUrl: thumbnail?.publicUrl ?? "",
           fileName: originalName, fileSize: file.size, storageProvider: "supabase",
           supabaseMediaUrl: display.publicUrl, supabaseThumbnailUrl: thumbnail?.publicUrl ?? "",
         });
-        setMessage("Supabase Storage upload complete. Add a title and save the gallery item to publish it.");
+        setMessage("Upload complete. Add a title and save the gallery item to publish it.");
       } else {
         setMessage("Uploading directly to Cloudflare R2…");
         const original = await uploadR2Variant(file, type, "original", originalName);
