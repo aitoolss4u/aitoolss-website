@@ -2,7 +2,16 @@ import "server-only";
 import {DeleteObjectCommand,GetObjectCommand,HeadObjectCommand,PutObjectCommand,S3Client} from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 export type R2ObjectInfo={key:string;size:number;contentType:string;etag:string|null};
-export function isR2Configured(){return Boolean(process.env.R2_ACCESS_KEY_ID&&process.env.R2_SECRET_ACCESS_KEY&&process.env.R2_BUCKET_NAME&&(process.env.R2_S3_ENDPOINT||process.env.R2_ACCOUNT_ID)&&process.env.R2_PUBLIC_BASE_URL);}
+export function getR2ConfigurationStatus(){
+ const missing:string[]=[];
+ if(!process.env.R2_ACCESS_KEY_ID?.trim())missing.push("R2_ACCESS_KEY_ID");
+ if(!process.env.R2_SECRET_ACCESS_KEY?.trim())missing.push("R2_SECRET_ACCESS_KEY");
+ if(!process.env.R2_BUCKET_NAME?.trim())missing.push("R2_BUCKET_NAME");
+ if(!process.env.R2_S3_ENDPOINT?.trim()&&!process.env.R2_ACCOUNT_ID?.trim())missing.push("R2_S3_ENDPOINT or R2_ACCOUNT_ID");
+ if(!process.env.R2_PUBLIC_BASE_URL?.trim())missing.push("R2_PUBLIC_BASE_URL");
+ return {configured:missing.length===0,missing};
+}
+export function isR2Configured(){return getR2ConfigurationStatus().configured;}
 function required(name:string){const value=process.env[name]?.trim();if(!value)throw new Error("Missing server environment variable: "+name);return value;}
 export function getR2Bucket(){return required("R2_BUCKET_NAME");}
 export function getR2PublicUrl(key:string){const base=required("R2_PUBLIC_BASE_URL").replace(/\/+$/u,"");if(!/^https:\/\//iu.test(base))throw new Error("R2_PUBLIC_BASE_URL must use HTTPS.");return base+"/"+key.split("/").map(encodeURIComponent).join("/");}
