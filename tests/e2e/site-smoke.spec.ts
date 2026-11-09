@@ -384,6 +384,12 @@ test("Business Name Ideas generates the exact selected number of names", async (
 });
 
 
+test("R2 and Drive backup manager route exists and remains admin-protected", async ({ page }) => {
+  const response = await page.goto("/admin/backups");
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveURL(/admin-login/);
+});
+
 test("all 74 catalogue entries render their matching tool page and interface", async ({ request }) => {
   const source = await readFile("src/lib/tools.ts", "utf8");
   const entries = [...source.matchAll(/^\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
