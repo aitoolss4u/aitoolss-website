@@ -94,7 +94,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Title<input name="title" maxLength={160} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Creator / attribution<input name="creator" maxLength={100} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Description<input name="description" maxLength={500} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
-          <label style={{display:"flex",gap:8,alignItems:"center"}}><input type="checkbox" name="is_published" /> Publish on homepage</label>
+          <label style={{display:"flex",gap:8,alignItems:"center"}}><input type="checkbox" name="is_published" defaultChecked /> Publish on homepage (recommended)</label>
           <div><button style={{padding:"11px 18px",borderRadius:10,background:"#6d53d7",color:"#fff",fontWeight:800}}>Add gallery item</button></div>
         </form>
       </section>
@@ -116,7 +116,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
             <label style={{display:"flex",gap:8,alignItems:"center",fontSize:12,fontWeight:700}}><input type="checkbox" name="backup_confirmed_now" /> I opened and checked this Drive file now</label>
             <small style={{color:"#817891"}}>Saving a URL alone never confirms a backup. Confirm only after checking the file itself. Current status: {item.backup_status ?? "backup_pending"}{item.backup_saved_at ? " · Saved " + new Date(item.backup_saved_at).toLocaleString() : ""}{item.backup_confirmed_at ? " · Confirmed " + new Date(item.backup_confirmed_at).toLocaleString() : ""}.</small>
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Sort order<input name="sort_order" type="number" min="0" max="100000" defaultValue={item.sort_order} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>
-            <label style={{display:"flex",gap:8,alignItems:"center"}}><input type="checkbox" name="is_published" defaultChecked={item.is_published} /> Published</label>
+            <label style={{display:"flex",gap:8,alignItems:"center",padding:10,borderRadius:10,background:item.is_published?"#e9f9ef":"#fff4e5",color:item.is_published?"#17683b":"#8a4b10",fontWeight:800}}><input type="checkbox" name="is_published" defaultChecked={item.is_published} /> {item.is_published ? "Published on homepage" : "Draft — tick to show on homepage"} Published</label>
             <div style={{display:"flex",gap:8,alignItems:"center"}}><button style={{padding:"10px 14px",borderRadius:9,background:"#6d53d7",color:"#fff",fontWeight:800}}>Save item</button></div>
           </form>
           <DeleteGalleryForm action={deleteGalleryItem} id={item.id} />
