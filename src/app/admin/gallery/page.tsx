@@ -10,7 +10,7 @@ export const metadata = { title: "Gallery management | AIToolss Admin", robots: 
 export default async function AdminGalleryPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();
-  const [{ data: items, error: itemsError }, { data: settingsRow }, { data: categories, error: categoriesError }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { data: settingsRow }, { data: categories }] = await Promise.all([
     supabase.from("gallery_items").select("id,media_type,media_url,thumbnail_url,title,description,creator,is_published,sort_order,created_at,storage_provider,r2_object_key,r2_original_object_key,r2_thumbnail_key,original_file_name,original_size_bytes,backup_google_drive_url,backup_status,backup_confirmed_at,backup_saved_at").order("sort_order").order("created_at", { ascending: false }),
     supabase.from("site_settings").select("value").eq("key", "gallery_layout").maybeSingle(),
     supabase.from("categories").select("image_original_size_bytes,image_r2_key,image_original_r2_key"),
