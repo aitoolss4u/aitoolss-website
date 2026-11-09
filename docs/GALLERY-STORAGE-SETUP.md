@@ -4,7 +4,7 @@
 Vercel hosts the Next.js app and authenticated admin APIs. Supabase stores category/gallery records and media metadata. The simplest gallery upload path uses the existing Supabase Storage project. Cloudflare R2 remains an optional advanced store after the owner configures its credentials, bucket and public domain. Google Drive links are backup references only.
 
 ## Database
-Run `supabase/migrations/202610310003_r2_media_and_drive_backups.sql` in Supabase SQL Editor after Phase 14 and Phase 15. It adds storage and backup metadata without deleting existing media or legacy Supabase Storage objects.
+For the easiest setup, run `supabase/migrations/202611090001_easy_gallery_storage.sql` once in Supabase SQL Editor after the Phase 13 gallery migration. It creates the Supabase public gallery bucket and adds the R2/Drive metadata fields without deleting existing media. This migration is self-contained for the gallery storage fields; the earlier `202610310003_r2_media_and_drive_backups.sql` remains available for existing R2-only setups.
 
 ## One-time Cloudflare setup
 1. Create a Standard R2 bucket named `aitoolss-gallery`.
