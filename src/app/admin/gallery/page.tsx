@@ -31,7 +31,11 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
     "r2-type":"The stored object MIME type does not match the selected image/video type.",
     "r2-size":"The original upload is empty or exceeds the allowed size.",
     "r2-thumbnail":"The thumbnail could not be verified. Upload the media again to regenerate it.",
-    "media-url":"Enter a valid public HTTPS media/thumbnail URL, or upload a file to R2.",
+    "media-url":"Enter a valid public HTTPS media/thumbnail URL, or upload a file to storage.",
+    "supabase-url":"The Supabase public media URL does not match this project. Upload the file again.",
+    "supabase-thumbnail":"The thumbnail must belong to the AIToolss Supabase gallery bucket.",
+    "supabase-size":"The file is empty or exceeds the 50 MB Supabase Storage limit.",
+    "supabase-object":"Could not verify the public Supabase file. Check the storage bucket migration and upload again.",
     "backup-url":"Use a valid Google Drive sharing URL. Mark it confirmed only after opening and checking that file.",
     create:"Could not create the media entry. Check the gallery database migration and admin permissions.",
     update:"Could not update this media entry. Check the gallery database migration and admin permissions.",
@@ -62,10 +66,11 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
           <p style={{fontSize:12,color:"#817b91",marginTop:7}}>Warnings: 70% · 85% · 95%. This estimate sums stored original file sizes recorded in the database; it is not the Cloudflare billing meter and may not include orphaned R2 objects.</p>
         </div>
         <div className="admin-storage-readiness" role="status">
-          <strong>{r2Status.configured ? "R2 environment variables are present" : "R2 setup is incomplete in this Vercel environment"}</strong>
-          {r2Status.configured
-            ? <p>Bucket credentials and public URL are configured. Upload a small test image to verify bucket read permission and the public media domain.</p>
-            : <><p>Upload is disabled until these server-only variables are added in Vercel, for the environment you are testing:</p><ul>{r2Status.missing.map((name)=> <li key={name}><code>{name}</code></li>)}</ul><p>Do not add the Access Key or Secret Key with a NEXT_PUBLIC_ prefix.</p></>}
+          <strong>Easy upload: Supabase Storage</strong>
+          <p>New image and video uploads use the Supabase bucket by default. No Cloudflare account, R2 token, custom media domain or bucket CORS setup is needed.</p>
+          <p>One-time setup: run <code>supabase/migrations/202611090001_easy_gallery_storage.sql</code> in your Supabase SQL Editor. The free-plan allowance is 1 GB storage and 5 GB egress; each file is limited to 50 MB.</p>
+          <p>{r2Status.configured ? "Advanced Cloudflare R2 is also configured and remains available in the Storage location selector." : "Cloudflare R2 remains an optional advanced storage choice; it is not needed for the easy upload mode."}</p>
+          <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">Open Supabase Dashboard ↗</a>
           <Link href="/admin/backups">Open R2 &amp; Drive backups ↗</Link>
         </div>
       </section>
