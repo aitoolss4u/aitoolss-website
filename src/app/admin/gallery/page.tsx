@@ -45,7 +45,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   const totalGalleryBytes = (items ?? []).reduce((sum, item) => sum + Number(item.original_size_bytes ?? 0), 0);
   const totalCategoryBytes = (categories ?? []).reduce((sum, item) => sum + Number(item.image_original_size_bytes ?? 0), 0);
   const estimatedBytes = totalGalleryBytes + totalCategoryBytes;
-  const estimatedPercent = estimatedBytes / (10 * 1024 * 1024 * 1024) * 100;
+  const estimatedPercent = estimatedBytes / (1 * 1024 * 1024 * 1024) * 100;
   const backupCount = (status: string) => (items ?? []).filter((item) => (item.backup_status ?? "backup_pending") === status).length;
   const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? (bytes / 1024).toFixed(1) + " KB" : (bytes / (1024 * 1024 * 1024) >= 1 ? (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB" : (bytes / (1024 * 1024)).toFixed(1) + " MB");
   return <main className="admin-gallery-page" style={{minHeight:"100vh",background:"#faf9ff",color:"#28233f",padding:"clamp(1rem,2.5vw,2.5rem)"}}>
@@ -54,16 +54,16 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
       <header style={{margin:"1.5rem 0 2rem"}}><p style={{fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#7657ff"}}>AIToolss / CONTENT</p><h1 style={{fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,letterSpacing:"-.04em"}}>AI Creations Gallery</h1><p style={{color:"#77718e",marginTop:8}}>Upload images/videos to Cloudflare R2 here. After upload, add a title and choose Publish on homepage to display the media publicly. Google Drive is only for backups.</p><Link href="/admin/backups" className="admin-backup-page-link">Manage R2 &amp; Google Drive backups ↗</Link></header>
       <section id="storage" style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
         <div style={{display:"flex",flexWrap:"wrap",alignItems:"start",justifyContent:"space-between",gap:12}}>
-          <div><h2 style={{fontSize:20,fontWeight:850}}>Storage &amp; backup overview</h2><p style={{color:"#77718e",fontSize:13,marginTop:6}}>R2 is the intended primary store for new uploads. Existing Supabase Storage and external links are preserved.</p></div>
+          <div><h2 style={{fontSize:20,fontWeight:850}}>Storage &amp; backup overview</h2><p style={{color:"#77718e",fontSize:13,marginTop:6}}>Supabase Storage is the default for new uploads. Cloudflare R2 remains an optional advanced store; all existing media links are preserved.</p></div>
           <a href="/api/admin/gallery/backup-manifest" style={{display:"inline-flex",padding:"10px 14px",borderRadius:10,border:"1px solid #d9d2ee",color:"#58449e",fontWeight:800,fontSize:13}}>↓ Export backup CSV</a>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:10,marginTop:18}}>
           {[[ "Gallery items", String(items?.length ?? 0) ],[ "Backup pending", String(backupCount("backup_pending")) ],[ "Link saved", String(backupCount("backup_link_saved")) ],[ "Backup confirmed", String(backupCount("backup_confirmed")) ],[ "Backup missing", String(backupCount("backup_missing")) ]].map(([label,value])=><div key={label} style={{padding:13,border:"1px solid #ece8f4",borderRadius:12,background:"#faf9fd"}}><small style={{color:"#817b91"}}>{label}</small><strong style={{display:"block",fontSize:22,color:"#29263a",marginTop:4}}>{value}</strong></div>)}
         </div>
         <div style={{marginTop:18}}>
-          <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong style={{fontSize:13}}>Recorded original media size (application estimate)</strong><strong style={{fontSize:13}}>{formatBytes(estimatedBytes)} / 10 GB · {estimatedPercent.toFixed(2)}%</strong></div>
+          <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong style={{fontSize:13}}>Recorded gallery file size (application estimate)</strong><strong style={{fontSize:13}}>{formatBytes(estimatedBytes)} / 1 GB Supabase Free allowance · {estimatedPercent.toFixed(2)}%</strong></div>
           <div style={{height:9,borderRadius:999,background:"#eeeaf5",overflow:"hidden",marginTop:8}}><div style={{height:"100%",width:Math.min(100,estimatedPercent)+"%",background:estimatedPercent>=95?"#dc515a":estimatedPercent>=85?"#d98d32":estimatedPercent>=70?"#c9a23c":"#46a77d"}} /></div>
-          <p style={{fontSize:12,color:"#817b91",marginTop:7}}>Warnings: 70% · 85% · 95%. This estimate sums stored original file sizes recorded in the database; it is not the Cloudflare billing meter and may not include orphaned R2 objects.</p>
+          <p style={{fontSize:12,color:"#817b91",marginTop:7}}>Warnings: 70% · 85% · 95%. This is an estimate against the Supabase Free storage allowance. Check Supabase Storage usage for the authoritative total; it may not include orphaned uploads or account for other buckets.</p>
         </div>
         <div className="admin-storage-readiness" role="status">
           <strong>Easy upload: Supabase Storage</strong>
@@ -85,7 +85,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
         </form>
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
-        <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>Upload supported files directly to the configured Cloudflare R2 bucket using a short-lived admin-authorized URL. You may also retain a public HTTPS media URL for external or legacy media. Google Drive links belong only in the backup field, never as the public delivery URL. R2 requires the Supabase metadata migration, Cloudflare bucket/domain, and Vercel environment variables.</p>
+        <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>Upload files to Supabase Storage (the default easy option) or choose Cloudflare R2 (advanced). Public HTTPS URLs from another media host are also supported. Google Drive links belong only in the backup field, never as the public delivery URL. Supabase Storage requires the one-time gallery setup SQL; R2 additionally requires Cloudflare bucket/domain and Vercel server-only environment variables.</p>
         <form className="admin-gallery-form" action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:16}}>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media type<select name="media_type" required style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="image">Image</option><option value="video">Video</option></select></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media URL (HTTPS, optional if uploading)<input name="media_url" type="url" placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
