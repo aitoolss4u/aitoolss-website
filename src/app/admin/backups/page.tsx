@@ -48,15 +48,10 @@ export default async function AdminBackupsPage({
 }) {
   const params = await searchParams;
   const supabase = await createClient();
-  const [{ data: items, error }, { data: countRows }] = await Promise.all([
-    supabase
-      .from("gallery_items")
-      .select("id,title,media_type,media_url,thumbnail_url,original_file_name,original_size_bytes,storage_provider,r2_object_key,r2_original_object_key,backup_google_drive_url,backup_status,backup_saved_at,backup_confirmed_at,created_at")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("gallery_items")
-      .select("id,backup_status"),
-  ]);
+  const { data: items, error } = await supabase
+    .from("gallery_items")
+    .select("id,title,media_type,media_url,thumbnail_url,original_file_name,original_size_bytes,storage_provider,r2_object_key,r2_original_object_key,backup_google_drive_url,backup_status,backup_saved_at,backup_confirmed_at,created_at")
+    .order("created_at", { ascending: false });
 
   const r2 = getR2ConfigurationStatus();
   const missingMetadata = Boolean(error && (
