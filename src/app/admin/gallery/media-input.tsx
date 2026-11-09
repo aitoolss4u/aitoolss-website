@@ -93,7 +93,7 @@ export default function GalleryMediaInput({ label = "Upload image or video", cur
   const [message, setMessage] = useState("");
   const [values, setValues] = useState<UploadState>({ ...empty, ...current });
   const [copied, setCopied] = useState(false);
-  const [storageMode, setStorageMode] = useState<"supabase" | "r2" | "external">(current?.storageProvider === "r2" ? "r2" : current?.storageProvider === "supabase" ? "supabase" : "external");
+  const [storageMode, setStorageMode] = useState<"supabase" | "r2" | "external">(current?.storageProvider === "r2" ? "r2" : current?.storageProvider === "external" ? "external" : "supabase");
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -169,8 +169,7 @@ export default function GalleryMediaInput({ label = "Upload image or video", cur
         <select value={storageMode} disabled={busy} onChange={(event) => {
           const next = event.target.value as "supabase" | "r2" | "external";
           setStorageMode(next);
-          if (next === "external") setValues({ ...empty, storageProvider: "external" });
-          else setValues((current) => ({ ...current, storageProvider: next }));
+          setValues({ ...empty, storageProvider: next });
         }} aria-label="Storage location">
           <option value="supabase">Supabase Storage (easy setup)</option>
           <option value="r2">Cloudflare R2 (advanced)</option>
