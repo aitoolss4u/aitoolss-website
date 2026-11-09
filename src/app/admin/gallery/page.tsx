@@ -18,9 +18,8 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   ]);
   const r2Status = getR2ConfigurationStatus();
   const metadataMissing = Boolean(itemsError && (itemsError.code === "42703" || itemsError.code === "PGRST204" || /column .* does not exist|schema cache/i.test(itemsError.message ?? "")));
-  const settings = (settingsRow?.value ?? { columns: 4, rows: 4 }) as { columns?: number; rows?: number };
+  const settings = (settingsRow?.value ?? { columns: 4 }) as { columns?: number };
   const columns = [4,5,6].includes(Number(settings.columns)) ? Number(settings.columns) : 4;
-  const rows = [3,4,5,6].includes(Number(settings.rows)) ? Number(settings.rows) : 4;
   const messages: Record<string,string> = {
     "invalid-layout":"Choose a supported column and row count.",
     "invalid-media":"Select a valid image or video and enter valid HTTPS media and thumbnail URLs.",
