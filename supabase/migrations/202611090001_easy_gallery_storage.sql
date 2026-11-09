@@ -156,6 +156,7 @@ $$;
 revoke all on function public.get_popular_tool_slugs() from public;
 grant execute on function public.get_popular_tool_slugs() to anon, authenticated;
 
+alter table public.categories add column if not exists image_url text check (image_url is null or (char_length(image_url) <= 2048 and image_url ~ '^https://'));
 alter table public.categories add column if not exists image_alt text not null default '';
 alter table public.categories add column if not exists image_r2_key text;
 alter table public.categories add column if not exists image_original_r2_key text;
