@@ -17,7 +17,9 @@ async function resolveMedia(formData:FormData,mediaType:"image"|"video",submitte
  if(storageProvider==="supabase"&&supabaseSubmittedUrl){
   const mediaUrl=clean(formData.get("supabase_media_url"),2048);
   const thumbnailUrl=clean(formData.get("supabase_thumbnail_url"),2048)||submittedThumbnail;
-  const base=(process.env.NEXT_PUBLIC_SUPABASE_URL??"").replace(/\\/+$/u,"")+"/storage/v1/object/public/aitoolss-gallery/";
+  let projectUrl=process.env.NEXT_PUBLIC_SUPABASE_URL??"";
+  while(projectUrl.endsWith("/"))projectUrl=projectUrl.slice(0,-1);
+  const base=projectUrl+"/storage/v1/object/public/aitoolss-gallery/";
   const allowed=mediaType==="image"?["image/jpeg","image/png","image/webp","image/gif"]:["video/mp4","video/webm"];
   if(!base.startsWith("https://")||!mediaUrl.startsWith(base))throw new MediaResolutionError("supabase-url","The Supabase public media URL does not match this project. Upload the file again.");
   if(thumbnailUrl&&!thumbnailUrl.startsWith(base))throw new MediaResolutionError("supabase-thumbnail","The thumbnail URL must belong to the AIToolss Supabase gallery bucket.");
