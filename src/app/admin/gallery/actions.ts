@@ -150,3 +150,22 @@ export async function updateGalleryBackup(formData:FormData){
  refresh();
  redirect("/admin/backups?saved=updated");
 }
+
+
+export async function publishAllGalleryDrafts(_formData:FormData){
+ const {supabase,user}=await requireAdmin();
+ const {data:updated,error}=await supabase.from("gallery_items")
+  .update({is_published:true,updated_by:user.id,updated_at:new Date().toISOString()})
+  .eq("is_published",false)
+  .select("id");
+ if(error)redirect("/admin/gallery?error=publish-all");
+ const publishedCount=updated?.length??0;
+ await supabase.from("admin_audit_log").insert({
+  actor_id:user.id,
+  action:"publish_all_gallery_drafts",
+  entity_type:"gallery",
+  details:{published_count:publishedCount}
+ });
+ refresh();
+ redirect("/admin/gallery?saved=published-all");
+}
