@@ -60,7 +60,7 @@ assert.ok(r2Migration.includes("add column if not exists r2_object_key") && r2Mi
 assert.ok(easyStorageMigration.includes("'aitoolss-gallery'") && easyStorageMigration.includes("52428800"), "Easy storage migration must create the 50 MB AITOOLSS public bucket");
 assert.ok(easyStorageMigration.includes("auth.jwt() -> 'app_metadata' ->> 'role'"), "Only admin users may upload gallery assets");
 assert.ok(galleryUploader.includes("createClient()") && galleryUploader.includes('.from("aitoolss-gallery").upload('), "Gallery uploader must support direct authenticated Supabase Storage uploads");
-assert.ok(galleryUploader.includes('current?.storageProvider === "r2" ? "r2" : "supabase"'), "Supabase Storage must be the default upload choice");
+assert.ok(galleryUploader.includes('current?.storageProvider === "r2" ? "r2" : current?.storageProvider === "external" ? "external" : "supabase"'), "Supabase Storage must be the default upload choice");
 for (const slug of ["word-counter", "text-summarizer", "pomodoro-timer", "ai-image-detector", "ai-video-detector", "grammar-checker", "plagiarism-checker", "ai-humanizer", "paraphrasing-tool", "summarizer", "translator", "background-remover", "ai-chatbot", "dictionary", "ai-email-helper", "citation-generator", "image-compressor", "image-dimension-checker", "color-palette-builder", "decision-matrix", "json-formatter", "random-password-generator"]) {
   assert.ok(entries.some((entry) => entry.slug === slug), `expected tool missing from catalog: ${slug}`);
   assert.ok(route.includes(`"${slug}"`), `expected representative tool handler missing: ${slug}`);
