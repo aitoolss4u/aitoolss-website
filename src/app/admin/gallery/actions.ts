@@ -13,7 +13,8 @@ class MediaResolutionError extends Error{constructor(readonly code:string,messag
 
 async function resolveMedia(formData:FormData,mediaType:"image"|"video",submittedUrl:string,submittedThumbnail:string){
  const storageProvider=clean(formData.get("storage_provider"),20);
- if(storageProvider==="supabase"){
+ const supabaseSubmittedUrl=clean(formData.get("supabase_media_url"),2048);
+ if(storageProvider==="supabase"&&supabaseSubmittedUrl&&(!submittedUrl||submittedUrl===supabaseSubmittedUrl)){
   const mediaUrl=clean(formData.get("supabase_media_url"),2048);
   const thumbnailUrl=clean(formData.get("supabase_thumbnail_url"),2048)||submittedThumbnail;
   const base=(process.env.NEXT_PUBLIC_SUPABASE_URL??"").replace(/\\/+$/u,"")+"/storage/v1/object/public/aitoolss-gallery/";
