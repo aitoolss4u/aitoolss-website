@@ -82,8 +82,8 @@ function backupInput(formData:FormData,old?:{backup_google_drive_url:string|null
 }
 
 export async function saveGalleryLayout(formData:FormData){
- const {supabase,user}=await requireAdmin();const columns=Number(formData.get("columns")),rows=Number(formData.get("rows"));
- if(![4,5,6].includes(columns)||![3,4,5,6].includes(rows))redirect("/admin/gallery?error=invalid-layout");
+ const {supabase,user}=await requireAdmin();const columns=Number(formData.get("columns")),rows=6;
+ if(![4,5,6].includes(columns))redirect("/admin/gallery?error=invalid-layout");
  const {error}=await supabase.from("site_settings").upsert({key:"gallery_layout",value:{columns,rows},updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:"key"});
  if(error)redirect("/admin/gallery?error=save-layout");
  await supabase.from("admin_audit_log").insert({actor_id:user.id,action:"update_gallery_layout",entity_type:"gallery_settings",details:{columns,rows}});
