@@ -57,6 +57,8 @@ assert.ok(adminTheme.includes(".admin-gallery-form > .admin-r2-uploader") && adm
 assert.ok(backupPage.includes("updateGalleryBackup") && backupPage.includes("Google Drive sharing URL"), "Drive backups must have a dedicated backup management page");
 assert.ok(r2Library.includes("getR2ConfigurationStatus"), "Admin pages must show which R2 configuration variables are missing");
 assert.ok(r2Migration.includes("add column if not exists r2_object_key") && r2Migration.includes("add column if not exists backup_google_drive_url"), "R2 metadata migration must add object and Drive backup fields");
+assert.ok(easyStorageMigration.includes("create table if not exists public.gallery_items"), "Easy storage migration must bootstrap Phase 13 gallery_items");
+assert.ok(easyStorageMigration.includes("create table if not exists public.site_settings") && easyStorageMigration.includes("create table if not exists public.categories"), "Easy storage migration must bootstrap its Phase 8 dependencies");
 assert.ok(easyStorageMigration.includes("'aitoolss-gallery'") && easyStorageMigration.includes("52428800"), "Easy storage migration must create the 50 MB AITOOLSS public bucket");
 assert.ok(easyStorageMigration.includes("auth.jwt() -> 'app_metadata' ->> 'role'"), "Only admin users may upload gallery assets");
 assert.ok(galleryUploader.includes("createClient()") && galleryUploader.includes('.from("aitoolss-gallery").upload('), "Gallery uploader must support direct authenticated Supabase Storage uploads");
