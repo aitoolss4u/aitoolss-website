@@ -3,22 +3,40 @@ import { createClient } from "@/lib/supabase/server";
 import { createGalleryItem, deleteGalleryItem, saveGalleryLayout, updateGalleryItem } from "./actions";
 import { DeleteGalleryForm } from "./delete-button";
 import GalleryMediaInput from "./media-input";
-import { isR2Configured } from "@/lib/r2";
+import { getR2ConfigurationStatus } from "@/lib/r2";
 
 export const metadata = { title: "Gallery management | AIToolss Admin", robots: { index: false, follow: false } };
 
 export default async function AdminGalleryPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();
-  const [{ data: items, error: itemsError }, { data: settingsRow }, { data: categories }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { data: settingsRow }, { data: categories, error: categoriesError }] = await Promise.all([
     supabase.from("gallery_items").select("id,media_type,media_url,thumbnail_url,title,description,creator,is_published,sort_order,created_at,storage_provider,r2_object_key,r2_original_object_key,r2_thumbnail_key,original_file_name,original_size_bytes,backup_google_drive_url,backup_status,backup_confirmed_at,backup_saved_at").order("sort_order").order("created_at", { ascending: false }),
     supabase.from("site_settings").select("value").eq("key", "gallery_layout").maybeSingle(),
     supabase.from("categories").select("image_original_size_bytes,image_r2_key,image_original_r2_key"),
   ]);
+  const r2Status = getR2ConfigurationStatus();
+  const metadataMissing = Boolean(itemsError && (itemsError.code === "42703" || itemsError.code === "PGRST204" || /column .* does not exist|schema cache/i.test(itemsError.message ?? "")));
   const settings = (settingsRow?.value ?? { columns: 4, rows: 4 }) as { columns?: number; rows?: number };
   const columns = [4,5,6].includes(Number(settings.columns)) ? Number(settings.columns) : 4;
   const rows = [3,4,5,6].includes(Number(settings.rows)) ? Number(settings.rows) : 4;
-  const messages: Record<string,string> = { "invalid-layout":"Choose a supported column and row count.", "save-layout":"Could not save the gallery settings. Confirm the Phase 13 migration is applied.", "invalid-media":"The R2 object could not be verified or the HTTPS media URL is invalid. Check upload details and run the R2 metadata migration.", "backup-url":"Use a valid Google Drive sharing URL. Mark it confirmed only after opening and checking that file.", create:"Could not create the media entry.", update:"Could not update this media entry.", delete:"Could not remove this media entry from the public gallery.", "invalid-id":"The media entry ID is invalid." };
+  const messages: Record<string,string> = {
+    "invalid-layout":"Choose a supported column and row count.",
+    "save-layout":"Could not save gallery settings. Apply the Phase 13 gallery migration.",
+    "r2-config":"Cloudflare R2 is not configured in this Vercel environment. Add the missing server-only variables listed in Storage readiness below, then redeploy.",
+    "r2-details":"The upload did not include valid R2 details. Select the file and upload it again.",
+    "r2-url":"The uploaded media URL does not match R2_PUBLIC_BASE_URL. Check the public domain configuration and upload again.",
+    "r2-object":"The object could not be found in your R2 bucket. Confirm the bucket, S3 endpoint and Object Read permission on the R2 token.",
+    "r2-type":"The stored object MIME type does not match the selected image/video type.",
+    "r2-size":"The original upload is empty or exceeds the allowed size.",
+    "r2-thumbnail":"The thumbnail could not be verified. Upload the media again to regenerate it.",
+    "media-url":"Enter a valid public HTTPS media/thumbnail URL, or upload a file to R2.",
+    "backup-url":"Use a valid Google Drive sharing URL. Mark it confirmed only after opening and checking that file.",
+    create:"Could not create the media entry. Check the gallery database migration and admin permissions.",
+    update:"Could not update this media entry. Check the gallery database migration and admin permissions.",
+    delete:"Could not remove this media entry from the public gallery.",
+    "invalid-id":"The media entry ID is invalid."
+  };
   const totalGalleryBytes = (items ?? []).reduce((sum, item) => sum + Number(item.original_size_bytes ?? 0), 0);
   const totalCategoryBytes = (categories ?? []).reduce((sum, item) => sum + Number(item.image_original_size_bytes ?? 0), 0);
   const estimatedBytes = totalGalleryBytes + totalCategoryBytes;
@@ -28,7 +46,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   return <main className="admin-gallery-page" style={{minHeight:"100vh",background:"#faf9ff",color:"#28233f",padding:"clamp(1rem,2.5vw,2.5rem)"}}>
     <div className="admin-gallery-container" style={{width:"100%",maxWidth:"none",margin:0}}>
       <Link href="/admin" style={{color:"#654ed0",fontWeight:700}}>← Back to Admin Studio</Link>
-      <header style={{margin:"1.5rem 0 2rem"}}><p style={{fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#7657ff"}}>AIToolss / CONTENT</p><h1 style={{fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,letterSpacing:"-.04em"}}>AI Creations Gallery</h1><p style={{color:"#77718e",marginTop:8}}>Manage persistent R2 uploads, publication, order, CDN media and Google Drive backup references. New file uploads go directly from the browser to R2 after admin authorization; legacy Supabase Storage and external HTTPS media remain available.</p></header>
+      <header style={{margin:"1.5rem 0 2rem"}}><p style={{fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#7657ff"}}>AIToolss / CONTENT</p><h1 style={{fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,letterSpacing:"-.04em"}}>AI Creations Gallery</h1><p style={{color:"#77718e",marginTop:8}}>Upload images/videos to Cloudflare R2 here. After upload, add a title and choose Publish on homepage to display the media publicly. Google Drive is only for backups.</p><Link href="/admin/backups" className="admin-backup-page-link">Manage R2 &amp; Google Drive backups ↗</Link></header>
       <section id="storage" style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
         <div style={{display:"flex",flexWrap:"wrap",alignItems:"start",justifyContent:"space-between",gap:12}}>
           <div><h2 style={{fontSize:20,fontWeight:850}}>Storage &amp; backup overview</h2><p style={{color:"#77718e",fontSize:13,marginTop:6}}>R2 is the intended primary store for new uploads. Existing Supabase Storage and external links are preserved.</p></div>
@@ -42,8 +60,12 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
           <div style={{height:9,borderRadius:999,background:"#eeeaf5",overflow:"hidden",marginTop:8}}><div style={{height:"100%",width:Math.min(100,estimatedPercent)+"%",background:estimatedPercent>=95?"#dc515a":estimatedPercent>=85?"#d98d32":estimatedPercent>=70?"#c9a23c":"#46a77d"}} /></div>
           <p style={{fontSize:12,color:"#817b91",marginTop:7}}>Warnings: 70% · 85% · 95%. This estimate sums stored original file sizes recorded in the database; it is not the Cloudflare billing meter and may not include orphaned R2 objects.</p>
         </div>
-        <div style={{marginTop:12,padding:12,borderRadius:12,background:isR2Configured()?"#edf8f1":"#fff7e8",color:isR2Configured()?"#236a42":"#7b5a20",fontSize:13}}>
-          {isR2Configured() ? "R2 credentials are present in this runtime. Verify the media domain and a real test upload before treating the integration as operational." : "R2 is not configured in this deployment yet. Add the server-only R2 variables and connect media.aitoolss.com in Cloudflare before uploads can work."}
+        <div className="admin-storage-readiness" role="status">
+          <strong>{r2Status.configured ? "R2 environment variables are present" : "R2 setup is incomplete in this Vercel environment"}</strong>
+          {r2Status.configured
+            ? <p>Bucket credentials and public URL are configured. Upload a small test image to verify bucket read permission and the public media domain.</p>
+            : <><p>Upload is disabled until these server-only variables are added in Vercel, for the environment you are testing:</p><ul>{r2Status.missing.map((name)=> <li key={name}><code>{name}</code></li>)}</ul><p>Do not add the Access Key or Secret Key with a NEXT_PUBLIC_ prefix.</p></>}
+          <Link href="/admin/backups">Open R2 &amp; Drive backups ↗</Link>
         </div>
       </section>
       {params.saved && <p role="status" style={{padding:12,borderRadius:12,background:"#e6faef",color:"#17683b",marginBottom:16}}>Saved successfully: {params.saved.replaceAll("-"," ")}.</p>}
@@ -58,7 +80,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
         <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>Upload supported files directly to the configured Cloudflare R2 bucket using a short-lived admin-authorized URL. You may also retain a public HTTPS media URL for external or legacy media. Google Drive links belong only in the backup field, never as the public delivery URL. R2 requires the Supabase metadata migration, Cloudflare bucket/domain, and Vercel environment variables.</p>
-        <form className="admin-gallery-form" action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:16}}>
+        <form className="admin-gallery-form" action={createGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:16}}>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media type<select name="media_type" required style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="image">Image</option><option value="video">Video</option></select></label>
           <label style={{display:"grid",gap:6,fontSize:13,fontWeight:700}}>Media URL (HTTPS, optional if uploading)<input name="media_url" type="url" placeholder="https://…" style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}} /></label>
           <GalleryMediaInput label="Upload image or video (optional if using a URL)" />
@@ -71,10 +93,10 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
         </form>
       </section>
       <section><h2 style={{fontSize:20,fontWeight:850,marginBottom:12}}>Existing media ({items?.length ?? 0})</h2>
-        {itemsError ? <p role="alert">Could not load gallery items. Confirm the Phase 13 migration and admin permissions.</p> : !items?.length ? <div style={{padding:24,border:"1px dashed #cfc5f5",borderRadius:16,color:"#77718e"}}>No media entries yet. Add a relevant AI-generated image or video URL above. Nothing is published until you choose Publish.</div> :
+        {itemsError ? <div className="admin-migration-warning" role="alert"><strong>{metadataMissing ? "R2 media metadata migration is missing." : "Could not load gallery items."}</strong><p>{metadataMissing ? "Apply supabase/migrations/202610310003_r2_media_and_drive_backups.sql in the Supabase SQL Editor after the Phase 13 gallery, Phase 14 category and Phase 15 tool-catalogue migrations. This adds R2 object keys, storage provider, file size and Drive backup fields without deleting existing media." : "Confirm the Phase 13 gallery migration, the R2 media metadata migration and the administrator role."}</p><a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">Open Supabase Dashboard ↗</a></div> : !items?.length ? <div style={{padding:24,border:"1px dashed #cfc5f5",borderRadius:16,color:"#77718e"}}>No media entries yet. Add a relevant AI-generated image or video URL above. Nothing is published until you choose Publish.</div> :
         <div style={{display:"grid",gap:14}}>{items.map((item) => <article key={item.id} style={{padding:16,border:"1px solid #e8e2f6",borderRadius:16,background:"#fff"}}>
           <div style={{marginBottom:12}}>{item.media_type === "image" ? <img src={item.thumbnail_url || item.media_url} alt={item.title || "Gallery media"} style={{maxWidth:260,maxHeight:160,objectFit:"contain",borderRadius:10}} /> : <video src={item.media_url} controls playsInline preload="none" poster={item.thumbnail_url ?? undefined} style={{maxWidth:320,maxHeight:180,borderRadius:10}} />}</div>
-          <form className="admin-gallery-item-form" action={updateGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:14}}>
+          <form className="admin-gallery-item-form" action={updateGalleryItem} style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:14}}>
             <input type="hidden" name="id" value={item.id} />
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Type<select name="media_type" defaultValue={item.media_type} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}}><option value="image">Image</option><option value="video">Video</option></select></label>
             <label style={{display:"grid",gap:5,fontSize:12,fontWeight:700}}>Media URL<input name="media_url" type="url" defaultValue={item.media_url} style={{padding:9,border:"1px solid #ddd5f0",borderRadius:9}} /></label>
