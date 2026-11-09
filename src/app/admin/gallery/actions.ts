@@ -12,6 +12,26 @@ function refresh(){revalidatePath("/");revalidatePath("/api/gallery");revalidate
 class MediaResolutionError extends Error{constructor(readonly code:string,message:string){super(message);this.name="MediaResolutionError";}}
 
 async function resolveMedia(formData:FormData,mediaType:"image"|"video",submittedUrl:string,submittedThumbnail:string){
+ const storageProvider=clean(formData.get("storage_provider"),20);
+ if(storageProvider==="supabase"){
+  const mediaUrl=clean(formData.get("supabase_media_url"),2048);
+  const thumbnailUrl=clean(formData.get("supabase_thumbnail_url"),2048)||submittedThumbnail;
+  const base=(process.env.NEXT_PUBLIC_SUPABASE_URL??"").replace(/\\/+$/u,"")+"/storage/v1/object/public/aitoolss-gallery/";
+  const allowed=mediaType==="image"?["image/jpeg","image/png","image/webp","image/gif"]:["video/mp4","video/webm"];
+  if(!base.startsWith("https://")||!mediaUrl.startsWith(base))throw new MediaResolutionError("supabase-url","The Supabase public media URL does not match this project. Upload the file again.");
+  if(thumbnailUrl&&!thumbnailUrl.startsWith(base))throw new MediaResolutionError("supabase-thumbnail","The thumbnail URL must belong to the AIToolss Supabase gallery bucket.");
+  const originalSize=Number(formData.get("original_size_bytes")??0);
+  if(!Number.isSafeInteger(originalSize)||originalSize<=0||originalSize>50*1024*1024)throw new MediaResolutionError("supabase-size","The original file is empty or exceeds the 50 MB Supabase Storage upload limit.");
+  const verifyPublicObject=async(url:string,types:string[])=>{
+   const response=await fetch(url,{method:"HEAD",cache:"no-store"});
+   if(!response.ok)throw new Error("Object not found");
+   const contentType=response.headers.get("content-type")?.split(";")[0]??"";
+   if(!types.includes(contentType))throw new Error("Invalid public object type");
+  };
+  try{await verifyPublicObject(mediaUrl,allowed);}catch{throw new MediaResolutionError("supabase-object","The file uploaded to Supabase Storage could not be read publicly. Confirm the public bucket setup, then upload again.");}
+  if(thumbnailUrl){try{await verifyPublicObject(thumbnailUrl,["image/webp"]);}catch{throw new MediaResolutionError("supabase-thumbnail","The thumbnail could not be read from the public Supabase bucket. Upload the file again.");}}
+  return {media_url:mediaUrl,thumbnail_url:thumbnailUrl||null,storage_provider:"supabase",r2_object_key:null,r2_original_object_key:null,r2_thumbnail_key:null,original_file_name:clean(formData.get("original_file_name"),200),original_size_bytes:originalSize};
+ }
  const r2Url=clean(formData.get("r2_media_url"),2048);
  const objectKey=clean(formData.get("r2_object_key"),512);
  const originalKey=clean(formData.get("r2_original_object_key"),512);
