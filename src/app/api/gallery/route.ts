@@ -14,13 +14,14 @@ export async function GET() {
     const layout = (layoutRow?.value ?? {}) as { columns?: number; rows?: number };
     const columns = [4, 5, 6].includes(Number(layout.columns)) ? Number(layout.columns) : 4;
     const rows = [3, 4, 5, 6].includes(Number(layout.rows)) ? Number(layout.rows) : 4;
+    const totalPublished = count ?? (items ?? []).length;
     return NextResponse.json({
       items: (items ?? []).map((item) => ({
         id: item.id, type: item.media_type, url: item.media_url, thumbnail_url: item.thumbnail_url,
         title: item.title, description: item.description, creator: item.creator,
       })),
-      columns, rows,
-    }, { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } });
+      columns, rows, totalPublished, returnedItems: (items ?? []).length,
+    }, { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } });
   } catch {
     return NextResponse.json({ items: [], columns: 4, rows: 4 });
   }
