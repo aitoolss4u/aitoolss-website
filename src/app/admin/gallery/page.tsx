@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createGalleryItem, deleteGalleryItem, saveGalleryLayout, updateGalleryItem } from "./actions";
+import { createGalleryItem, deleteGalleryItem, publishAllGalleryDrafts, saveGalleryLayout, updateGalleryItem } from "./actions";
 import { DeleteGalleryForm } from "./delete-button";
+import { PublishAllGalleryForm } from "./publish-all-button";
 import GalleryMediaInput from "./media-input";
 import { getR2ConfigurationStatus } from "@/lib/r2";
 
@@ -40,12 +41,15 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
     create:"Could not create the media entry. Check the gallery database migration and admin permissions.",
     update:"Could not update this media entry. Check the gallery database migration and admin permissions.",
     delete:"Could not remove this media entry from the public gallery.",
-    "invalid-id":"The media entry ID is invalid."
+    "invalid-id":"The media entry ID is invalid.",
+    "publish-all":"Could not publish saved gallery drafts. Check the gallery table and admin permissions."
   };
   const totalGalleryBytes = (items ?? []).reduce((sum, item) => sum + Number(item.original_size_bytes ?? 0), 0);
   const totalCategoryBytes = (categories ?? []).reduce((sum, item) => sum + Number(item.image_original_size_bytes ?? 0), 0);
   const estimatedBytes = totalGalleryBytes + totalCategoryBytes;
   const estimatedPercent = estimatedBytes / (1 * 1024 * 1024 * 1024) * 100;
+  const publishedCount = (items ?? []).filter((item) => item.is_published).length;
+  const draftCount = (items ?? []).length - publishedCount;
   const backupCount = (status: string) => (items ?? []).filter((item) => (item.backup_status ?? "backup_pending") === status).length;
   const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? (bytes / 1024).toFixed(1) + " KB" : (bytes / (1024 * 1024 * 1024) >= 1 ? (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB" : (bytes / (1024 * 1024)).toFixed(1) + " MB");
   return <main className="admin-gallery-page" style={{minHeight:"100vh",background:"#faf9ff",color:"#28233f",padding:"clamp(1rem,2.5vw,2.5rem)"}}>
@@ -58,7 +62,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
           <a href="/api/admin/gallery/backup-manifest" style={{display:"inline-flex",padding:"10px 14px",borderRadius:10,border:"1px solid #d9d2ee",color:"#58449e",fontWeight:800,fontSize:13}}>↓ Export backup CSV</a>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:10,marginTop:18}}>
-          {[[ "Gallery items", String(items?.length ?? 0) ],[ "Backup pending", String(backupCount("backup_pending")) ],[ "Link saved", String(backupCount("backup_link_saved")) ],[ "Backup confirmed", String(backupCount("backup_confirmed")) ],[ "Backup missing", String(backupCount("backup_missing")) ]].map(([label,value])=><div key={label} style={{padding:13,border:"1px solid #ece8f4",borderRadius:12,background:"#faf9fd"}}><small style={{color:"#817b91"}}>{label}</small><strong style={{display:"block",fontSize:22,color:"#29263a",marginTop:4}}>{value}</strong></div>)}
+          {[[ "Gallery items", String(items?.length ?? 0) ],[ "Published", String(publishedCount) ],[ "Drafts", String(draftCount) ],[ "Backup pending", String(backupCount("backup_pending")) ],[ "Link saved", String(backupCount("backup_link_saved")) ],[ "Backup confirmed", String(backupCount("backup_confirmed")) ],[ "Backup missing", String(backupCount("backup_missing")) ]].map(([label,value])=><div key={label} style={{padding:13,border:"1px solid #ece8f4",borderRadius:12,background:"#faf9fd"}}><small style={{color:"#817b91"}}>{label}</small><strong style={{display:"block",fontSize:22,color:"#29263a",marginTop:4}}>{value}</strong></div>)}
         </div>
         <div style={{marginTop:18}}>
           <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong style={{fontSize:13}}>Recorded gallery file size (application estimate)</strong><strong style={{fontSize:13}}>{formatBytes(estimatedBytes)} / 1 GB Supabase Free allowance · {estimatedPercent.toFixed(2)}%</strong></div>
@@ -77,11 +81,10 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
       {params.saved && <p role="status" style={{padding:12,borderRadius:12,background:"#e6faef",color:"#17683b",marginBottom:16}}>Saved successfully: {params.saved.replaceAll("-"," ")}.</p>}
       {params.error && <p role="alert" style={{padding:12,borderRadius:12,background:"#fff0f0",color:"#9c2828",marginBottom:16}}>{messages[params.error] ?? "The request could not be completed."}</p>}
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
-        <h2 style={{fontSize:20,fontWeight:850}}>Public grid settings</h2><p style={{color:"#77718e",fontSize:14,margin:"6px 0 16px"}}>Default is 4 columns × 4 rows. The public grid adapts to smaller screens.</p>
+        <h2 style={{fontSize:20,fontWeight:850}}>Public gallery layout</h2><p style={{color:"#77718e",fontSize:14,margin:"6px 0 16px"}}>Choose the desktop column count. Every published image and video is shown; there is no row-based item cap. Mobile automatically uses two columns.</p>
         <form action={saveGalleryLayout} style={{display:"flex",flexWrap:"wrap",alignItems:"end",gap:16}}>
-          <label style={{display:"grid",gap:6,fontWeight:700}}>Columns<select name="columns" defaultValue={String(columns)} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="4">4 columns</option><option value="5">5 columns</option><option value="6">6 columns</option></select></label>
-          <label style={{display:"grid",gap:6,fontWeight:700}}>Rows<select name="rows" defaultValue={String(rows)} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="3">3 rows</option><option value="4">4 rows</option><option value="5">5 rows</option><option value="6">6 rows</option></select></label>
-          <button style={{padding:"11px 18px",borderRadius:10,background:"#6d53d7",color:"#fff",fontWeight:800}}>Save grid layout</button><span style={{color:"#77718e",fontSize:13}}>Current limit: {columns*rows} published items</span>
+          <label style={{display:"grid",gap:6,fontWeight:700}}>Desktop columns<select name="columns" defaultValue={String(columns)} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="4">4 columns</option><option value="5">5 columns</option><option value="6">6 columns</option></select></label>
+          <button style={{padding:"11px 18px",borderRadius:10,background:"#6d53d7",color:"#fff",fontWeight:800}}>Save layout</button><span style={{color:"#77718e",fontSize:13}}>All published items will be displayed.</span>
         </form>
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
@@ -98,7 +101,7 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
           <div><button style={{padding:"11px 18px",borderRadius:10,background:"#6d53d7",color:"#fff",fontWeight:800}}>Add gallery item</button></div>
         </form>
       </section>
-      <section><h2 style={{fontSize:20,fontWeight:850,marginBottom:12}}>Existing media ({items?.length ?? 0})</h2>
+      <section><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:12}}><div><h2 style={{fontSize:20,fontWeight:850}}>Existing media ({items?.length ?? 0})</h2><p style={{fontSize:13,color:"#77718e",marginTop:4}}>{publishedCount} published · {draftCount} drafts. Only published items appear on the homepage.</p></div><PublishAllGalleryForm action={publishAllGalleryDrafts} draftCount={draftCount} /></div>
         {itemsError ? <div className="admin-migration-warning" role="alert"><strong>{metadataMissing ? "R2 media metadata migration is missing." : "Could not load gallery items."}</strong><p>{metadataMissing ? "Apply supabase/migrations/202610310003_r2_media_and_drive_backups.sql in the Supabase SQL Editor after the Phase 13 gallery, Phase 14 category and Phase 15 tool-catalogue migrations. This adds R2 object keys, storage provider, file size and Drive backup fields without deleting existing media." : "Confirm the Phase 13 gallery migration, the R2 media metadata migration and the administrator role."}</p><a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">Open Supabase Dashboard ↗</a></div> : !items?.length ? <div style={{padding:24,border:"1px dashed #cfc5f5",borderRadius:16,color:"#77718e"}}>No media entries yet. Add a relevant AI-generated image or video URL above. Nothing is published until you choose Publish.</div> :
         <div style={{display:"grid",gap:14}}>{items.map((item) => <article key={item.id} style={{padding:16,border:"1px solid #e8e2f6",borderRadius:16,background:"#fff"}}>
           <div style={{marginBottom:12}}>{item.media_type === "image" ? <img src={item.thumbnail_url || item.media_url} alt={item.title || "Gallery media"} style={{maxWidth:260,maxHeight:160,objectFit:"contain",borderRadius:10}} /> : <video src={item.media_url} controls playsInline preload="none" poster={item.thumbnail_url ?? undefined} style={{maxWidth:320,maxHeight:180,borderRadius:10}} />}</div>
