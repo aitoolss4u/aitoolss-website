@@ -1,7 +1,7 @@
 # Gallery storage and backup setup
 
 ## Architecture
-Vercel hosts the Next.js app and authenticated admin APIs. Supabase stores category/gallery records and media metadata. Cloudflare R2 is the primary store for new files after the owner configures credentials, bucket and CDN. Public delivery uses `https://media.aitoolss.com/`. Google Drive links are backup references only.
+Vercel hosts the Next.js app and authenticated admin APIs. Supabase stores category/gallery records and media metadata. The simplest gallery upload path uses the existing Supabase Storage project. Cloudflare R2 remains an optional advanced store after the owner configures its credentials, bucket and public domain. Google Drive links are backup references only.
 
 ## Database
 Run `supabase/migrations/202610310003_r2_media_and_drive_backups.sql` in Supabase SQL Editor after Phase 14 and Phase 15. It adds storage and backup metadata without deleting existing media or legacy Supabase Storage objects.
@@ -70,3 +70,10 @@ In Supabase SQL Editor, confirm these are applied in order:
 4. `202610310003_r2_media_and_drive_backups.sql` (R2 object keys, storage provider, original size and Google Drive backup metadata).
 
 The R2 migration uses `ADD COLUMN IF NOT EXISTS` and preserves existing gallery/category records. A code deployment does not run SQL migrations for you. Check the Supabase migration history and select the correct project before executing SQL.
+
+
+## Free and simple recommendation
+
+For a small gallery, use the default **Supabase Storage (easy setup)** upload option. This uses the existing Supabase project and avoids Cloudflare account/token, DNS custom-domain and bucket-CORS configuration. The current Supabase Free plan includes 1 GB file storage and 5 GB egress; this migration limits individual files to 50 MB. Check current project usage and plan quotas before uploading larger collections or high-traffic videos. Public bucket contents can be read by anyone who has the URL; only signed-in admins may upload through the app.
+
+The older Cloudflare R2 upload path remains available from the Storage location selector for owners who have already configured R2.
