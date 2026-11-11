@@ -37,6 +37,8 @@ assert.ok(aiRoute.includes("https://ai-gateway.vercel.sh/v1/chat/completions"), 
 assert.ok(aiRoute.includes("GEMINI_API_KEY") && aiRoute.includes("gemini-3.7-flash"), "AI chat must support direct Gemini Free Tier configuration");
 assert.ok(route.includes('fetch("/api/tools/humanizer"'), "AI Humanizer must call its real server endpoint");
 assert.ok(humanizerRoute.includes("AI_GATEWAY_API_KEY"), "AI Humanizer must support an approved server-side AI Gateway key");
+assert.ok(humanizerRoute.includes("x-vercel-oidc-token") && humanizerRoute.includes("VERCEL_OIDC_TOKEN"), "AI Humanizer must support Vercel deployment OIDC when no API key is configured");
+assert.ok(humanizerRoute.includes("gatewayAuth = gatewayKey || oidcToken"), "AI Humanizer must prefer an explicit Gateway key and safely fall back to deployment OIDC");
 assert.ok(humanizerRoute.includes("GEMINI_API_KEY") && humanizerRoute.includes("gemini-3.7-flash"), "AI Humanizer must support direct Gemini Free Tier configuration");
 assert.ok(humanizerRoute.includes("generativelanguage.googleapis.com"), "AI Humanizer must call the Gemini API directly when configured");
 assert.ok(humanizerRoute.includes("AI_HUMANIZER_PRO_MODEL") && humanizerRoute.includes("AI_HUMANIZER_ULTRA_MODEL"), "Humanizer model tiers must be explicitly configured");
