@@ -26,13 +26,9 @@ const fallbackMetadata: Metadata = {
     description: siteConfig.description,
   },
   icons: {
-    icon: [
-      { url: "/favicon.ico", type: "image/x-icon", sizes: "16x16 32x32 48x48" },
-      { url: "/favicon.png?v=5", type: "image/png", sizes: "128x128" },
-      { url: "/favicon.svg?v=5", type: "image/svg+xml", sizes: "any" },
-    ],
-    shortcut: ["/favicon.ico"],
-    apple: [{ url: "/favicon.png?v=5", sizes: "128x128", type: "image/png" }],
+    icon: [{ url: "/favicon.png?v=6", type: "image/png", sizes: "32x32" }],
+    shortcut: ["/favicon.png?v=6"],
+    apple: [{ url: "/favicon.png?v=6", sizes: "32x32", type: "image/png" }],
   },
   robots: { index: true, follow: true },
 };
