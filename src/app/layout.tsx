@@ -25,7 +25,11 @@ const fallbackMetadata: Metadata = {
     title: "AIToolss — Discover AI Tools That Help You Do More",
     description: siteConfig.description,
   },
-  icons: { icon: [{ url: "/brand/aitoolss-logo.png?v=2", type: "image/png", sizes: "180x180" }], shortcut: ["/brand/aitoolss-logo.png?v=2"], apple: [{ url: "/brand/aitoolss-logo.png?v=2", sizes: "180x180", type: "image/png" }] },
+  icons: {
+    icon: [{ url: "/favicon.svg?v=3", type: "image/svg+xml", sizes: "any" }],
+    shortcut: ["/favicon.svg?v=3"],
+    apple: [{ url: "/brand/aitoolss-logo.png?v=3", sizes: "180x180", type: "image/png" }],
+  },
   robots: { index: true, follow: true },
 };
 
