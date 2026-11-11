@@ -26,9 +26,12 @@ const fallbackMetadata: Metadata = {
     description: siteConfig.description,
   },
   icons: {
-    icon: [{ url: "/favicon.svg?v=3", type: "image/svg+xml", sizes: "any" }],
-    shortcut: ["/favicon.svg?v=3"],
-    apple: [{ url: "/brand/aitoolss-logo.png?v=3", sizes: "180x180", type: "image/png" }],
+    icon: [
+      { url: "/favicon.png?v=4", type: "image/png", sizes: "128x128" },
+      { url: "/favicon.svg?v=4", type: "image/svg+xml", sizes: "any" },
+    ],
+    shortcut: ["/favicon.png?v=4"],
+    apple: [{ url: "/favicon.png?v=4", sizes: "128x128", type: "image/png" }],
   },
   robots: { index: true, follow: true },
 };
