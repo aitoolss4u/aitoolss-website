@@ -53,10 +53,10 @@ assert.ok(route.includes("Rewrite strength"), "AI Humanizer must expose rewrite-
 assert.ok(route.includes('fetch("/api/tools/ai-generate"') && route.includes("usesAIGeneration"), "Generative writing/productivity tools must call the real AI generation endpoint");
 assert.ok(aiGenerationRoute.includes("GEMINI_API_KEY") && aiGenerationRoute.includes("gemini-3.1-flash-lite"), "AI generation endpoint must support the configured Gemini free-tier model");
 assert.ok(aiGenerationRoute.includes("taskInstructions") && aiGenerationRoute.includes("prompt-generator") && aiGenerationRoute.includes("translator") && aiGenerationRoute.includes("business-name-ideas"), "AI generation endpoint must use task-specific prompts for supported tools");
-const clientAiList = route.match(/const AI_GENERATION_TOOL_SLUGS = \\[([\\s\\S]*?)\\] as const;/);
+const clientAiList = route.match(/const AI_GENERATION_TOOL_SLUGS = \[([\s\S]*?)\] as const;/);
 assert.ok(clientAiList, "client must explicitly identify AI-backed tools");
 const clientAiSlugs = [...clientAiList[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]).sort();
-const apiAiSlugs = [...aiGenerationRoute.matchAll(/^\\s*"([^"]+)":/gm)].map((match) => match[1]).sort();
+const apiAiSlugs = [...aiGenerationRoute.matchAll(/^\s*"([^"]+)":/gm)].map((match) => match[1]).sort();
 assert.deepEqual(clientAiSlugs, apiAiSlugs, "every client AI generator must have a matching task-specific server prompt");
 assert.ok(textSummarizerInterface.includes('/api/tools/ai-generate') && textSummarizerInterface.includes('slug: "text-summarizer"'), "dedicated Text Summarizer page must use real contextual AI");
 assert.equal(packageJson.dependencies["@bg0/browser"], "0.1.1", "Background Remover must use the pinned browser-local segmentation package");
