@@ -261,7 +261,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "AI chat could not complete this request.");
         if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty response.");
-        setChatMessages((current) => [...current, { role: "user", content: userMessage }, { role: "assistant", content: data.output }].slice(-12));
+        setChatMessages((current) => [...current, { role: "user" as const, content: userMessage }, { role: "assistant" as const, content: data.output as string }].slice(-12));
         setInput("");
         setOutput("");
       } else if (usesAIGeneration) {
