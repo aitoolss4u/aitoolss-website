@@ -283,7 +283,9 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         setOutput(imageInfo);
       } else if (slug === "background-remover") {
         if (!selectedFile) throw new Error("Please choose an image first.");
-        setBackgroundProgress("Loading the on-device AI model…");
+        if (selectedFile.size > 40 * 1024 * 1024) throw new Error("Please choose an image smaller than 40 MB.");
+        if (!["image/png", "image/jpeg", "image/webp"].includes(selectedFile.type)) throw new Error("Background Remover supports PNG, JPG and WebP images.");
+        setBackgroundProgress("Loading the on-device AI model. The first run may take a few minutes…");
         const { removeBackground } = await import("@bg0/browser");
         const result = await removeBackground(selectedFile, {
           quality: "quality",
@@ -325,7 +327,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   };
   if (!tool) return <main className="tool-page-shell"><div className="tool-page-content"><p className="tool-eyebrow">AIToolss / Tool not found</p><h1 className="tool-page-title">We couldn’t find that tool.</h1><Link href="/" className="tool-primary-button">Back to all tools</Link></div></main>;
   const isImage = tool.mode === "image";
-  const runDisabled = isImage ? !selectedFile : !input.trim();
+  const runDisabled = isImage ? !selectedFile : !input.trim() || (slug === "translator" && option === "default");
   return <ToolDetailSections tool={tool} seo={seo}>
     <section className="tool-panel">
       <div className="tool-eyebrow">{usesHumanizer ? "Writing · AI-powered rewrite" : usesAI || usesAIGeneration ? tool.category + " · Gemini AI-powered" : tool.category + " · Browser tool"}</div>
@@ -333,7 +335,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : usesAI ? "Your message" : "Your input"}</label>
         {usesAI && chatMessages.length > 0 && <div className="ai-chat-history" aria-live="polite">{chatMessages.map((message, index) => <article key={index} className={message.role === "user" ? "ai-chat-message ai-chat-user" : "ai-chat-message ai-chat-assistant"}><strong>{message.role === "user" ? "You" : "AIToolss AI"}</strong><p>{message.content}</p></article>)}</div>}
         {isImage
-          ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
+          ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : slug === "background-remover" ? "image/png,image/jpeg,image/webp" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
           : <textarea id="tool-input" value={input} maxLength={usesHumanizer ? 12000 : usesAIGeneration || usesAI ? 24000 : undefined} onChange={(e)=>{setInput(e.target.value);if(usesHumanizer || usesAIGeneration || usesAI){setOutput("");setToolError("");}}} rows={usesHumanizer ? 12 : 8} placeholder={usesHumanizer ? "Paste the text you want to rewrite…" : usesAI ? "Ask a question and continue the conversation…" : "Paste text, enter a topic, or add values…"} className="tool-input" />}
         {usesHumanizer && <>
           <div className="humanizer-input-meta"><span>{words(input)} words</span><span>{input.length.toLocaleString()} / 12,000 characters</span></div>
