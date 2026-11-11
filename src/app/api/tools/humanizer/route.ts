@@ -53,7 +53,7 @@ function gatewayModel(level: typeof modelLevels[number]) {
 function geminiModel(level: typeof modelLevels[number]) {
   if (level === "pro") return process.env.GEMINI_HUMANIZER_PRO_MODEL?.trim() || "";
   if (level === "ultra") return process.env.GEMINI_HUMANIZER_ULTRA_MODEL?.trim() || "";
-  return process.env.GEMINI_HUMANIZER_LITE_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.7-flash";
+  return process.env.GEMINI_HUMANIZER_LITE_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
 }
 
 function extractGeminiText(data: unknown): string {
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   if (!geminiKey && !gatewayKey) {
     return NextResponse.json(
-      { error: "AI Humanizer is not configured yet. Add GEMINI_API_KEY for the free Gemini option, or configure an approved AI Gateway key." },
+      { error: "AI Humanizer is not configured yet. Add a server-only GEMINI_API_KEY in Vercel to enable the free Gemini API option. No AI Gateway billing or credit card is required for this path." },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
