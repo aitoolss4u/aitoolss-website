@@ -7,6 +7,20 @@ import PomodoroTimer from "@/components/pomodoro-timer";
 import ToolDetailSections from "@/components/tool-detail-sections";
 import type { ToolSeoContent } from "@/lib/tool-seo";
 
+const AI_GENERATION_TOOL_SLUGS = [
+  "text-summarizer", "summarizer", "paragraph-rewriter", "paraphrasing-tool",
+  "tone-changer", "grammar-checker", "headline-generator", "blog-outline-builder",
+  "email-draft-helper", "ai-email-helper", "image-alt-text-helper", "prompt-generator",
+  "daily-planner", "goal-breakdown", "meeting-notes-formatter", "code-explainer",
+  "wordpress-excerpt-maker", "social-caption-writer", "hashtag-ideas",
+  "meta-description-writer", "youtube-description-builder", "video-script-outline",
+  "product-description-writer", "study-notes-organizer", "flashcard-maker",
+  "quiz-question-builder", "essay-outline-builder", "business-name-ideas",
+  "swot-analysis-builder", "meeting-agenda-maker", "cover-letter-builder",
+  "interview-practice-questions", "achievement-bullet-rewriter", "regex-cheat-sheet",
+  "translator",
+] as const;
+
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -283,12 +297,14 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   const [isProcessing, setIsProcessing] = useState(false);
   const [copyStatus, setCopyStatus] = useState("");
   const [businessCount, setBusinessCount] = useState(10);
-  const [showBusinessCount, setShowBusinessCount] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [backgroundProgress, setBackgroundProgress] = useState("");
   const [toolError, setToolError] = useState("");
   const [humanizerSettings, setHumanizerSettings] = useState({ modelLevel: "lite", style: "general", readingLevel: "general", strength: "balanced" });
   const tool = useMemo(() => getTool(slug), [slug]);
   const usesAI = slug === "ai-chatbot";
   const usesHumanizer = slug === "ai-humanizer";
+  const usesAIGeneration = AI_GENERATION_TOOL_SLUGS.includes(slug as typeof AI_GENERATION_TOOL_SLUGS[number]);
   const isMediaTool = slug === "ai-image-detector" || slug === "ai-video-detector";
   async function copyResult() {
     try {
@@ -315,21 +331,42 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty rewrite.");
         setOutput(data.output);
       } else if (usesAI) {
+        const userMessage = input.trim();
         const response = await fetch("/api/tools/ai-chat", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ message: input.trim() }),
+          body: JSON.stringify({ message: userMessage, history: chatMessages.slice(-10) }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "AI chat could not complete this request.");
         if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty response.");
+        setChatMessages((current) => [...current, { role: "user", content: userMessage }, { role: "assistant", content: data.output }].slice(-12));
+        setInput("");
+        setOutput("");
+      } else if (usesAIGeneration) {
+        const response = await fetch("/api/tools/ai-generate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug, input: input.trim(), option, businessCount }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "AI generation could not complete this request.");
+        if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty result.");
         setOutput(data.output);
       } else if (isMediaTool) {
         if (!selectedFile) throw new Error("Please choose a media file first.");
         setOutput(await inspectMediaLocally(selectedFile, slug));
       } else if (slug === "background-remover") {
         if (!selectedFile) throw new Error("Please choose an image first.");
-        setOutput(await removeFlatBackgroundLocally(selectedFile));
+        setBackgroundProgress("Loading the on-device AI model…");
+        const { removeBackground } = await import("@bg0/browser");
+        const result = await removeBackground(selectedFile, {
+          quality: "quality",
+          onProgress: (progress) => setBackgroundProgress(progress.message + " " + Math.round(progress.progress * 100) + "%"),
+        });
+        if (!result.blob || result.blob.type !== "image/png") throw new Error("The AI model did not return a transparent PNG. Please try another image.");
+        setOutput(URL.createObjectURL(result.blob));
+        setBackgroundProgress("Background removed successfully · " + result.width + " × " + result.height + " px · processed locally");
       } else if (slug === "plagiarism-checker") {
         const response = await fetch("/api/tools/plagiarism", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ input }) });
         const data = await response.json();
@@ -343,13 +380,14 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
       } else setOutput(run(slug, input, slug === "business-name-ideas" ? String(businessCount) : option));
     } catch (error) {
       const message = error instanceof Error ? error.message : "The tool could not complete this request.";
-      if (usesHumanizer || usesAI) setToolError(message);
+      if (usesHumanizer || usesAI || usesAIGeneration) setToolError(message);
       else setOutput(message);
     }
     finally { setIsProcessing(false); }
   };
   const onImage = (picked: File | null) => {
     setOutput("");
+    setBackgroundProgress("");
     setSelectedFile(picked);
     if (!picked) { setImageInfo(""); return; }
     if (slug === "ai-video-detector") { setImageInfo(picked.name + " · " + (picked.size / 1024 / 1024).toFixed(1) + " MB"); return; }
@@ -364,12 +402,13 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   const runDisabled = isImage ? !selectedFile : !input.trim();
   return <ToolDetailSections tool={tool} seo={seo}>
     <section className="tool-panel">
-      <div className="tool-eyebrow">{slug === "ai-humanizer" ? "Writing · AI-powered rewrite" : tool.category + " · Browser tool"}</div>
+      <div className="tool-eyebrow">{usesHumanizer ? "Writing · AI-powered rewrite" : usesAI || usesAIGeneration ? tool.category + " · Gemini AI-powered" : tool.category + " · Browser tool"}</div>
       {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
         <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : "Your input"}</label>
+        {usesAI && chatMessages.length > 0 && <div className="ai-chat-history" aria-live="polite">{chatMessages.map((message, index) => <article key={index} className={message.role === "user" ? "ai-chat-message ai-chat-user" : "ai-chat-message ai-chat-assistant"}><strong>{message.role === "user" ? "You" : "AIToolss AI"}</strong><p>{message.content}</p></article>)}</div>}
         {isImage
           ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
-          : <textarea id="tool-input" value={input} maxLength={usesHumanizer ? 12000 : undefined} onChange={(e)=>{setInput(e.target.value);if(usesHumanizer){setOutput("");setToolError("");}}} rows={usesHumanizer ? 12 : 8} placeholder={usesHumanizer ? "Paste the text you want to rewrite…" : "Paste text, enter a topic, or add values…"} className="tool-input" />}
+          : <textarea id="tool-input" value={input} maxLength={usesHumanizer ? 12000 : usesAIGeneration || usesAI ? 24000 : undefined} onChange={(e)=>{setInput(e.target.value);if(usesHumanizer || usesAIGeneration || usesAI){setOutput("");setToolError("");}}} rows={usesHumanizer ? 12 : 8} placeholder={usesHumanizer ? "Paste the text you want to rewrite…" : usesAI ? "Ask a question and continue the conversation…" : "Paste text, enter a topic, or add values…"} className="tool-input" />}
         {usesHumanizer && <>
           <div className="humanizer-input-meta"><span>{words(input)} words</span><span>{input.length.toLocaleString()} / 12,000 characters</span></div>
           <div className="humanizer-settings-grid">
@@ -399,16 +438,13 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
         {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
         {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
-        {slug === "business-name-ideas" && <div className="tool-business-count" onMouseEnter={() => setShowBusinessCount(true)}>
-          <button type="button" className="tool-secondary-button" aria-haspopup="menu" aria-expanded={showBusinessCount} onClick={() => setShowBusinessCount(true)}>Show Result ▾</button>
-          {showBusinessCount && <div className="tool-business-count-menu" role="menu" aria-label="Number of business names">
-            {[10, 20, 50, 100].map((count) => <button key={count} type="button" role="menuitem" onClick={() => { setBusinessCount(count); setShowBusinessCount(false); setCopyStatus(""); setOutput(input.trim() ? run(slug, input, String(count)) : "Enter your business niche or keywords, then choose how many names to generate."); }}>{count} names</button>)}
-          </div>}
-        </div>}
+        {backgroundProgress && <p className="tool-image-info" role="status">{backgroundProgress}</p>}
+        {slug === "translator" && <label className="tool-option-label">Translate to<select aria-label="Target language" value={option} onChange={(event) => setOption(event.target.value)} className="tool-select"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option><option value="German">German</option><option value="Arabic">Arabic</option><option value="Chinese (Simplified)">Chinese (Simplified)</option><option value="Japanese">Japanese</option><option value="Portuguese">Portuguese</option></select></label>}
+        {slug === "business-name-ideas" && <label className="tool-option-label">Number of ideas<select aria-label="Number of business name ideas" value={businessCount} onChange={(event) => setBusinessCount(Number(event.target.value))} className="tool-select"><option value={10}>10 ideas</option><option value={20}>20 ideas</option><option value={50}>50 ideas</option><option value={100}>100 ideas</option></select></label>}
         {slug === "plagiarism-checker" && <p className="rounded-xl border border-slate-200 p-3 text-sm">Paste the text to check, then add comparison material under a separate <strong>--- SOURCE ---</strong> line. This checks similarity only against the sources you provide; it does not search the whole web or academic databases.</p>}
         <div className="tool-actions">
           <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? (usesHumanizer ? "Humanizing…" : "Processing…") : isImage ? "Process file" : usesHumanizer ? "Humanize text" : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
-          <button onClick={()=>{setInput("");setOutput("");setToolError("");setImageInfo("");setSelectedFile(null);setHumanizerSettings({modelLevel:"lite",style:"general",readingLevel:"general",strength:"balanced"});}} className="tool-secondary-button">Clear</button>
+          <button onClick={()=>{if(output.startsWith("blob:"))URL.revokeObjectURL(output);setInput("");setOutput("");setToolError("");setImageInfo("");setBackgroundProgress("");setSelectedFile(null);setChatMessages([]);setOption("default");setBusinessCount(10);setHumanizerSettings({modelLevel:"lite",style:"general",readingLevel:"general",strength:"balanced"});}} className="tool-secondary-button">Clear</button>
         </div>
       </div>}
       {toolError && <p className="humanizer-error" role="alert">{toolError}</p>}
@@ -416,11 +452,11 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         <article className="humanizer-result-card"><div className="humanizer-result-title"><h2>Original text</h2><span>{words(input)} words</span></div><pre>{input}</pre></article>
         <article className="humanizer-result-card humanizer-output-card"><div className="humanizer-result-title"><h2>Humanized rewrite</h2><span>{words(output)} words</span></div><pre>{output}</pre><button onClick={copyResult} className="tool-copy-button">{copyStatus || "Copy rewrite"}</button></article>
       </section>}
-      {output && slug !== "ai-humanizer" && <section className="tool-result">
+      {output && slug !== "ai-humanizer" && !usesAI && <section className="tool-result">
         <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && !output.startsWith("data:image/") && <button onClick={copyResult} className="tool-copy-button">{copyStatus || "Copy result"}</button>}</div>
         {output.startsWith("blob:") || output.startsWith("data:image/") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download={slug === "background-remover" ? "aitoolss-background-removed.png" : "aitoolss-compressed.jpg"} className="tool-download-link">Download processed image</a></> : <pre className="tool-output-text">{output}</pre>}
       </section>}
-      <p className="tool-privacy-note">{usesAI ? "AI chat requests are sent securely to the configured Vercel AI Gateway. If the AI key or model is not configured, the tool reports that clearly and does not return a fabricated answer." : isMediaTool ? "Free local inspection only: no AI authenticity model runs, and no file is uploaded. Metadata and frame patterns cannot prove whether media is AI-generated." : slug === "background-remover" ? "Runs locally in your browser. Best results are with a plain, evenly coloured background; complex scenes may leave artefacts. No image is uploaded." : slug === "ai-humanizer" ? "AI-powered editorial rewriting is available when the site owner configures an approved model. Missing configuration is reported clearly; this tool does not fabricate results or promise to bypass AI detectors." : slug === "plagiarism-checker" ? "Phrase matching runs on this site's server against only the sources you paste. No paid API or external plagiarism database is used." : "This utility runs locally in your browser. Some outputs use deterministic rules rather than a generative AI model; check each tool's limitations before relying on its result."}</p>
+      <p className="tool-privacy-note">{usesAI || usesAIGeneration ? "This tool sends your text to the configured Gemini AI model to generate a real response. Results can be inaccurate; review them before use. Do not submit confidential information to the free-tier provider." : isMediaTool ? "Free local inspection only: no AI authenticity model runs, and no file is uploaded. Metadata and frame patterns cannot prove whether media is AI-generated." : slug === "background-remover" ? "AI subject segmentation runs locally in your browser using a downloaded model. Your selected image is not uploaded; the first run may take longer while the model downloads and is cached." : slug === "ai-humanizer" ? "AI-powered editorial rewriting is available when the site owner configures an approved model. Missing configuration is reported clearly; this tool does not fabricate results or promise to bypass AI detectors." : slug === "plagiarism-checker" ? "Phrase matching runs on this site's server against only the sources you paste. No paid API or external plagiarism database is used." : "This utility runs locally in your browser. Some outputs use deterministic rules rather than a generative AI model; check each tool's limitations before relying on its result."}</p>
     </section>
   </ToolDetailSections>;
 }
