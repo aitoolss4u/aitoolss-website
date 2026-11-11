@@ -65,11 +65,18 @@ function extractGeminiText(data: unknown): string {
 export async function POST(request: Request) {
   const geminiKey = process.env.GEMINI_API_KEY?.trim();
   const gatewayKey = process.env.AI_GATEWAY_API_KEY?.trim();
+  // Vercel Functions receive the short-lived deployment OIDC token on this
+  // request header. This avoids requiring a manually-created API key in Vercel.
+  const oidcToken = request.headers.get("x-vercel-oidc-token")?.trim()
+    || process.env.VERCEL_OIDC_TOKEN?.trim()
+    || "";
+  const gatewayAuth = gatewayKey || oidcToken;
+  const gatewayAuthSource = gatewayKey ? "api-key" : oidcToken ? "oidc" : null;
   const useGemini = Boolean(geminiKey);
 
-  if (!geminiKey && !gatewayKey) {
+  if (!geminiKey && !gatewayAuth) {
     return NextResponse.json(
-      { error: "AI Humanizer is not configured yet. Add GEMINI_API_KEY for the free Gemini option, or configure an approved AI Gateway key." },
+      { error: "AI Humanizer could not find an AI credential. On Vercel, enable project OIDC for AI Gateway, or add GEMINI_API_KEY for Google's free Gemini API." },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -159,7 +166,7 @@ export async function POST(request: Request) {
     } else {
       response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: "Bearer " + gatewayKey, "Content-Type": "application/json" },
+        headers: { Authorization: "Bearer " + gatewayAuth, "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
           temperature: strength === "quality" ? 0.35 : strength === "strong" ? 0.75 : 0.55,
@@ -196,7 +203,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { output: output.trim(), modelLevel, model, provider: useGemini ? "gemini" : "vercel-ai-gateway", style, readingLevel, strength, inputWords: text.split(/\s+/).length },
+      { output: output.trim(), modelLevel, model, provider: useGemini ? "gemini" : "vercel-ai-gateway", auth: useGemini ? "api-key" : gatewayAuthSource, style, readingLevel, strength, inputWords: text.split(/\s+/).length },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
