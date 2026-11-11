@@ -53,7 +53,7 @@ function gatewayModel(level: typeof modelLevels[number]) {
 function geminiModel(level: typeof modelLevels[number]) {
   if (level === "pro") return process.env.GEMINI_HUMANIZER_PRO_MODEL?.trim() || "";
   if (level === "ultra") return process.env.GEMINI_HUMANIZER_ULTRA_MODEL?.trim() || "";
-  return process.env.GEMINI_HUMANIZER_LITE_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.7-flash";
+  return process.env.GEMINI_HUMANIZER_LITE_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.1-flash-lite";
 }
 
 function extractGeminiText(data: unknown): string {
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   if (!geminiKey && !gatewayKey) {
     return NextResponse.json(
-      { error: "AI Humanizer is not configured yet. Add GEMINI_API_KEY for the free Gemini option, or configure an approved AI Gateway key." },
+      { error: "AI Humanizer is not configured yet. Add a server-only GEMINI_API_KEY in Vercel to enable the free Gemini API option. No AI Gateway billing or credit card is required for this path." },
       { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
   ].join("\n");
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 40_000);
+  const timeout = setTimeout(() => controller.abort(), 50_000);
   try {
     let response: Response;
     if (useGemini) {
@@ -149,7 +149,8 @@ export async function POST(request: Request) {
             contents: [{ role: "user", parts: [{ text: userPrompt }] }],
             generationConfig: {
               temperature: strength === "quality" ? 0.35 : strength === "strong" ? 0.75 : 0.55,
-              maxOutputTokens: 5_000,
+              maxOutputTokens: 3_500,
+              thinkingConfig: { thinkingLevel: "MINIMAL" },
             },
           }),
           signal: controller.signal,
@@ -174,7 +175,7 @@ export async function POST(request: Request) {
     if (!response.ok) {
       if (response.status === 429) {
         return NextResponse.json(
-          { error: "The free model quota is temporarily exhausted. Please wait and try again later." },
+          { error: "The Gemini free-tier quota or rate limit is temporarily unavailable. Check Google AI Studio usage limits and try again shortly." },
           { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": "60" } },
         );
       }
