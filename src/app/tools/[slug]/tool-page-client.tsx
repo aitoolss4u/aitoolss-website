@@ -181,87 +181,6 @@ async function extractVideoFrames(file: File): Promise<string[]> {
 }
 
 
-async function removeFlatBackgroundLocally(file: File): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error("Choose a valid image file.");
-  if (file.size > 20 * 1024 * 1024) throw new Error("Please choose an image smaller than 20 MB.");
-  const url = URL.createObjectURL(file);
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const element = new Image();
-      element.onload = () => resolve(element);
-      element.onerror = () => reject(new Error("Could not read this image."));
-      element.src = url;
-    });
-    const pixelLimit = 14_000_000;
-    const scale = Math.min(1, 2400 / Math.max(image.width, image.height), Math.sqrt(pixelLimit / (image.width * image.height)));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) throw new Error("Canvas processing is not supported in this browser.");
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-    const { data, width, height } = frame;
-    const edgeSamples: number[][] = [];
-    const step = Math.max(1, Math.floor(Math.min(width, height) / 90));
-    for (let x = 0; x < width; x += step) {
-      const top = x * 4, bottom = ((height - 1) * width + x) * 4;
-      edgeSamples.push([data[top], data[top + 1], data[top + 2]], [data[bottom], data[bottom + 1], data[bottom + 2]]);
-    }
-    for (let y = step; y < height - 1; y += step) {
-      const left = y * width * 4, right = (y * width + width - 1) * 4;
-      edgeSamples.push([data[left], data[left + 1], data[left + 2]], [data[right], data[right + 1], data[right + 2]]);
-    }
-    const median = (values: number[]) => {
-      const sorted = values.slice().sort((a, b) => a - b);
-      return sorted[Math.floor(sorted.length / 2)] ?? 0;
-    };
-    const background = [0, 1, 2].map((channel) => median(edgeSamples.map((pixel) => pixel[channel])));
-    const edgeSpread = median(edgeSamples.map((pixel) => Math.hypot(pixel[0] - background[0], pixel[1] - background[1], pixel[2] - background[2])));
-    const threshold = Math.max(28, Math.min(76, 34 + edgeSpread * 1.25));
-    const total = width * height;
-    const visited = new Uint8Array(total);
-    const queue = new Int32Array(total);
-    let head = 0, tail = 0;
-    const enqueue = (index: number) => {
-      if (index < 0 || index >= total || visited[index]) return;
-      visited[index] = 1;
-      queue[tail++] = index;
-    };
-    for (let x = 0; x < width; x++) { enqueue(x); enqueue((height - 1) * width + x); }
-    for (let y = 1; y < height - 1; y++) { enqueue(y * width); enqueue(y * width + width - 1); }
-    const featherStart = threshold * 0.58;
-    const clamp = (value: number) => Math.max(0, Math.min(255, Math.round(value)));
-    while (head < tail) {
-      const index = queue[head++];
-      const offset = index * 4;
-      const distance = Math.hypot(data[offset] - background[0], data[offset + 1] - background[1], data[offset + 2] - background[2]);
-      if (distance > threshold) continue;
-      const alpha = Math.max(0, Math.min(1, (distance - featherStart) / (threshold - featherStart)));
-      data[offset + 3] = Math.round(alpha * 255);
-      if (alpha > 0.08 && alpha < 0.98) {
-        for (let channel = 0; channel < 3; channel++) {
-          data[offset + channel] = clamp((data[offset + channel] - background[channel] * (1 - alpha)) / alpha);
-        }
-      }
-      const x = index % width;
-      const y = Math.floor(index / width);
-      if (x > 0) enqueue(index - 1);
-      if (x + 1 < width) enqueue(index + 1);
-      if (y > 0) enqueue(index - width);
-      if (y + 1 < height) enqueue(index + width);
-      if (x > 0 && y > 0) enqueue(index - width - 1);
-      if (x + 1 < width && y > 0) enqueue(index - width + 1);
-      if (x > 0 && y + 1 < height) enqueue(index + width - 1);
-      if (x + 1 < width && y + 1 < height) enqueue(index + width + 1);
-    }
-    context.putImageData(frame, 0, 0);
-    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not create the transparent PNG.")), "image/png"));
-    return URL.createObjectURL(blob);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
 async function inspectMediaLocally(file: File, slug: string): Promise<string> {
   if (slug === "ai-video-detector") {
     const frames = await extractVideoFrames(file);
@@ -318,7 +237,9 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   }
   const process = async () => {
     if (isProcessing) return;
-    setIsProcessing(true); setOutput(""); setToolError(""); setCopyStatus("");
+    setIsProcessing(true);
+    if (output.startsWith("blob:")) URL.revokeObjectURL(output);
+    setOutput(""); setToolError(""); setCopyStatus("");
     try {
       if (usesHumanizer) {
         const response = await fetch("/api/tools/humanizer", {
@@ -356,6 +277,10 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
       } else if (isMediaTool) {
         if (!selectedFile) throw new Error("Please choose a media file first.");
         setOutput(await inspectMediaLocally(selectedFile, slug));
+      } else if (slug === "image-dimension-checker") {
+        if (!selectedFile) throw new Error("Please choose an image first.");
+        if (!imageInfo) throw new Error("The selected image could not be inspected. Please choose it again.");
+        setOutput(imageInfo);
       } else if (slug === "background-remover") {
         if (!selectedFile) throw new Error("Please choose an image first.");
         setBackgroundProgress("Loading the on-device AI model…");
@@ -439,11 +364,11 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
         {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
         {backgroundProgress && <p className="tool-image-info" role="status">{backgroundProgress}</p>}
-        {slug === "translator" && <label className="tool-option-label">Translate to<select aria-label="Target language" value={option} onChange={(event) => setOption(event.target.value)} className="tool-select"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option><option value="German">German</option><option value="Arabic">Arabic</option><option value="Chinese (Simplified)">Chinese (Simplified)</option><option value="Japanese">Japanese</option><option value="Portuguese">Portuguese</option></select></label>}
+        {slug === "translator" && <label className="tool-option-label">Translate to<select aria-label="Target language" value={option} onChange={(event) => setOption(event.target.value)} className="tool-select"><option value="default">Choose a language…</option><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option><option value="German">German</option><option value="Arabic">Arabic</option><option value="Chinese (Simplified)">Chinese (Simplified)</option><option value="Japanese">Japanese</option><option value="Portuguese">Portuguese</option></select></label>}
         {slug === "business-name-ideas" && <label className="tool-option-label">Number of ideas<select aria-label="Number of business name ideas" value={businessCount} onChange={(event) => setBusinessCount(Number(event.target.value))} className="tool-select"><option value={10}>10 ideas</option><option value={20}>20 ideas</option><option value={50}>50 ideas</option><option value={100}>100 ideas</option></select></label>}
         {slug === "plagiarism-checker" && <p className="rounded-xl border border-slate-200 p-3 text-sm">Paste the text to check, then add comparison material under a separate <strong>--- SOURCE ---</strong> line. This checks similarity only against the sources you provide; it does not search the whole web or academic databases.</p>}
         <div className="tool-actions">
-          <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? (usesHumanizer ? "Humanizing…" : "Processing…") : isImage ? "Process file" : usesHumanizer ? "Humanize text" : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
+          <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? (usesHumanizer ? "Humanizing…" : usesAI || usesAIGeneration ? "Generating…" : "Processing…") : isImage ? slug === "ai-image-detector" || slug === "ai-video-detector" ? "Inspect media" : slug === "image-dimension-checker" ? "Check dimensions" : "Process file" : usesHumanizer ? "Humanize text" : usesAI || usesAIGeneration ? slug === "translator" ? "Translate text" : usesAI ? "Send message" : "Generate with AI" : "Run tool"} ↗</button>
           <button onClick={()=>{if(output.startsWith("blob:"))URL.revokeObjectURL(output);setInput("");setOutput("");setToolError("");setImageInfo("");setBackgroundProgress("");setSelectedFile(null);setChatMessages([]);setOption("default");setBusinessCount(10);setHumanizerSettings({modelLevel:"lite",style:"general",readingLevel:"general",strength:"balanced"});}} className="tool-secondary-button">Clear</button>
         </div>
       </div>}
