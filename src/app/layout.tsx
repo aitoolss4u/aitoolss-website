@@ -27,11 +27,12 @@ const fallbackMetadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.png?v=4", type: "image/png", sizes: "128x128" },
-      { url: "/favicon.svg?v=4", type: "image/svg+xml", sizes: "any" },
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "16x16 32x32 48x48" },
+      { url: "/favicon.png?v=5", type: "image/png", sizes: "128x128" },
+      { url: "/favicon.svg?v=5", type: "image/svg+xml", sizes: "any" },
     ],
-    shortcut: ["/favicon.png?v=4"],
-    apple: [{ url: "/favicon.png?v=4", sizes: "128x128", type: "image/png" }],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/favicon.png?v=5", sizes: "128x128", type: "image/png" }],
   },
   robots: { index: true, follow: true },
 };
