@@ -179,6 +179,21 @@ export async function POST(request: Request) {
     }
 
     if (!response.ok) {
+      const providerErrorBody = await response.clone().json().catch(() => null) as
+        | { error?: string | { message?: string }; message?: string }
+        | null;
+      const providerErrorMessage = typeof providerErrorBody?.error === "string"
+        ? providerErrorBody.error
+        : typeof providerErrorBody?.error === "object" && providerErrorBody.error
+          ? providerErrorBody.error.message
+          : providerErrorBody?.message;
+      console.error("[humanizer] AI provider request failed", {
+        status: response.status,
+        provider: useGemini ? "gemini" : "vercel-ai-gateway",
+        auth: useGemini ? "api-key" : gatewayAuthSource,
+        model,
+        message: typeof providerErrorMessage === "string" ? providerErrorMessage.slice(0, 180) : undefined,
+      });
       if (response.status === 429) {
         return NextResponse.json(
           { error: "The free model quota is temporarily exhausted. Please wait and try again later." },
