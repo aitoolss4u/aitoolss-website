@@ -311,6 +311,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
     finally { setIsProcessing(false); }
   };
   const onImage = (picked: File | null) => {
+    if (output.startsWith("blob:")) URL.revokeObjectURL(output);
     setOutput("");
     setBackgroundProgress("");
     setSelectedFile(picked);
@@ -329,7 +330,7 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
     <section className="tool-panel">
       <div className="tool-eyebrow">{usesHumanizer ? "Writing · AI-powered rewrite" : usesAI || usesAIGeneration ? tool.category + " · Gemini AI-powered" : tool.category + " · Browser tool"}</div>
       {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
-        <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : "Your input"}</label>
+        <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : usesAI ? "Your message" : "Your input"}</label>
         {usesAI && chatMessages.length > 0 && <div className="ai-chat-history" aria-live="polite">{chatMessages.map((message, index) => <article key={index} className={message.role === "user" ? "ai-chat-message ai-chat-user" : "ai-chat-message ai-chat-assistant"}><strong>{message.role === "user" ? "You" : "AIToolss AI"}</strong><p>{message.content}</p></article>)}</div>}
         {isImage
           ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
