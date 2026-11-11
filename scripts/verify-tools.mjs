@@ -37,7 +37,8 @@ assert.ok(aiRoute.includes("https://ai-gateway.vercel.sh/v1/chat/completions"), 
 assert.ok(aiRoute.includes("GEMINI_API_KEY") && aiRoute.includes("gemini-3.7-flash"), "AI chat must support direct Gemini Free Tier configuration");
 assert.ok(route.includes('fetch("/api/tools/humanizer"'), "AI Humanizer must call its real server endpoint");
 assert.ok(humanizerRoute.includes("AI_GATEWAY_API_KEY"), "AI Humanizer must support an approved server-side AI Gateway key");
-assert.ok(humanizerRoute.includes("GEMINI_API_KEY") && humanizerRoute.includes("gemini-3.8-flash"), "AI Humanizer must use the current stable Gemini Free Tier model by default");
+assert.ok(humanizerRoute.includes("GEMINI_API_KEY") && humanizerRoute.includes("gemini-3.1-flash-lite"), "AI Humanizer must use the low-latency Gemini Free Tier model by default");
+assert.ok(humanizerRoute.includes('thinkingLevel: "MINIMAL"'), "AI Humanizer should minimize reasoning latency for editorial rewrites");
 assert.ok(humanizerRoute.includes("generativelanguage.googleapis.com"), "AI Humanizer must call the Gemini API directly when configured");
 assert.ok(humanizerRoute.includes("AI_HUMANIZER_PRO_MODEL") && humanizerRoute.includes("AI_HUMANIZER_ULTRA_MODEL"), "Humanizer model tiers must be explicitly configured");
 assert.ok(humanizerRoute.includes("MAX_TEXT_LENGTH = 12_000"), "AI Humanizer must enforce a bounded input size");
