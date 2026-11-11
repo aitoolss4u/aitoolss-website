@@ -18,8 +18,9 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
   ]);
   const r2Status = getR2ConfigurationStatus();
   const metadataMissing = Boolean(itemsError && (itemsError.code === "42703" || itemsError.code === "PGRST204" || /column .* does not exist|schema cache/i.test(itemsError.message ?? "")));
-  const settings = (settingsRow?.value ?? { columns: 4 }) as { columns?: number };
-  const columns = [4,5,6].includes(Number(settings.columns)) ? Number(settings.columns) : 4;
+  const settings = (settingsRow?.value ?? { columns: 5, rows: 3 }) as { columns?: number; rows?: number };
+  const columns = [2,3,4,5,6].includes(Number(settings.columns)) ? Number(settings.columns) : 5;
+  const rows = [1,2,3,4,5,6,8].includes(Number(settings.rows)) ? Number(settings.rows) : 3;
   const messages: Record<string,string> = {
     "invalid-layout":"Choose a supported column and row count.",
     "invalid-media":"Select a valid image or video and enter valid HTTPS media and thumbnail URLs.",
@@ -79,12 +80,14 @@ export default async function AdminGalleryPage({ searchParams }: { searchParams:
       </section>
       {params.saved && <p role="status" style={{padding:12,borderRadius:12,background:"#e6faef",color:"#17683b",marginBottom:16}}>Saved successfully: {params.saved.replaceAll("-"," ")}.</p>}
       {params.error && <p role="alert" style={{padding:12,borderRadius:12,background:"#fff0f0",color:"#9c2828",marginBottom:16}}>{messages[params.error] ?? "The request could not be completed."}</p>}
-      <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
-        <h2 style={{fontSize:20,fontWeight:850}}>Public gallery layout</h2><p style={{color:"#77718e",fontSize:14,margin:"6px 0 16px"}}>Choose the desktop column count. Every published image and video is shown; there is no row-based item cap. Mobile automatically uses two columns.</p>
+      <section className="admin-gallery-layout-settings" style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
+        <div style={{display:"flex",alignItems:"start",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><div><h2 style={{fontSize:20,fontWeight:850}}>Public gallery layout</h2><p style={{color:"#77718e",fontSize:14,margin:"6px 0 16px"}}>Choose how many columns and rows appear first on the homepage. Visitors can still open the full gallery with “View all”.</p></div><span style={{padding:"7px 11px",borderRadius:999,background:"#f1edff",color:"#6045bd",fontSize:12,fontWeight:800}}>Up to {columns * rows} items initially</span></div>
         <form action={saveGalleryLayout} style={{display:"flex",flexWrap:"wrap",alignItems:"end",gap:16}}>
-          <label style={{display:"grid",gap:6,fontWeight:700}}>Desktop columns<select name="columns" defaultValue={String(columns)} style={{padding:10,border:"1px solid #ddd5f0",borderRadius:10}}><option value="4">4 columns</option><option value="5">5 columns</option><option value="6">6 columns</option></select></label>
-          <button style={{padding:"11px 18px",borderRadius:10,background:"#6d53d7",color:"#fff",fontWeight:800}}>Save layout</button><span style={{color:"#77718e",fontSize:13}}>All published items will be displayed.</span>
+          <label style={{display:"grid",gap:6,fontWeight:700}}>Desktop columns<select name="columns" defaultValue={String(columns)} style={{minWidth:160,padding:11,border:"1px solid #ddd5f0",borderRadius:10,background:"#fff"}}><option value="2">2 columns</option><option value="3">3 columns</option><option value="4">4 columns</option><option value="5">5 columns</option><option value="6">6 columns</option></select></label>
+          <label style={{display:"grid",gap:6,fontWeight:700}}>Visible rows<select name="rows" defaultValue={String(rows)} style={{minWidth:160,padding:11,border:"1px solid #ddd5f0",borderRadius:10,background:"#fff"}}><option value="1">1 row</option><option value="2">2 rows</option><option value="3">3 rows</option><option value="4">4 rows</option><option value="5">5 rows</option><option value="6">6 rows</option><option value="8">8 rows</option></select></label>
+          <button style={{padding:"11px 18px",borderRadius:10,background:"#6d53d7",color:"#fff",fontWeight:800}}>Save layout</button>
         </form>
+        <p style={{color:"#77718e",fontSize:12,marginTop:12}}>Desktop: {columns} columns × {rows} rows = {columns * rows} visible items. Tablet and mobile automatically use fewer columns while preserving full images.</p>
       </section>
       <section style={{padding:20,border:"1px solid #e8e2f6",borderRadius:18,background:"#fff",marginBottom:24}}>
         <h2 style={{fontSize:20,fontWeight:850,marginBottom:16}}>Add media</h2><p style={{color:"#77718e",fontSize:13,lineHeight:1.7,marginBottom:14}}>Upload files to Supabase Storage (the default easy option) or choose Cloudflare R2 (advanced). Public HTTPS URLs from another media host are also supported. Google Drive links belong only in the backup field, never as the public delivery URL. Supabase Storage requires the one-time gallery setup SQL; R2 additionally requires Cloudflare bucket/domain and Vercel server-only environment variables.</p>
