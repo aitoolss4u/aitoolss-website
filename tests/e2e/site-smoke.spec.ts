@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 
 test("homepage reflects discovery UI, moving border and looping featured row", async ({ page }) => {
@@ -314,18 +315,60 @@ test("tool FAQ answers are completely hidden while collapsed", async ({ page }) 
 });
 
 
-test("AI Humanizer rewrites input and confirms clipboard copy", async ({ page }) => {
+test("AI Humanizer sends selected editorial controls and shows an original/rewrite comparison", async ({ page }) => {
+  let submitted: Record<string, unknown> | null = null;
+  await page.route("**/api/tools/humanizer", async (route) => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ output: "AI has changed how businesses make decisions, making analysis faster and easier to review." }),
+    });
+  });
   const response = await page.goto("/tools/ai-humanizer");
   expect(response?.status()).toBe(200);
-  const original = "Furthermore, it is important to utilize a large number of tools in order to demonstrate the process.";
+  const original = "The implementation of artificial intelligence in modern business operations has fundamentally transformed how organizations approach decision-making processes.";
   await page.getByLabel("Your input").fill(original);
-  await page.getByRole("button", { name: /Run tool/ }).click();
-  const result = page.locator(".tool-output-text");
-  await expect(result).toBeVisible();
-  await expect(result).not.toHaveText(original);
+  await page.getByLabel("Model level").selectOption("lite");
+  await page.getByLabel("Writing style").selectOption("business");
+  await page.getByLabel("Reading level").selectOption("university");
+  await page.getByLabel("Rewrite strength").selectOption("balanced");
+  await expect(page.getByText(/\d+ words/).first()).toBeVisible();
+  await page.getByRole("button", { name: /Humanize text/ }).click();
+
+  await expect(page.getByRole("heading", { name: "Original text" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Humanized rewrite" })).toBeVisible();
+  await expect(page.locator(".humanizer-result-card").first().locator("pre")).toHaveText(original);
+  await expect(page.locator(".humanizer-output-card").locator("pre")).toHaveText("AI has changed how businesses make decisions, making analysis faster and easier to review.");
+  expect(submitted).toEqual({
+    text: original,
+    settings: { modelLevel: "lite", style: "business", readingLevel: "university", strength: "balanced" },
+  });
+
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.getByRole("button", { name: "Copy result" }).click();
+  await page.getByRole("button", { name: "Copy rewrite" }).click();
   await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
+});
+
+test("AI Humanizer keeps the free Gemini Lite option available in the selector", async ({ page }) => {
+  await page.goto("/tools/ai-humanizer");
+  await expect(page.getByLabel("Model level")).toHaveValue("lite");
+  await expect(page.getByLabel("Model level").locator('option[value="lite"]')).toBeAttached();
+  await expect(page.getByLabel("Writing style")).toHaveValue("general");
+  await expect(page.getByLabel("Rewrite strength")).toHaveValue("balanced");
+});
+
+test("AI Humanizer reports missing configuration instead of showing a fake rewrite", async ({ page }) => {
+  await page.route("**/api/tools/humanizer", (route) => route.fulfill({
+    status: 503,
+    contentType: "application/json",
+    body: JSON.stringify({ error: "AI Humanizer is not configured yet." }),
+  }));
+  await page.goto("/tools/ai-humanizer");
+  await page.getByLabel("Your input").fill("A draft that needs a careful editorial rewrite.");
+  await page.getByRole("button", { name: /Humanize text/ }).click();
+  await expect(page.locator(".humanizer-error")).toContainText("AI Humanizer is not configured yet");
+  await expect(page.locator(".humanizer-comparison")).toHaveCount(0);
 });
 
 test("Business Name Ideas generates the exact selected number of names", async ({ page }) => {
@@ -337,5 +380,39 @@ test("Business Name Ideas generates the exact selected number of names", async (
     await page.getByRole("menuitem", { name: `${count} names` }).click();
     const lines = (await page.locator(".tool-output-text").innerText()).trim().split(String.fromCharCode(10));
     expect(lines).toHaveLength(count);
+  }
+});
+
+
+test("R2 and Drive backup manager route exists and remains admin-protected", async ({ page }) => {
+  const response = await page.goto("/admin/backups");
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveURL(/admin-login/);
+});
+
+test("all 74 catalogue entries render their matching tool page and interface", async ({ request }) => {
+  const source = await readFile("src/lib/tools.ts", "utf8");
+  const entries = [...source.matchAll(/^\["([^"]+)","([^"]+)","([^"]+)"/gm)].map((match) => ({
+    name: match[1],
+    slug: match[2],
+  }));
+  expect(entries).toHaveLength(74);
+  expect(new Set(entries.map((entry) => entry.slug)).size).toBe(74);
+
+  // Check every catalogue destination against the running Next.js application.
+  // Bounded batches avoid flooding the local test server with 74 simultaneous requests.
+  for (let start = 0; start < entries.length; start += 10) {
+    const batch = entries.slice(start, start + 10);
+    const results = await Promise.all(batch.map(async (entry) => {
+      const response = await request.get("/tools/" + entry.slug);
+      return { entry, response, html: await response.text() };
+    }));
+    for (const { entry, response, html } of results) {
+      expect(response.status(), entry.slug).toBe(200);
+      expect(html, entry.slug).toContain('data-tool-detail-page="true"');
+      expect(html, entry.slug).toContain('data-section="tool-interface"');
+      expect(html, entry.slug).toContain(entry.name);
+      expect(html, entry.slug).toContain('data-section="seo-content"');
+    }
   }
 });
