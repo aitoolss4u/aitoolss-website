@@ -6,6 +6,11 @@ Vercel hosts the Next.js app and authenticated admin APIs. Supabase stores categ
 ## Database
 For the easiest setup, run `supabase/migrations/202611090001_easy_gallery_storage.sql` once in Supabase SQL Editor after the Phase 13 gallery migration. It creates the Supabase public gallery bucket and adds the R2/Drive metadata fields without deleting existing media. This migration is self-contained for the gallery storage fields; the earlier `202610310003_r2_media_and_drive_backups.sql` remains available for existing R2-only setups.
 
+## Category images — Supabase Storage
+Admin Studio → Manage Category Images uploads the original file and optimized WebP directly to the existing public `aitoolss-gallery` bucket. Category objects use `categories/{category-id}/original/` and `categories/{category-id}/optimized/` paths. The optimized public URL is saved to `categories.image_url`; the legacy R2 key fields remain empty for new Supabase uploads. Only signed-in users with trusted admin app metadata may upload. No R2 credentials, Cloudflare account, custom media domain or CORS configuration is needed.
+
+The same one-time SQL migration, `supabase/migrations/202611090001_easy_gallery_storage.sql`, creates the bucket and its public-read/admin-upload policies. Run it in the connected Supabase project's SQL Editor if it has not already been applied.
+
 ## One-time Cloudflare setup
 1. Create a Standard R2 bucket named `aitoolss-gallery`.
 2. Create an R2 API token scoped to that bucket with Object Read & Write. Save the Access Key ID and Secret Access Key.
