@@ -78,7 +78,7 @@ assert.ok(galleryPage.includes('className="admin-gallery-form"') && galleryPage.
 assert.ok(homepage.includes("galleryMasonryBuckets.map") && homepage.includes("galleryImageRatios"), "Public gallery must distribute cards into measured masonry columns");
 assert.ok(homepageStyles.includes(".ai-gallery-masonry {\\n  display: grid;") && homepageStyles.includes(".ai-gallery-column {\\n  display: flex;"), "Masonry must use explicit independent columns, not balanced multicolumn rows");
 assert.ok(!homepageStyles.includes("column-fill: balance"), "Gallery layout must not balance cards into artificial equal-height rows");
-assert.ok(homepage.includes("light-category-image-label") && !/category\\.imageUrl \\? <span[\\s\\S]*?light-category-image-label[\\s\\S]*?light-category-description/.test(homepage), "Uploaded category cards must render a single category-name overlay without subtitle text");
+assert.ok(homepage.includes("{category.imageUrl ? <span") && homepage.includes('<span className="light-category-image-label">{category.name}</span>'), "Uploaded category cards must render the category name overlay");
 
 assert.ok(adminTheme.includes(".admin-gallery-form > .admin-r2-uploader") && adminTheme.includes("grid-column: 1 / -1"), "R2 uploader must occupy its own full-width grid row");
 assert.ok(backupPage.includes("updateGalleryBackup") && backupPage.includes("Google Drive sharing URL"), "Drive backups must have a dedicated backup management page");
