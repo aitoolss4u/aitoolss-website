@@ -1786,39 +1786,50 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 }
 
 
-/* True Pinterest-style masonry: each card flows directly beneath the previous card in its column. */
+
+/* Pinterest-style masonry: JavaScript balances every card into the currently shortest column. */
 .ai-gallery-masonry {
+  display: grid;
+  grid-template-columns: repeat(var(--gallery-columns, 5), minmax(0, 1fr));
+  align-items: start;
+  gap: 1rem;
+  width: 100%;
+}
+.ai-gallery-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+.ai-gallery-column > .ai-gallery-card {
   display: block;
   width: 100%;
-  column-count: var(--gallery-columns, 5);
-  column-gap: 1rem;
-  column-fill: balance;
-}
-.ai-gallery-masonry > .ai-gallery-card {
-  display: inline-block;
-  width: 100%;
-  margin: 0 0 1rem;
-  vertical-align: top;
+  min-width: 0;
+  margin: 0;
   break-inside: avoid;
-  page-break-inside: avoid;
 }
-.ai-gallery-masonry .gallery-image-natural {
+.ai-gallery-column .gallery-image-natural {
   display: block;
   width: 100%;
   height: auto;
+  max-width: 100%;
   max-height: none;
+  aspect-ratio: auto;
   object-fit: contain;
+  object-position: center;
 }
 @media (max-width: 900px) {
-  .ai-gallery-masonry { column-count: 3; }
+  .ai-gallery-masonry { gap: .85rem; }
+  .ai-gallery-column { gap: .85rem; }
 }
 @media (max-width: 760px) {
-  .ai-gallery-masonry { column-count: 2; column-gap: .7rem; }
-  .ai-gallery-masonry > .ai-gallery-card { margin-bottom: .7rem; }
+  .ai-gallery-masonry { gap: .7rem; }
+  .ai-gallery-column { gap: .7rem; }
 }
 @media (max-width: 420px) {
-  .ai-gallery-masonry { column-gap: .55rem; }
-  .ai-gallery-masonry > .ai-gallery-card { margin-bottom: .55rem; }
+  .ai-gallery-masonry { gap: .55rem; }
+  .ai-gallery-column { gap: .55rem; }
 }
 
 /* Image-backed category cards contain only the category name over the artwork. */

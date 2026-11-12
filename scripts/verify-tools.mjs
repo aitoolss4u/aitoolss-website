@@ -63,6 +63,8 @@ assert.equal(packageJson.dependencies["@bg0/browser"], "0.1.1", "Background Remo
 assert.ok(route.includes('import("@bg0/browser")') && !route.includes("removeFlatBackgroundLocally"), "Background Remover must use model-based segmentation, not flat-colour flood fill");
 assert.ok(route.includes("chatMessages.slice(-10)"), "AI Chatbot UI must send conversation context");
 assert.ok(route.includes("This tool does not have a verified handler yet"), "Unknown tools must fail clearly instead of showing generic filler output");
+const homepage = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+const homepageStyles = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
 const galleryPage = await readFile(new URL("../src/app/admin/gallery/page.tsx", import.meta.url), "utf8");
 const backupPage = await readFile(new URL("../src/app/admin/backups/page.tsx", import.meta.url), "utf8");
 const adminTheme = await readFile(new URL("../src/app/admin/admin-theme.css", import.meta.url), "utf8");
@@ -73,6 +75,11 @@ const galleryUploader = await readFile(new URL("../src/app/admin/gallery/media-i
 const categoryImageManager = await readFile(new URL("../src/app/admin/category-image-manager.tsx", import.meta.url), "utf8");
 const adminActions = await readFile(new URL("../src/app/admin/actions.ts", import.meta.url), "utf8");
 assert.ok(galleryPage.includes('className="admin-gallery-form"') && galleryPage.includes('gridTemplateColumns:"repeat(2,minmax(0,1fr))"'), "Gallery upload form must use a stable two-column layout");
+assert.ok(homepage.includes("galleryMasonryBuckets.map") && homepage.includes("galleryImageRatios"), "Public gallery must distribute cards into measured masonry columns");
+assert.ok(homepageStyles.includes(".ai-gallery-masonry") && homepageStyles.includes("display: grid;") && homepageStyles.includes(".ai-gallery-column") && homepageStyles.includes("display: flex;"), "Masonry must use explicit independent columns, not balanced multicolumn rows");
+assert.ok(!homepageStyles.includes("column-fill: balance"), "Gallery layout must not balance cards into artificial equal-height rows");
+assert.ok(homepage.includes("{category.imageUrl ? <span") && homepage.includes('<span className="light-category-image-label">{category.name}</span>'), "Uploaded category cards must render the category name overlay");
+
 assert.ok(adminTheme.includes(".admin-gallery-form > .admin-r2-uploader") && adminTheme.includes("grid-column: 1 / -1"), "R2 uploader must occupy its own full-width grid row");
 assert.ok(backupPage.includes("updateGalleryBackup") && backupPage.includes("Google Drive sharing URL"), "Drive backups must have a dedicated backup management page");
 assert.ok(r2Library.includes("getR2ConfigurationStatus"), "Admin pages must show which R2 configuration variables are missing");
