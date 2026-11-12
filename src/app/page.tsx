@@ -103,6 +103,29 @@ export default function Home() {
   const [galleryColumns, setGalleryColumns] = useState(5);
   const [galleryRows, setGalleryRows] = useState(3);
   const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const [galleryMasonryColumns, setGalleryMasonryColumns] = useState(5);
+  const [galleryImageRatios, setGalleryImageRatios] = useState<Record<string, number>>({});
+
+
+  const galleryItemsToShow = useMemo(
+    () => galleryExpanded ? gallery : gallery.slice(0, galleryColumns * galleryRows),
+    [gallery, galleryExpanded, galleryColumns, galleryRows],
+  );
+  const galleryMasonryBuckets = useMemo(() => {
+    const buckets = Array.from({ length: galleryMasonryColumns }, () => [] as typeof gallery);
+    const heights = Array.from({ length: galleryMasonryColumns }, () => 0);
+    for (const item of galleryItemsToShow) {
+      let shortestColumn = 0;
+      for (let index = 1; index < heights.length; index += 1) {
+        if (heights[index] < heights[shortestColumn]) shortestColumn = index;
+      }
+      buckets[shortestColumn].push(item);
+      // Estimate before an image loads, then rebalance using its real intrinsic ratio.
+      const ratio = galleryImageRatios[item.id] ?? (item.type === "video" ? 0.5625 : 1.15);
+      heights[shortestColumn] += Math.max(0.25, Math.min(2.5, ratio)) + 0.08;
+    }
+    return buckets;
+  }, [galleryItemsToShow, galleryMasonryColumns, galleryImageRatios]);
   const [popular, setPopular] = useState<string[]>([]);
   const categories = useMemo(() => categoryNames.map((name) => {
     const meta = categoryMeta.find((category) => category.name === name);
@@ -128,6 +151,21 @@ export default function Home() {
     fetch("/api/gallery", { cache: "no-store" }).then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([2,3,4,5,6].includes(data.columns) ? data.columns : 5); setGalleryRows([1,2,3,4,5,6,8].includes(data.rows) ? data.rows : 3); setGalleryExpanded(false); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
   }, []);
+
+
+  useEffect(() => {
+    const updateMasonryColumns = () => {
+      const responsiveLimit = window.matchMedia("(max-width: 760px)").matches
+        ? 2
+        : window.matchMedia("(max-width: 900px)").matches
+          ? 3
+          : galleryColumns;
+      setGalleryMasonryColumns(Math.max(1, Math.min(galleryColumns, responsiveLimit)));
+    };
+    updateMasonryColumns();
+    window.addEventListener("resize", updateMasonryColumns, { passive: true });
+    return () => window.removeEventListener("resize", updateMasonryColumns);
+  }, [galleryColumns]);
 
   useEffect(() => {
     const node = featuredWindowRef.current;
@@ -319,17 +357,36 @@ export default function Home() {
             </div>
           </section>
 
-          <section id="gallery" className="gallery-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">MADE WITH AI</p><h2>AI Creations Gallery<span>.</span></h2><p>Explore inspiring AI-generated visuals and videos from the creative community.</p></div></div>{gallery.length ? <><div className="ai-gallery-masonry mt-6" style={{ "--gallery-columns": galleryColumns } as React.CSSProperties}>{(galleryExpanded ? gallery : gallery.slice(0, galleryColumns * galleryRows)).map((item) => item.type === "image" ? (
-            <a key={item.id} className="ai-gallery-card ai-gallery-card-linked" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`View ${item.title || "AI image"}`}>
-              <img className="gallery-image-natural" src={item.url} alt={item.title || "AI creation"} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; const parent = event.currentTarget.parentElement; if (parent && !parent.querySelector(".media-fallback")) { const fallback = document.createElement("span"); fallback.className = "media-fallback"; fallback.textContent = "Preview unavailable"; parent.appendChild(fallback); } }} />
-            </a>
-          ) : (
-            <article key={item.id} className="ai-gallery-card ai-gallery-video-card">
-              <a className="gallery-video-card-hit-area" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`Open video: ${item.title || "AI creation"}`}>Open video: {item.title || "AI creation"}</a>
-              <div className="gallery-media"><video src={item.url} poster={item.thumbnail_url || undefined} controls preload="none" aria-label={item.title || "AI-generated video"} onError={(event) => { event.currentTarget.style.display = "none"; const parent = event.currentTarget.parentElement; if (parent && !parent.querySelector(".media-fallback")) { const fallback = document.createElement("span"); fallback.className = "media-fallback"; fallback.textContent = "Video preview unavailable"; parent.appendChild(fallback); } }} /><span className="gallery-type">▶ VIDEO</span></div>
-
-            </article>
-          ))}</div><div className="gallery-grid-footer" aria-live="polite"><span>{galleryExpanded ? `Showing all ${gallery.length} creations` : `Showing ${Math.min(gallery.length, galleryColumns * galleryRows)} of ${gallery.length} creations`}</span>{gallery.length > galleryColumns * galleryRows && <button type="button" onClick={() => setGalleryExpanded((value) => !value)}>{galleryExpanded ? "Show fewer" : `View all ${gallery.length} creations`}</button>}</div></> : <div className="gallery-empty mt-6"><span aria-hidden="true">✧</span><h3>Creative work is on its way</h3><p>Published AI images and videos will appear here when an administrator adds them.</p></div>}</section>
+          <section id="gallery" className="gallery-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">MADE WITH AI</p><h2>AI Creations Gallery<span>.</span></h2><p>Explore inspiring AI-generated visuals and videos from the creative community.</p></div></div>{gallery.length ? <><div className="ai-gallery-masonry mt-6" style={{ "--gallery-columns": galleryMasonryColumns } as React.CSSProperties}>
+            {galleryMasonryBuckets.map((column, columnIndex) => <div className="ai-gallery-column" key={columnIndex}>
+              {column.map((item) => item.type === "image" ? (
+                <a key={item.id} className="ai-gallery-card ai-gallery-card-linked" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`View ${item.title || "AI image"}`}>
+                  <img className="gallery-image-natural" src={item.url} alt={item.title || "AI creation"} loading="lazy" decoding="async"
+                    onLoad={(event) => {
+                      const image = event.currentTarget;
+                      if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+                        const ratio = image.naturalHeight / image.naturalWidth;
+                        setGalleryImageRatios((current) => current[item.id] === ratio ? current : { ...current, [item.id]: ratio });
+                      }
+                    }}
+                    onError={(event) => { event.currentTarget.style.display = "none"; const parent = event.currentTarget.parentElement; if (parent && !parent.querySelector(".media-fallback")) { const fallback = document.createElement("span"); fallback.className = "media-fallback"; fallback.textContent = "Preview unavailable"; parent.appendChild(fallback); } }} />
+                </a>
+              ) : (
+                <article key={item.id} className="ai-gallery-card ai-gallery-video-card">
+                  <a className="gallery-video-card-hit-area" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`Open video: ${item.title || "AI creation"}`}>Open video: {item.title || "AI creation"}</a>
+                  <div className="gallery-media"><video src={item.url} poster={item.thumbnail_url || undefined} controls preload="metadata" aria-label={item.title || "AI-generated video"}
+                    onLoadedMetadata={(event) => {
+                      const video = event.currentTarget;
+                      if (video.videoWidth > 0 && video.videoHeight > 0) {
+                        const ratio = video.videoHeight / video.videoWidth;
+                        setGalleryImageRatios((current) => current[item.id] === ratio ? current : { ...current, [item.id]: ratio });
+                      }
+                    }}
+                    onError={(event) => { event.currentTarget.style.display = "none"; const parent = event.currentTarget.parentElement; if (parent && !parent.querySelector(".media-fallback")) { const fallback = document.createElement("span"); fallback.className = "media-fallback"; fallback.textContent = "Video preview unavailable"; parent.appendChild(fallback); } }} /><span className="gallery-type">▶ VIDEO</span></div>
+                </article>
+              ))}
+            </div>)}
+          </div><div className="gallery-grid-footer" aria-live="polite"><span>{galleryExpanded ? `Showing all ${gallery.length} creations` : `Showing ${Math.min(gallery.length, galleryColumns * galleryRows)} of ${gallery.length} creations`}</span>{gallery.length > galleryColumns * galleryRows && <button type="button" onClick={() => setGalleryExpanded((value) => !value)}>{galleryExpanded ? "Show fewer" : `View all ${gallery.length} creations`}</button>}</div></> : <div className="gallery-empty mt-6"><span aria-hidden="true">✧</span><h3>Creative work is on its way</h3><p>Published AI images and videos will appear here when an administrator adds them.</p></div>}</section>
           <section id="categories" className="light-categories-section mt-14 scroll-mt-24">
             <div className="section-topline"><div><p className="light-kicker">FIND YOUR FLOW</p><h2>Explore by category<span>.</span></h2><p>Choose a lane, or follow your curiosity.</p></div></div>
             <div className="light-category-grid mt-5">
