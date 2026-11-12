@@ -78,7 +78,7 @@ assert.ok(galleryPage.includes('className="admin-gallery-form"') && galleryPage.
 assert.ok(homepage.includes("galleryMasonryBuckets.map") && homepage.includes("galleryImageRatios"), "Public gallery must distribute cards into measured masonry columns");
 assert.ok(homepageStyles.includes(".ai-gallery-masonry") && homepageStyles.includes("display: grid;") && homepageStyles.includes(".ai-gallery-column") && homepageStyles.includes("display: flex;"), "Masonry must use explicit independent columns, not balanced multicolumn rows");
 assert.ok(!homepageStyles.includes("column-fill: balance"), "Gallery layout must not balance cards into artificial equal-height rows");
-assert.ok(homepage.includes("{category.imageUrl ? <span") && homepage.includes('<span className="light-category-image-label">{category.name}</span>'), "Uploaded category cards must render the category name overlay");
+assert.ok(homepage.includes("light-category-art") && homepage.includes('<span className="light-category-image-label">{category.name}</span>'), "Category tiles must render a single category-name overlay");
 
 assert.ok(adminTheme.includes(".admin-gallery-form > .admin-r2-uploader") && adminTheme.includes("grid-column: 1 / -1"), "R2 uploader must occupy its own full-width grid row");
 assert.ok(backupPage.includes("updateGalleryBackup") && backupPage.includes("Google Drive sharing URL"), "Drive backups must have a dedicated backup management page");
@@ -119,3 +119,10 @@ for (const slug of ["word-counter", "text-summarizer", "image-compressor"]) {
 }
 
 console.log(`Tool verification passed: ${entries.length} unique tools across 8 categories; no duplicate handlers.`);
+
+
+assert.ok(homepage.includes('data-layout="shortest-column-masonry-v2"') && homepage.includes('ref={galleryMasonryRef}'), "Public gallery must mount the measured shortest-column masonry layout");
+assert.ok(homepage.includes('data-gallery-id={item.id}') && homepage.includes('syncLoadedMedia'), "Masonry must rebalance from actual loaded image and video dimensions, including cached media");
+assert.ok(homepage.includes('light-category-card--tile') && homepage.includes('light-category-image-label'), "Category tiles must always use a single category-name overlay");
+assert.ok(!homepage.includes('className="light-category-description">') && !homepage.includes('className="light-category-count">Explore'), "Category tiles must not render subtitles or Explore copy");
+assert.ok(homepageStyles.includes(".light-category-card--tile .light-category-description") && homepageStyles.includes("display: none !important"), "Image-only category tiles must suppress legacy subtitle and Explore styles");

@@ -105,6 +105,7 @@ export default function Home() {
   const [galleryExpanded, setGalleryExpanded] = useState(false);
   const [galleryMasonryColumns, setGalleryMasonryColumns] = useState(5);
   const [galleryImageRatios, setGalleryImageRatios] = useState<Record<string, number>>({});
+  const galleryMasonryRef = useRef<HTMLDivElement>(null);
 
 
   const galleryItemsToShow = useMemo(
@@ -147,7 +148,7 @@ export default function Home() {
 
   useEffect(() => {
     fetch("/api/catalog/tools").then((response) => response.ok ? response.json() : null).then((data) => { if (Array.isArray(data?.tools) && data.tools.length) setDynamicTools(data.tools.map((tool: typeof tools[number]) => ({ ...tool, href: "/tools/" + tool.slug }))); }).catch(() => setDynamicTools(tools));
-    fetch("/api/categories").then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); if (Array.isArray(data.items)) setCategoryImages(Object.fromEntries(data.items.filter((item: unknown) => !!item && typeof item === "object" && typeof (item as {name?:unknown}).name === "string").map((item: {name:string;image_url?:string|null;image_alt?:string|null}) => [item.name, { url: item.image_url ?? "", alt: item.image_alt ?? "" }]))); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
+    fetch("/api/categories", { cache: "no-store" }).then((r) => r.ok ? r.json() : { categories: toolCategories }).then((data) => { const names = Array.isArray(data.categories) ? data.categories.filter((name: unknown): name is string => typeof name === "string" && toolCategories.includes(name)) : []; setCategoryNames(names.length === 8 ? names : toolCategories); if (Array.isArray(data.items)) { const nextImages: Record<string, { url: string; alt: string }> = {}; for (const item of data.items as Array<{ name?: unknown; image_url?: unknown; imageUrl?: unknown; image_alt?: unknown; imageAlt?: unknown }>) { if (typeof item?.name !== "string") continue; const name = item.name.trim(); if (!toolCategories.includes(name)) continue; const imageUrl = typeof item.image_url === "string" ? item.image_url : typeof item.imageUrl === "string" ? item.imageUrl : ""; const imageAlt = typeof item.image_alt === "string" ? item.image_alt : typeof item.imageAlt === "string" ? item.imageAlt : ""; nextImages[name] = { url: imageUrl.trim(), alt: imageAlt.trim() }; } setCategoryImages(nextImages); } const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } }).catch(() => { setCategoryNames(toolCategories); const requestedCategory = new URLSearchParams(window.location.search).get("category"); if (requestedCategory && toolCategories.includes(requestedCategory)) { setActiveCategory(requestedCategory); setSuggestionsOpen(false); setActiveSuggestionIndex(-1); } });
     fetch("/api/gallery", { cache: "no-store" }).then((r) => r.ok ? r.json() : { items: [] }).then((data) => { setGallery(Array.isArray(data.items) ? data.items : []); setGalleryColumns([2,3,4,5,6].includes(data.columns) ? data.columns : 5); setGalleryRows([1,2,3,4,5,6,8].includes(data.rows) ? data.rows : 3); setGalleryExpanded(false); }).catch(() => setGallery([]));
     fetch("/api/popular-tools").then((r) => r.ok ? r.json() : { slugs: [] }).then((data) => setPopular(Array.isArray(data.slugs) ? data.slugs : [])).catch(() => setPopular([]));
   }, []);
@@ -166,6 +167,36 @@ export default function Home() {
     window.addEventListener("resize", updateMasonryColumns, { passive: true });
     return () => window.removeEventListener("resize", updateMasonryColumns);
   }, [galleryColumns]);
+
+  useEffect(() => {
+    const root = galleryMasonryRef.current;
+    if (!root) return;
+    const syncLoadedMedia = () => {
+      const measured: Record<string, number> = {};
+      root.querySelectorAll<HTMLImageElement>("img[data-gallery-id]").forEach((image) => {
+        const id = image.dataset.galleryId;
+        if (id && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) measured[id] = image.naturalHeight / image.naturalWidth;
+      });
+      root.querySelectorAll<HTMLVideoElement>("video[data-gallery-id]").forEach((video) => {
+        const id = video.dataset.galleryId;
+        if (id && video.videoWidth > 0 && video.videoHeight > 0) measured[id] = video.videoHeight / video.videoWidth;
+      });
+      if (Object.keys(measured).length) setGalleryImageRatios((current) => {
+        let changed = false;
+        for (const [id, ratio] of Object.entries(measured)) if (Math.abs((current[id] ?? 0) - ratio) > 0.005) { changed = true; break; }
+        return changed ? { ...current, ...measured } : current;
+      });
+    };
+    // Capture native load events and also measure media already complete from cache after hydration.
+    root.addEventListener("load", syncLoadedMedia, true);
+    const observer = new MutationObserver(syncLoadedMedia);
+    observer.observe(root, { childList: true, subtree: true });
+    syncLoadedMedia();
+    return () => {
+      root.removeEventListener("load", syncLoadedMedia, true);
+      observer.disconnect();
+    };
+  }, [galleryItemsToShow, galleryMasonryColumns]);
 
   useEffect(() => {
     const node = featuredWindowRef.current;
@@ -357,11 +388,11 @@ export default function Home() {
             </div>
           </section>
 
-          <section id="gallery" className="gallery-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">MADE WITH AI</p><h2>AI Creations Gallery<span>.</span></h2><p>Explore inspiring AI-generated visuals and videos from the creative community.</p></div></div>{gallery.length ? <><div className="ai-gallery-masonry mt-6" style={{ "--gallery-columns": galleryMasonryColumns } as React.CSSProperties}>
+          <section id="gallery" className="gallery-section mt-14 scroll-mt-24"><div className="section-topline"><div><p className="light-kicker">MADE WITH AI</p><h2>AI Creations Gallery<span>.</span></h2><p>Explore inspiring AI-generated visuals and videos from the creative community.</p></div></div>{gallery.length ? <><div ref={galleryMasonryRef} className="ai-gallery-masonry mt-6" data-layout="shortest-column-masonry-v2" style={{ "--gallery-columns": galleryMasonryColumns } as React.CSSProperties}>
             {galleryMasonryBuckets.map((column, columnIndex) => <div className="ai-gallery-column" key={columnIndex}>
               {column.map((item) => item.type === "image" ? (
                 <a key={item.id} className="ai-gallery-card ai-gallery-card-linked" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`View ${item.title || "AI image"}`}>
-                  <img className="gallery-image-natural" src={item.url} alt={item.title || "AI creation"} loading="lazy" decoding="async"
+                  <img className="gallery-image-natural" data-gallery-id={item.id} src={item.url} alt={item.title || "AI creation"} loading="lazy" decoding="async"
                     onLoad={(event) => {
                       const image = event.currentTarget;
                       if (image.naturalWidth > 0 && image.naturalHeight > 0) {
@@ -374,7 +405,7 @@ export default function Home() {
               ) : (
                 <article key={item.id} className="ai-gallery-card ai-gallery-video-card">
                   <a className="gallery-video-card-hit-area" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`Open video: ${item.title || "AI creation"}`}>Open video: {item.title || "AI creation"}</a>
-                  <div className="gallery-media"><video src={item.url} poster={item.thumbnail_url || undefined} controls preload="metadata" aria-label={item.title || "AI-generated video"}
+                  <div className="gallery-media"><video data-gallery-id={item.id} src={item.url} poster={item.thumbnail_url || undefined} controls preload="metadata" aria-label={item.title || "AI-generated video"}
                     onLoadedMetadata={(event) => {
                       const video = event.currentTarget;
                       if (video.videoWidth > 0 && video.videoHeight > 0) {
@@ -390,8 +421,11 @@ export default function Home() {
           <section id="categories" className="light-categories-section mt-14 scroll-mt-24">
             <div className="section-topline"><div><p className="light-kicker">FIND YOUR FLOW</p><h2>Explore by category<span>.</span></h2><p>Choose a lane, or follow your curiosity.</p></div></div>
             <div className="light-category-grid mt-5">
-              {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} aria-pressed={activeCategory === category.name} className={`light-category-card cat-${category.tint} ${category.imageUrl ? "light-category-card--image" : ""} ${activeCategory === category.name ? "light-category-active" : ""}`}>
-                {category.imageUrl ? <span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true"><img src={category.imageUrl} alt="" className="light-category-image" /><span className="light-category-image-label">{category.name}</span></span> : <><span className={`light-category-icon category-visual category-visual-${category.name.toLowerCase()}`} aria-hidden="true">{categoryVisuals[category.name] ?? category.icon}</span><span className="light-category-name">{category.name}</span><span className="light-category-description">{category.subtitle}</span><span className="light-category-count">Explore <span aria-hidden="true">↗</span></span></>}
+              {categories.map((category) => <button key={category.name} onClick={() => chooseCategory(category.name, true)} aria-label={`Explore ${category.name} tools`} aria-pressed={activeCategory === category.name} className={`light-category-card light-category-card--tile cat-${category.tint} ${activeCategory === category.name ? "light-category-active" : ""}`}>
+                <span className={`light-category-art category-visual-${category.name.toLowerCase()}`} aria-hidden="true">
+                  {category.imageUrl ? <img src={category.imageUrl} alt="" className="light-category-image" loading="eager" decoding="async" /> : null}
+                  <span className="light-category-image-label">{category.name}</span>
+                </span>
               </button>)}
             </div>
 
