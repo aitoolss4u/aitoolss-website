@@ -19,7 +19,10 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        # GitHub-hosted Ubuntu runners already include browser system libraries.
+        # Avoid apt mirror dependency installation here: transient mirror DNS
+        # failures should not prevent the actual browser tests from running.
+        run: npx playwright install chromium
       - name: Verify tool catalog
         run: npm run test:tools
       - name: Lint

@@ -7,6 +7,20 @@ import PomodoroTimer from "@/components/pomodoro-timer";
 import ToolDetailSections from "@/components/tool-detail-sections";
 import type { ToolSeoContent } from "@/lib/tool-seo";
 
+const AI_GENERATION_TOOL_SLUGS = [
+  "text-summarizer", "summarizer", "paragraph-rewriter", "paraphrasing-tool",
+  "tone-changer", "grammar-checker", "headline-generator", "blog-outline-builder",
+  "email-draft-helper", "ai-email-helper", "image-alt-text-helper", "prompt-generator",
+  "daily-planner", "goal-breakdown", "meeting-notes-formatter", "code-explainer",
+  "wordpress-excerpt-maker", "social-caption-writer", "hashtag-ideas",
+  "meta-description-writer", "youtube-description-builder", "video-script-outline",
+  "product-description-writer", "study-notes-organizer", "flashcard-maker",
+  "quiz-question-builder", "essay-outline-builder", "business-name-ideas",
+  "swot-analysis-builder", "meeting-agenda-maker", "cover-letter-builder",
+  "interview-practice-questions", "achievement-bullet-rewriter", "regex-cheat-sheet",
+  "translator",
+] as const;
+
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -125,7 +139,7 @@ function run(slug: string, input: string, option: string): string {
     case "aspect-ratio-calculator": case "pomodoro-session-planner": case "salary-hourly-converter": case "invoice-tax-calculator": case "break-even-calculator": { const n = text.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || []; if (slug === "aspect-ratio-calculator") { if (n.length < 2 || !n[0] || !n[1]) return "Enter width and height, e.g. 1920, 1080."; const gcd=(a:number,b:number):number=>b?gcd(b,a%b):a; const d=gcd(Math.round(n[0]),Math.round(n[1])); return JSON.stringify({ ratio: (n[0]/d)+":"+(n[1]/d), width:n[0], height:n[1] },null,2); } if (slug === "pomodoro-session-planner") { const work=Math.max(1,n[0]||25), br=Math.max(1,n[1]||5), rounds=Math.max(1,Math.floor(n[2]||4)); return Array.from({length:rounds},(_,i)=>"Round "+(i+1)+": Focus "+work+" min → Break "+br+" min").join("\n")+"\nTotal planned time: "+(rounds*(work+br))+" minutes."; } if (slug === "salary-hourly-converter") return n.length ? "$"+(n[0]/2080).toFixed(2)+" per hour (assuming 40 hours/week × 52 weeks)." : "Enter annual salary, e.g. 65000."; if (slug === "invoice-tax-calculator") return n.length>=2 ? JSON.stringify({subtotal:n[0],taxRate:n[1]+"%",taxAmount:+(n[0]*n[1]/100).toFixed(2),total:+(n[0]*(1+n[1]/100)).toFixed(2)},null,2) : "Enter subtotal and tax rate, e.g. 1000, 18."; return n.length>=2 && n[1]>0 ? "Break-even units: "+Math.ceil(n[0]/n[1])+" (fixed costs ÷ contribution per unit)." : "Enter fixed costs and contribution per unit, e.g. 5000, 25."; }
     case "daily-planner": case "goal-breakdown": case "habit-tracker-template": case "resume-checklist": case "grammar-checklist": case "citation-checklist": case "swot-analysis-builder": { const items = slug === "resume-checklist" ? ["Contact details and professional summary","Relevant experience with measurable impact","Skills matched to the role","Education and certifications","Proofread dates, spelling and formatting"] : slug === "grammar-checklist" ? ["Check subject–verb agreement","Review punctuation and sentence boundaries","Replace unclear pronouns","Check consistent tense","Read aloud for awkward phrasing"] : slug === "citation-checklist" ? ["Author or organization","Publication date","Title of work","Publisher or site name","URL or DOI where applicable","Required style guide formatting"] : slug === "swot-analysis-builder" ? ["Strengths — internal advantages","Weaknesses — internal limitations","Opportunities — external openings","Threats — external risks"] : slug === "habit-tracker-template" ? ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"] : slug === "goal-breakdown" ? ["Define the outcome and success measure","Split into 3–5 milestones","Choose the next small action","Set a review date","Track progress and adjust"] : ["Top priority","Second priority","Quick task","Break / reset","End-of-day review"]; return (text ? "Focus: "+text+"\n\n" : "")+items.map((item)=>"☐ "+item).join("\n"); }
     case "headline-generator": case "blog-outline-builder": case "prompt-generator": case "hashtag-ideas": case "video-script-outline": case "interview-practice-questions": case "quiz-question-builder": case "essay-outline-builder": case "flashcard-maker": case "meeting-agenda-maker": case "meeting-notes-formatter": case "study-notes-organizer": case "regex-cheat-sheet": case "code-explainer": case "youtube-description-builder": { const topic=text; const templates: Record<string,string[]> = { "business-name-ideas":["Bright "+titleCase(topic),"Next "+titleCase(topic),"Nova "+titleCase(topic),titleCase(topic)+" Studio", "True "+titleCase(topic)], "headline-generator":["The Complete Guide to "+titleCase(topic),"What to Know About "+titleCase(topic),"5 Ways to Improve "+titleCase(topic),"A Smarter Approach to "+titleCase(topic)], "blog-outline-builder":["Introduction: why "+topic+" matters","Key concepts and context","Practical steps or examples","Common mistakes to avoid","Conclusion and next steps"], "prompt-generator":["Role: Act as an experienced specialist in "+topic+".","Goal: Help me achieve a specific, measurable outcome.","Context: [Add audience, constraints and background].","Output: Provide a structured, actionable response.","Quality bar: State assumptions and ask clarifying questions when needed."], "hashtag-ideas": ["#"+slugify(topic),"#"+slugify(topic+"tips"),"#"+slugify(topic+"community"),"#learn"+titleCase(topic).replace(/\s/g,""),"#"+slugify("how to "+topic)], "video-script-outline":["Hook (0–5 sec): open with a clear promise about "+topic,"Context: explain why it matters","Main point 1: teach or demonstrate","Main point 2: show an example","Wrap-up: recap and invite action"], "interview-practice-questions":["Tell me about your experience with "+topic+".","Describe a challenge you solved related to "+topic+".","How do you prioritize when deadlines compete?","What would you improve about your current approach?"], "quiz-question-builder":["Define the central idea of "+topic+".","What is one practical example of "+topic+"?","Compare two important aspects of "+topic+".","What common misconception exists about "+topic+"?"], "essay-outline-builder":["Introduction and thesis about "+topic,"Background and key terms","Main argument 1 with evidence","Main argument 2 with evidence","Counterargument and response","Conclusion"], "flashcard-maker":topic.split(/\n/).filter(Boolean).map((line)=>"Q: "+line.split(/[:–-]/)[0]+"\nA: "+(line.split(/[:–-]/).slice(1).join("-").trim()||"Add a definition for this term.")), "meeting-agenda-maker":["Objective: "+topic,"Updates and context (5 min)","Discussion and decisions (15 min)","Owners and next actions (5 min)"], "meeting-notes-formatter":["## Summary",""+topic,"## Decisions","- [Add decision]","## Action items","- [Owner] — [Task] — [Due date]"], "study-notes-organizer":["## Topic: "+topic,"### Key ideas","- "+topic.split(/[.!?\n]/).filter(Boolean).slice(0,4).join("\n- "),"### Questions to review","- What is the main concept?","- How could it be applied?"], "regex-cheat-sheet":["Email-like pattern: ^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$","Digits: \\d+","Word boundary: \\bword\\b","Whitespace: \\s+","Start/end: ^pattern$"], "code-explainer":["Input received: "+topic,"Look for declarations, functions, control flow and data transformations.","Check edge cases, external dependencies and error handling.","This is a heuristic overview, not an AI-generated code review."], "youtube-description-builder":["[One-sentence video summary about "+topic+"]","","⏱️ Chapters","00:00 Introduction","00:30 Main topic","","🔗 Resources","[Add links]","","Subscribe for more and leave your questions below."], "swot-analysis-builder":["Strengths: internal advantages of "+topic,"Weaknesses: internal limitations to address","Opportunities: external openings to explore","Threats: external risks to monitor"] }; return (templates[slug] || ["Introduction: "+topic,"Main point: "+topic,"Next step: add detail and examples"]).join("\n"); }
-    default: { const definition = getTool(slug); const lines = text.split(/[\n.!?;]+/).map((line) => line.trim()).filter(Boolean); if (definition?.mode === "ideas") return ["Starting point: " + text, "Angle 1: explain the problem and who it affects", "Angle 2: share a practical example", "Angle 3: offer a step-by-step solution", "Next step: choose one angle and add specific details."].join("\n"); if (definition?.mode === "checklist") return ["Goal: " + text, "☐ Define the desired outcome", "☐ Gather the relevant details", "☐ Identify risks or missing information", "☐ Complete the next action", "☐ Review and refine"].join("\n"); if (definition?.mode === "formatter") return lines.map((line) => "• " + line).join("\n"); if (definition?.mode === "json") { try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return "Input is not valid JSON. Check commas, quotes, brackets and braces."; } } return lines.join("\n"); }
+    default: return "This tool does not have a verified handler yet. No result was generated. Please contact the site owner for support.";
   }
 }
 function rgbToHsl(r:number,g:number,b:number) { const rr=r/255,gg=g/255,bb=b/255,max=Math.max(rr,gg,bb),min=Math.min(rr,gg,bb); let h=0,s=0; const l=(max+min)/2; if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case rr:h=(gg-bb)/d+(gg<bb?6:0);break;case gg:h=(bb-rr)/d+2;break;default:h=(rr-gg)/d+4;}h/=6;}return "hsl("+Math.round(h*360)+", "+Math.round(s*100)+"%, "+Math.round(l*100)+"%)"; }
@@ -167,87 +181,6 @@ async function extractVideoFrames(file: File): Promise<string[]> {
 }
 
 
-async function removeFlatBackgroundLocally(file: File): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error("Choose a valid image file.");
-  if (file.size > 20 * 1024 * 1024) throw new Error("Please choose an image smaller than 20 MB.");
-  const url = URL.createObjectURL(file);
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const element = new Image();
-      element.onload = () => resolve(element);
-      element.onerror = () => reject(new Error("Could not read this image."));
-      element.src = url;
-    });
-    const pixelLimit = 14_000_000;
-    const scale = Math.min(1, 2400 / Math.max(image.width, image.height), Math.sqrt(pixelLimit / (image.width * image.height)));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) throw new Error("Canvas processing is not supported in this browser.");
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-    const { data, width, height } = frame;
-    const edgeSamples: number[][] = [];
-    const step = Math.max(1, Math.floor(Math.min(width, height) / 90));
-    for (let x = 0; x < width; x += step) {
-      const top = x * 4, bottom = ((height - 1) * width + x) * 4;
-      edgeSamples.push([data[top], data[top + 1], data[top + 2]], [data[bottom], data[bottom + 1], data[bottom + 2]]);
-    }
-    for (let y = step; y < height - 1; y += step) {
-      const left = y * width * 4, right = (y * width + width - 1) * 4;
-      edgeSamples.push([data[left], data[left + 1], data[left + 2]], [data[right], data[right + 1], data[right + 2]]);
-    }
-    const median = (values: number[]) => {
-      const sorted = values.slice().sort((a, b) => a - b);
-      return sorted[Math.floor(sorted.length / 2)] ?? 0;
-    };
-    const background = [0, 1, 2].map((channel) => median(edgeSamples.map((pixel) => pixel[channel])));
-    const edgeSpread = median(edgeSamples.map((pixel) => Math.hypot(pixel[0] - background[0], pixel[1] - background[1], pixel[2] - background[2])));
-    const threshold = Math.max(28, Math.min(76, 34 + edgeSpread * 1.25));
-    const total = width * height;
-    const visited = new Uint8Array(total);
-    const queue = new Int32Array(total);
-    let head = 0, tail = 0;
-    const enqueue = (index: number) => {
-      if (index < 0 || index >= total || visited[index]) return;
-      visited[index] = 1;
-      queue[tail++] = index;
-    };
-    for (let x = 0; x < width; x++) { enqueue(x); enqueue((height - 1) * width + x); }
-    for (let y = 1; y < height - 1; y++) { enqueue(y * width); enqueue(y * width + width - 1); }
-    const featherStart = threshold * 0.58;
-    const clamp = (value: number) => Math.max(0, Math.min(255, Math.round(value)));
-    while (head < tail) {
-      const index = queue[head++];
-      const offset = index * 4;
-      const distance = Math.hypot(data[offset] - background[0], data[offset + 1] - background[1], data[offset + 2] - background[2]);
-      if (distance > threshold) continue;
-      const alpha = Math.max(0, Math.min(1, (distance - featherStart) / (threshold - featherStart)));
-      data[offset + 3] = Math.round(alpha * 255);
-      if (alpha > 0.08 && alpha < 0.98) {
-        for (let channel = 0; channel < 3; channel++) {
-          data[offset + channel] = clamp((data[offset + channel] - background[channel] * (1 - alpha)) / alpha);
-        }
-      }
-      const x = index % width;
-      const y = Math.floor(index / width);
-      if (x > 0) enqueue(index - 1);
-      if (x + 1 < width) enqueue(index + 1);
-      if (y > 0) enqueue(index - width);
-      if (y + 1 < height) enqueue(index + width);
-      if (x > 0 && y > 0) enqueue(index - width - 1);
-      if (x + 1 < width && y > 0) enqueue(index - width + 1);
-      if (x > 0 && y + 1 < height) enqueue(index + width - 1);
-      if (x + 1 < width && y + 1 < height) enqueue(index + width + 1);
-    }
-    context.putImageData(frame, 0, 0);
-    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not create the transparent PNG.")), "image/png"));
-    return URL.createObjectURL(blob);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
 async function inspectMediaLocally(file: File, slug: string): Promise<string> {
   if (slug === "ai-video-detector") {
     const frames = await extractVideoFrames(file);
@@ -283,12 +216,14 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   const [isProcessing, setIsProcessing] = useState(false);
   const [copyStatus, setCopyStatus] = useState("");
   const [businessCount, setBusinessCount] = useState(10);
-  const [showBusinessCount, setShowBusinessCount] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [backgroundProgress, setBackgroundProgress] = useState("");
   const [toolError, setToolError] = useState("");
   const [humanizerSettings, setHumanizerSettings] = useState({ modelLevel: "lite", style: "general", readingLevel: "general", strength: "balanced" });
   const tool = useMemo(() => getTool(slug), [slug]);
   const usesAI = slug === "ai-chatbot";
   const usesHumanizer = slug === "ai-humanizer";
+  const usesAIGeneration = AI_GENERATION_TOOL_SLUGS.includes(slug as typeof AI_GENERATION_TOOL_SLUGS[number]);
   const isMediaTool = slug === "ai-image-detector" || slug === "ai-video-detector";
   async function copyResult() {
     try {
@@ -302,7 +237,9 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   }
   const process = async () => {
     if (isProcessing) return;
-    setIsProcessing(true); setOutput(""); setToolError(""); setCopyStatus("");
+    setIsProcessing(true);
+    if (output.startsWith("blob:")) URL.revokeObjectURL(output);
+    setOutput(""); setToolError(""); setCopyStatus(""); setBackgroundProgress("");
     try {
       if (usesHumanizer) {
         const response = await fetch("/api/tools/humanizer", {
@@ -315,21 +252,48 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty rewrite.");
         setOutput(data.output);
       } else if (usesAI) {
+        const userMessage = input.trim();
         const response = await fetch("/api/tools/ai-chat", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ message: input.trim() }),
+          body: JSON.stringify({ message: userMessage, history: chatMessages.slice(-10) }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "AI chat could not complete this request.");
         if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty response.");
+        setChatMessages((current) => [...current, { role: "user" as const, content: userMessage }, { role: "assistant" as const, content: data.output as string }].slice(-12));
+        setInput("");
+        setOutput("");
+      } else if (usesAIGeneration) {
+        const response = await fetch("/api/tools/ai-generate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug, input: input.trim(), option, businessCount }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "AI generation could not complete this request.");
+        if (typeof data.output !== "string" || !data.output.trim()) throw new Error("The AI provider returned an empty result.");
         setOutput(data.output);
       } else if (isMediaTool) {
         if (!selectedFile) throw new Error("Please choose a media file first.");
         setOutput(await inspectMediaLocally(selectedFile, slug));
+      } else if (slug === "image-dimension-checker") {
+        if (!selectedFile) throw new Error("Please choose an image first.");
+        if (!imageInfo) throw new Error("The selected image could not be inspected. Please choose it again.");
+        setOutput(imageInfo);
       } else if (slug === "background-remover") {
         if (!selectedFile) throw new Error("Please choose an image first.");
-        setOutput(await removeFlatBackgroundLocally(selectedFile));
+        if (selectedFile.size > 40 * 1024 * 1024) throw new Error("Please choose an image smaller than 40 MB.");
+        if (!["image/png", "image/jpeg", "image/webp"].includes(selectedFile.type)) throw new Error("Background Remover supports PNG, JPG and WebP images.");
+        setBackgroundProgress("Loading the on-device AI model. The first run may take a few minutes…");
+        const { removeBackground } = await import("@bg0/browser");
+        const result = await removeBackground(selectedFile, {
+          quality: "quality",
+          onProgress: (progress) => setBackgroundProgress(progress.message + " " + Math.round(progress.progress * 100) + "%"),
+        });
+        if (!result.blob || result.blob.type !== "image/png") throw new Error("The AI model did not return a transparent PNG. Please try another image.");
+        setOutput(URL.createObjectURL(result.blob));
+        setBackgroundProgress("Background removed successfully · " + result.width + " × " + result.height + " px · processed locally");
       } else if (slug === "plagiarism-checker") {
         const response = await fetch("/api/tools/plagiarism", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ input }) });
         const data = await response.json();
@@ -343,13 +307,15 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
       } else setOutput(run(slug, input, slug === "business-name-ideas" ? String(businessCount) : option));
     } catch (error) {
       const message = error instanceof Error ? error.message : "The tool could not complete this request.";
-      if (usesHumanizer || usesAI) setToolError(message);
+      if (usesHumanizer || usesAI || usesAIGeneration) setToolError(message);
       else setOutput(message);
     }
     finally { setIsProcessing(false); }
   };
   const onImage = (picked: File | null) => {
+    if (output.startsWith("blob:")) URL.revokeObjectURL(output);
     setOutput("");
+    setBackgroundProgress("");
     setSelectedFile(picked);
     if (!picked) { setImageInfo(""); return; }
     if (slug === "ai-video-detector") { setImageInfo(picked.name + " · " + (picked.size / 1024 / 1024).toFixed(1) + " MB"); return; }
@@ -361,15 +327,16 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
   };
   if (!tool) return <main className="tool-page-shell"><div className="tool-page-content"><p className="tool-eyebrow">AIToolss / Tool not found</p><h1 className="tool-page-title">We couldn’t find that tool.</h1><Link href="/" className="tool-primary-button">Back to all tools</Link></div></main>;
   const isImage = tool.mode === "image";
-  const runDisabled = isImage ? !selectedFile : !input.trim();
+  const runDisabled = isImage ? !selectedFile : !input.trim() || (slug === "translator" && option === "default");
   return <ToolDetailSections tool={tool} seo={seo}>
     <section className="tool-panel">
-      <div className="tool-eyebrow">{slug === "ai-humanizer" ? "Writing · AI-powered rewrite" : tool.category + " · Browser tool"}</div>
+      <div className="tool-eyebrow">{usesHumanizer ? "Writing · AI-powered rewrite" : usesAI || usesAIGeneration ? tool.category + " · Gemini AI-powered" : tool.category + " · Browser tool"}</div>
       {slug === "pomodoro-timer" ? <PomodoroTimer /> : <div className="tool-workspace">
-        <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : "Your input"}</label>
+        <label htmlFor="tool-input" className="tool-field-label">{isImage ? slug === "ai-video-detector" ? "Choose a video" : "Choose an image" : usesAI ? "Your message" : "Your input"}</label>
+        {usesAI && chatMessages.length > 0 && <div className="ai-chat-history" aria-live="polite">{chatMessages.map((message, index) => <article key={index} className={message.role === "user" ? "ai-chat-message ai-chat-user" : "ai-chat-message ai-chat-assistant"}><strong>{message.role === "user" ? "You" : "AIToolss AI"}</strong><p>{message.content}</p></article>)}</div>}
         {isImage
-          ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
-          : <textarea id="tool-input" value={input} maxLength={usesHumanizer ? 12000 : undefined} onChange={(e)=>{setInput(e.target.value);if(usesHumanizer){setOutput("");setToolError("");}}} rows={usesHumanizer ? 12 : 8} placeholder={usesHumanizer ? "Paste the text you want to rewrite…" : "Paste text, enter a topic, or add values…"} className="tool-input" />}
+          ? <input id="tool-input" type="file" accept={slug === "ai-video-detector" ? "video/*" : slug === "background-remover" ? "image/png,image/jpeg,image/webp" : "image/*"} onChange={(e)=>onImage(e.target.files?.[0]??null)} className="tool-file-input" />
+          : <textarea id="tool-input" value={input} maxLength={usesHumanizer ? 12000 : usesAIGeneration || usesAI ? 24000 : undefined} onChange={(e)=>{setInput(e.target.value);if(usesHumanizer || usesAIGeneration || usesAI){setOutput("");setToolError("");}}} rows={usesHumanizer ? 12 : 8} placeholder={usesHumanizer ? "Paste the text you want to rewrite…" : usesAI ? "Ask a question and continue the conversation…" : "Paste text, enter a topic, or add values…"} className="tool-input" />}
         {usesHumanizer && <>
           <div className="humanizer-input-meta"><span>{words(input)} words</span><span>{input.length.toLocaleString()} / 12,000 characters</span></div>
           <div className="humanizer-settings-grid">
@@ -399,16 +366,13 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         {["text-summarizer"].includes(slug) && <label className="tool-option-label">Summary sentences <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="default">Automatic</option></select></label>}
         {["tone-changer","paragraph-rewriter","url-encoder-decoder","base64-encoder-decoder","html-entity-encoder","citation-generator"].includes(slug) && <label className="tool-option-label">Mode <select value={option} onChange={(e)=>setOption(e.target.value)} className="tool-select"><option value="default">Default / encode</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="decode">Decode</option>{slug === "citation-generator" && <><option value="mla">MLA</option><option value="chicago">Chicago</option></>}</select></label>}
         {imageInfo && <p className="tool-image-info">{imageInfo}</p>}
-        {slug === "business-name-ideas" && <div className="tool-business-count" onMouseEnter={() => setShowBusinessCount(true)}>
-          <button type="button" className="tool-secondary-button" aria-haspopup="menu" aria-expanded={showBusinessCount} onClick={() => setShowBusinessCount(true)}>Show Result ▾</button>
-          {showBusinessCount && <div className="tool-business-count-menu" role="menu" aria-label="Number of business names">
-            {[10, 20, 50, 100].map((count) => <button key={count} type="button" role="menuitem" onClick={() => { setBusinessCount(count); setShowBusinessCount(false); setCopyStatus(""); setOutput(input.trim() ? run(slug, input, String(count)) : "Enter your business niche or keywords, then choose how many names to generate."); }}>{count} names</button>)}
-          </div>}
-        </div>}
+        {backgroundProgress && <p className="tool-image-info" role="status">{backgroundProgress}</p>}
+        {slug === "translator" && <label className="tool-option-label">Translate to<select aria-label="Target language" value={option} onChange={(event) => setOption(event.target.value)} className="tool-select"><option value="default">Choose a language…</option><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option><option value="German">German</option><option value="Arabic">Arabic</option><option value="Chinese (Simplified)">Chinese (Simplified)</option><option value="Japanese">Japanese</option><option value="Portuguese">Portuguese</option></select></label>}
+        {slug === "business-name-ideas" && <label className="tool-option-label">Number of ideas<select aria-label="Number of business name ideas" value={businessCount} onChange={(event) => setBusinessCount(Number(event.target.value))} className="tool-select"><option value={10}>10 ideas</option><option value={20}>20 ideas</option><option value={50}>50 ideas</option><option value={100}>100 ideas</option></select></label>}
         {slug === "plagiarism-checker" && <p className="rounded-xl border border-slate-200 p-3 text-sm">Paste the text to check, then add comparison material under a separate <strong>--- SOURCE ---</strong> line. This checks similarity only against the sources you provide; it does not search the whole web or academic databases.</p>}
         <div className="tool-actions">
-          <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? (usesHumanizer ? "Humanizing…" : "Processing…") : isImage ? "Process file" : usesHumanizer ? "Humanize text" : usesAI ? "Generate with AI" : "Run tool"} ↗</button>
-          <button onClick={()=>{setInput("");setOutput("");setToolError("");setImageInfo("");setSelectedFile(null);setHumanizerSettings({modelLevel:"lite",style:"general",readingLevel:"general",strength:"balanced"});}} className="tool-secondary-button">Clear</button>
+          <button disabled={runDisabled || isProcessing || slug === "dictionary" && !input.trim()} onClick={process} className="tool-primary-button">{isProcessing ? (usesHumanizer ? "Humanizing…" : usesAI || usesAIGeneration ? "Generating…" : "Processing…") : isImage ? slug === "ai-image-detector" || slug === "ai-video-detector" ? "Inspect media" : slug === "image-dimension-checker" ? "Check dimensions" : "Process file" : usesHumanizer ? "Humanize text" : usesAI || usesAIGeneration ? slug === "translator" ? "Translate text" : usesAI ? "Send message" : "Generate with AI" : "Run tool"} ↗</button>
+          <button onClick={()=>{if(output.startsWith("blob:"))URL.revokeObjectURL(output);setInput("");setOutput("");setToolError("");setImageInfo("");setBackgroundProgress("");setSelectedFile(null);setChatMessages([]);setOption("default");setBusinessCount(10);setHumanizerSettings({modelLevel:"lite",style:"general",readingLevel:"general",strength:"balanced"});}} className="tool-secondary-button">Clear</button>
         </div>
       </div>}
       {toolError && <p className="humanizer-error" role="alert">{toolError}</p>}
@@ -416,11 +380,11 @@ export default function ToolPageClient({ slug, seo }: { slug: string; seo: ToolS
         <article className="humanizer-result-card"><div className="humanizer-result-title"><h2>Original text</h2><span>{words(input)} words</span></div><pre>{input}</pre></article>
         <article className="humanizer-result-card humanizer-output-card"><div className="humanizer-result-title"><h2>Humanized rewrite</h2><span>{words(output)} words</span></div><pre>{output}</pre><button onClick={copyResult} className="tool-copy-button">{copyStatus || "Copy rewrite"}</button></article>
       </section>}
-      {output && slug !== "ai-humanizer" && <section className="tool-result">
+      {output && slug !== "ai-humanizer" && !usesAI && <section className="tool-result">
         <div className="tool-result-heading"><h2>Result</h2>{!output.startsWith("blob:") && !output.startsWith("data:image/") && <button onClick={copyResult} className="tool-copy-button">{copyStatus || "Copy result"}</button>}</div>
         {output.startsWith("blob:") || output.startsWith("data:image/") ? <><img src={output} alt="Processed image preview" className="tool-output-image" /><a href={output} download={slug === "background-remover" ? "aitoolss-background-removed.png" : "aitoolss-compressed.jpg"} className="tool-download-link">Download processed image</a></> : <pre className="tool-output-text">{output}</pre>}
       </section>}
-      <p className="tool-privacy-note">{usesAI ? "AI chat requests are sent securely to the configured Vercel AI Gateway. If the AI key or model is not configured, the tool reports that clearly and does not return a fabricated answer." : isMediaTool ? "Free local inspection only: no AI authenticity model runs, and no file is uploaded. Metadata and frame patterns cannot prove whether media is AI-generated." : slug === "background-remover" ? "Runs locally in your browser. Best results are with a plain, evenly coloured background; complex scenes may leave artefacts. No image is uploaded." : slug === "ai-humanizer" ? "AI-powered editorial rewriting is available when the site owner configures an approved model. Missing configuration is reported clearly; this tool does not fabricate results or promise to bypass AI detectors." : slug === "plagiarism-checker" ? "Phrase matching runs on this site's server against only the sources you paste. No paid API or external plagiarism database is used." : "This utility runs locally in your browser. Some outputs use deterministic rules rather than a generative AI model; check each tool's limitations before relying on its result."}</p>
+      <p className="tool-privacy-note">{usesAI || usesAIGeneration ? "This tool sends your text to the configured Gemini AI model to generate a real response. Results can be inaccurate; review them before use. Do not submit confidential information to the free-tier provider." : isMediaTool ? "Free local inspection only: no AI authenticity model runs, and no file is uploaded. Metadata and frame patterns cannot prove whether media is AI-generated." : slug === "background-remover" ? "AI subject segmentation runs locally in your browser using a downloaded model. Your selected image is not uploaded; the first run may take longer while the model downloads and is cached." : slug === "ai-humanizer" ? "AI-powered editorial rewriting is available when the site owner configures an approved model. Missing configuration is reported clearly; this tool does not fabricate results or promise to bypass AI detectors." : slug === "plagiarism-checker" ? "Phrase matching runs on this site's server against only the sources you paste. No paid API or external plagiarism database is used." : "This utility runs locally in your browser. Some outputs use deterministic rules rather than a generative AI model; check each tool's limitations before relying on its result."}</p>
     </section>
   </ToolDetailSections>;
 }
