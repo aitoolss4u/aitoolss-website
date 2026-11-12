@@ -10,10 +10,10 @@ export async function GET() {
       supabase.from("gallery_items").select("id,media_type,media_url,thumbnail_url,title,description,creator,sort_order", { count: "exact" }).eq("is_published", true).order("sort_order").order("created_at", { ascending: false }).limit(500),
       supabase.from("site_settings").select("value").eq("key", "gallery_layout").maybeSingle(),
     ]);
-    if (error) return NextResponse.json({ items: [], columns: 5, rows: 3 }, { status: 200 });
+    if (error) return NextResponse.json({ items: [], columns: 4, rows: 4 }, { status: 200 });
     const layout = (layoutRow?.value ?? {}) as { columns?: number; rows?: number };
-    const columns = [2, 3, 4, 5, 6].includes(Number(layout.columns)) ? Number(layout.columns) : 5;
-    const rows = [1, 2, 3, 4, 5, 6, 8].includes(Number(layout.rows)) ? Number(layout.rows) : 3;
+    const columns = [2, 3, 4, 5, 6].includes(Number(layout.columns)) ? Number(layout.columns) : 4;
+    const rows = [1, 2, 3, 4, 5, 6, 8].includes(Number(layout.rows)) ? Number(layout.rows) : 4;
     const totalPublished = count ?? (items ?? []).length;
     return NextResponse.json({
       items: (items ?? []).map((item) => ({
@@ -23,6 +23,6 @@ export async function GET() {
       columns, rows, totalPublished, returnedItems: (items ?? []).length,
     }, { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } });
   } catch {
-    return NextResponse.json({ items: [], columns: 5, rows: 3 });
+    return NextResponse.json({ items: [], columns: 4, rows: 4 });
   }
 }
