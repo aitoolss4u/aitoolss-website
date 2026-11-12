@@ -97,6 +97,15 @@ export async function saveAdminData(payload: { categories: CategoryInput[]; sett
         const original = await verifyR2ObjectContent(item.imageOriginalR2Key);
         if (!["image/jpeg", "image/png", "image/webp"].includes(original.contentType) || original.size <= 0 || original.size > 50 * 1024 * 1024) return { ok: false as const, message: "Original category image is not a valid JPG, PNG or WebP object." };
       }
+      const supabasePublicBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/u, "") + "/storage/v1/object/public/aitoolss-gallery/";
+      if (!item.imageR2Key && item.imageUrl.startsWith(supabasePublicBase)) {
+        const expectedPrefix = supabasePublicBase + "categories/" + item.id + "/optimized/";
+        if (!item.imageUrl.startsWith(expectedPrefix)) return { ok: false as const, message: "Supabase category image URL does not match this category's optimized image folder." };
+        const response = await fetch(item.imageUrl, { method: "HEAD", cache: "no-store" });
+        const contentType = response.headers.get("content-type")?.split(";")[0] ?? "";
+        const size = Number(response.headers.get("content-length") ?? 0);
+        if (!response.ok || contentType !== "image/webp" || size <= 0 || size > 10 * 1024 * 1024) return { ok: false as const, message: "Supabase category image could not be verified as a valid optimized WebP file." };
+      }
     }
   } catch {
     return { ok: false as const, message: "One or more category R2 images could not be verified. The category changes were not saved." };

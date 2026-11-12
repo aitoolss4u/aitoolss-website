@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type ImageValues = { imageUrl:string; imageAlt:string; imageR2Key:string; imageOriginalR2Key:string; imageOriginalSizeBytes:number };
 async function toWebp(file:File,maxSize:number):Promise<Blob>{
@@ -12,27 +13,33 @@ async function toWebp(file:File,maxSize:number):Promise<Blob>{
  return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("Could not optimize this image.")),"image/webp",.84));
  }finally{URL.revokeObjectURL(url);}
 }
-async function upload(file:Blob,categoryId:string,variant:"original"|"optimized",name:string){
- const signedResponse=await fetch("/api/admin/r2/upload-url",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({purpose:"category",mediaType:"image",variant,categoryId,fileName:name,contentType:file.type,sizeBytes:file.size})});
- const signed=await signedResponse.json();if(!signedResponse.ok)throw new Error(signed.error||"Could not prepare image upload.");
- const uploaded=await fetch(signed.url,{method:"PUT",headers:{"Content-Type":file.type},body:file});
- if(!uploaded.ok)throw new Error("Cloudflare R2 rejected the upload ("+uploaded.status+"). Check the bucket CORS settings.");
- return signed as {key:string;publicUrl:string};
+async function uploadSupabaseVariant(file:Blob,categoryId:string,variant:"original"|"optimized",name:string){
+ const supabase=createClient();
+ const safeName=name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/^-+|-+$/g,"").slice(-100)||"category-image";
+ const path="categories/"+categoryId+"/"+variant+"/"+crypto.randomUUID()+"-"+safeName;
+ const {data,error}=await supabase.storage.from("aitoolss-gallery").upload(path,file,{
+  cacheControl:"31536000",contentType:file.type,upsert:false,
+ });
+ if(error)throw new Error(error.message||"Supabase Storage upload failed.");
+ const {data:publicData}=supabase.storage.from("aitoolss-gallery").getPublicUrl(data.path);
+ if(!publicData.publicUrl)throw new Error("Could not create the public category image URL.");
+ return {path:data.path,publicUrl:publicData.publicUrl};
 }
 export default function CategoryImageManager({categoryId,imageUrl,imageAlt,imageR2Key,imageOriginalR2Key,imageOriginalSizeBytes,onChange}:{categoryId:string;imageUrl:string;imageAlt:string;imageR2Key:string;imageOriginalR2Key:string;imageOriginalSizeBytes:number;onChange:(value:ImageValues)=>void}){
  const [busy,setBusy]=useState(false);const [message,setMessage]=useState("");const [preview,setPreview]=useState("");
  async function selectFile(file:File|undefined){
   if(!file)return;
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>50*1024*1024){setMessage("Choose a JPG, PNG or WebP image up to 50 MB.");return;}
-  setBusy(true);setMessage("Optimizing and uploading original + WebP…");
+  setBusy(true);setMessage("Optimizing image and uploading to Supabase Storage…");
   try{
    const optimized=await toWebp(file,1200);
-   const [originalObject,optimizedObject]=await Promise.all([upload(file,categoryId,"original",file.name),upload(optimized,categoryId,"optimized",file.name.replace(/\.[^.]+$/u,"")+".webp")]);
-   const checkResponse=await fetch("/api/admin/r2/verify",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({purpose:"category",keys:[originalObject.key,optimizedObject.key]})});
-   const check=await checkResponse.json();if(!checkResponse.ok||!check.verified)throw new Error(check.error||"R2 object verification failed.");
+   const [originalObject,optimizedObject]=await Promise.all([
+    uploadSupabaseVariant(file,categoryId,"original",file.name),
+    uploadSupabaseVariant(optimized,categoryId,"optimized",file.name.replace(/\.[^.]+$/u,"")+".webp"),
+   ]);
    setPreview(URL.createObjectURL(optimized));
-   onChange({imageUrl:optimizedObject.publicUrl,imageAlt:imageAlt||file.name.replace(/\.[^.]+$/u,"")+" category image",imageR2Key:optimizedObject.key,imageOriginalR2Key:originalObject.key,imageOriginalSizeBytes:file.size});
-   setMessage("Both R2 objects verified. Select Save changes to publish this image.");
+   onChange({imageUrl:optimizedObject.publicUrl,imageAlt:imageAlt||file.name.replace(/\.[^.]+$/u,"")+" category image",imageR2Key:"",imageOriginalR2Key:"",imageOriginalSizeBytes:file.size});
+   setMessage("Original and optimized images uploaded to Supabase. Select Save changes to publish this image.");
   }catch(error){setMessage(error instanceof Error?error.message:"Category image upload failed.");}
   finally{setBusy(false);}
  }
@@ -42,11 +49,11 @@ export default function CategoryImageManager({categoryId,imageUrl,imageAlt,image
   <div className="category-image-controls">
    <label className="admin-field"><span>Category image alternative text</span><input value={imageAlt} maxLength={240} onChange={event=>onChange({imageUrl,imageAlt:event.target.value,imageR2Key,imageOriginalR2Key,imageOriginalSizeBytes})} placeholder="Describe the image"/></label>
    <label className="admin-upload-control">Upload / replace category image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event=>void selectFile(event.target.files?.[0])}/></label>
-   <p className="admin-help-text">JPG, PNG, WebP · maximum 50 MB. Original and optimized WebP use separate R2 keys.</p>
+   <p className="admin-help-text">JPG, PNG, WebP · maximum 50 MB. Original and optimized WebP are saved in your Supabase gallery bucket.</p>
    <div className="admin-button-row"><button type="button" className="admin-secondary" disabled={busy||(!imageUrl&&!preview)} onClick={remove}>Remove image</button><button type="button" className="admin-secondary" disabled={busy} onClick={remove}>Restore default artwork</button></div>
    {message&&<p role="status" className="admin-inline-status">{busy?"Uploading… ":""}{message}</p>}
-   {imageR2Key&&<small className="admin-help-text">Optimized R2 key: {imageR2Key}</small>}
-   {imageOriginalR2Key&&<small className="admin-help-text">Original R2 key: {imageOriginalR2Key} · {(imageOriginalSizeBytes/1024).toFixed(1)} KB</small>}
+   {imageR2Key&&<small className="admin-help-text">Legacy R2 key: {imageR2Key}</small>}
+   {imageOriginalR2Key&&<small className="admin-help-text">Legacy R2 original: {imageOriginalR2Key} · {(imageOriginalSizeBytes/1024).toFixed(1)} KB</small>}
   </div>
  </div>;
 }
