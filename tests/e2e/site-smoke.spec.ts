@@ -379,7 +379,7 @@ test("Business Name Ideas generates the exact selected number of names", async (
   await page.route("**/api/tools/ai-generate", async (route) => {
     const body = route.request().postDataJSON() as { businessCount?: number };
     const count = Number(body.businessCount ?? 10);
-    const output = Array.from({ length: count }, (_, index) => `${index + 1}. Sample Business Name ${index + 1}`).join("\\n");
+    const output = Array.from({ length: count }, (_, index) => `${index + 1}. Sample Business Name ${index + 1}`).join("\n");
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ output }) });
   });
   await page.getByLabel("Your input").fill("coffee shop");
