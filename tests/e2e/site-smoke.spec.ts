@@ -173,7 +173,7 @@ test("homepage remains within the viewport at supported widths", async ({ page }
 });
 
 test("gallery image and video cards expose full-card links without blocking video controls", async ({ page }) => {
-  await page.route("**/api/gallery", (route) => route.fulfill({
+  await page.route("**/api/gallery**", (route) => route.fulfill({
     status: 200,
     contentType: "application/json",
     body: JSON.stringify({
@@ -185,8 +185,10 @@ test("gallery image and video cards expose full-card links without blocking vide
       ]
     })
   }));
+  const galleryResponse = page.waitForResponse((response) => response.url().includes("/api/gallery") && response.status() === 200);
   await page.goto("/");
-  const imageCard = page.locator(".ai-gallery-card-linked").filter({ hasText: "Gallery image test" });
+  await galleryResponse;
+  const imageCard = page.locator(".ai-gallery-card-linked").filter({ has: page.getByAltText("Gallery image test") });
   await expect(imageCard).toBeVisible();
   await expect(imageCard).toHaveAttribute("href", "https://gallery.test/image.jpg");
   const videoCard = page.locator(".ai-gallery-video-card");
@@ -374,11 +376,18 @@ test("AI Humanizer reports missing configuration instead of showing a fake rewri
 test("Business Name Ideas generates the exact selected number of names", async ({ page }) => {
   const response = await page.goto("/tools/business-name-ideas");
   expect(response?.status()).toBe(200);
+  await page.route("**/api/tools/ai-generate", async (route) => {
+    const body = route.request().postDataJSON() as { businessCount?: number };
+    const count = Number(body.businessCount ?? 10);
+    const output = Array.from({ length: count }, (_, index) => `${index + 1}. Sample Business Name ${index + 1}`).join("\n");
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ output }) });
+  });
   await page.getByLabel("Your input").fill("coffee shop");
   for (const count of [10, 20, 50, 100]) {
-    await page.getByRole("button", { name: /Show Result/ }).click();
-    await page.getByRole("menuitem", { name: `${count} names` }).click();
-    const lines = (await page.locator(".tool-output-text").innerText()).trim().split(String.fromCharCode(10));
+    await page.getByLabel("Number of business name ideas").selectOption(String(count));
+    await page.getByRole("button", { name: /Generate with AI/ }).click();
+    await expect(page.locator(".tool-output-text")).toBeVisible();
+    const lines = (await page.locator(".tool-output-text").innerText()).trim().split(String.fromCharCode(10)).filter(Boolean);
     expect(lines).toHaveLength(count);
   }
 });
