@@ -49,7 +49,7 @@ export default function CategoryImageManager({categoryId,imageUrl,imageAlt,image
   <div className="category-image-controls">
    <label className="admin-field"><span>Category image alternative text</span><input value={imageAlt} maxLength={240} onChange={event=>onChange({imageUrl,imageAlt:event.target.value,imageR2Key,imageOriginalR2Key,imageOriginalSizeBytes})} placeholder="Describe the image"/></label>
    <label className="admin-upload-control">Upload / replace category image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event=>void selectFile(event.target.files?.[0])}/></label>
-   <p className="admin-help-text">JPG, PNG, WebP · maximum 50 MB. Original and optimized WebP are saved in your Supabase gallery bucket.</p>
+   <p className="admin-help-text">JPG, PNG, WebP · maximum 50 MB. Recommended: 1600 × 900 px (16:9). The optimized WebP is resized to a maximum 1200 px while preserving the full image without cropping.</p>
    <div className="admin-button-row"><button type="button" className="admin-secondary" disabled={busy||(!imageUrl&&!preview)} onClick={remove}>Remove image</button><button type="button" className="admin-secondary" disabled={busy} onClick={remove}>Restore default artwork</button></div>
    {message&&<p role="status" className="admin-inline-status">{busy?"Uploading… ":""}{message}</p>}
    {imageR2Key&&<small className="admin-help-text">Legacy R2 key: {imageR2Key}</small>}
