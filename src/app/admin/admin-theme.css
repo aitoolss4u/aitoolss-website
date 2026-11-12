@@ -230,3 +230,14 @@
   background: #fff;
   color: #332d49;
 }
+
+
+/* Keep the fixed admin-session pill clear of the page-level Save changes action. */
+.admin-theme .admin-top-actions {
+  margin-top: 58px;
+}
+@media (max-width: 640px) {
+  .admin-theme .admin-top-actions {
+    margin-top: 0;
+  }
+}
