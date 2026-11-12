@@ -1893,3 +1893,73 @@ button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
   }
   .light-category-image-label { right: 9px; bottom: 9px; left: 9px; padding: 8px 12px; font-size: .92rem; }
 }
+
+
+/* Stable image-only category tiles: the category name is the only visible copy. */
+.light-category-card--tile {
+  min-height: 0 !important;
+  padding: 10px !important;
+  gap: 0 !important;
+  overflow: hidden;
+}
+.light-category-card--tile .light-category-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: clamp(150px, 16vw, 210px);
+  min-height: 150px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #eee7ff, #dff7ff);
+}
+.light-category-card--tile .light-category-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+  border-radius: inherit;
+}
+.light-category-card--tile .light-category-image-label {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  padding: 9px 14px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 10px;
+  background: rgb(20 17 30 / 78%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 18%);
+  pointer-events: none;
+}
+.light-category-card--tile .light-category-name,
+.light-category-card--tile .light-category-description,
+.light-category-card--tile .light-category-count {
+  display: none !important;
+}
+.light-category-card--tile.cat-peach .light-category-art { background: linear-gradient(135deg, #fff0e6, #e9e0ff); }
+.light-category-card--tile.cat-blue .light-category-art { background: linear-gradient(135deg, #e8f1ff, #dff7ff); }
+.light-category-card--tile.cat-mint .light-category-art { background: linear-gradient(135deg, #e4f7ed, #dceaff); }
+.light-category-card--tile.cat-rose .light-category-art { background: linear-gradient(135deg, #ffebf0, #f1e1ff); }
+.light-category-card--tile.cat-gold .light-category-art { background: linear-gradient(135deg, #fff5dc, #e6e2ff); }
+.light-category-card--tile.cat-sky .light-category-art { background: linear-gradient(135deg, #e4f6fb, #dbe8ff); }
+@media (max-width: 640px) {
+  .light-category-card--tile { padding: 7px !important; }
+  .light-category-card--tile .light-category-art { height: clamp(128px, 42vw, 180px); min-height: 128px; }
+  .light-category-card--tile .light-category-image-label { right: 9px; bottom: 9px; left: 9px; padding: 8px 12px; font-size: .92rem; }
+}
+
+/* Keep the measured, independent-column masonry aligned to natural media heights. */
+.ai-gallery-masonry { align-items: start; }
+.ai-gallery-column { align-self: start; height: auto; }
